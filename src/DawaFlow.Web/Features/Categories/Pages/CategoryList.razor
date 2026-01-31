@@ -10,11 +10,12 @@
 
 <PageTitle>Categories - DawaFlow</PageTitle>
 
-<div class="mb-4">
-    <div class="d-flex justify-space-between align-center mb-4">
-        <div>
-            <MudText Typo="Typo.h4" Class="mb-1">Drug Categories</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">Manage hierarchical drug classifications</MudText>
+<!-- Hero Section -->
+<div class="df-hero animate-fade-in-up">
+    <div class="df-hero-content">
+        <div class="df-hero-text">
+            <h1>Drug Categories</h1>
+            <p>Manage hierarchical drug classifications</p>
         </div>
         <MudButton Variant="Variant.Filled"
                    Color="Color.Primary"
@@ -23,10 +24,20 @@
             Add Category
         </MudButton>
     </div>
+</div>
 
-    <MudGrid>
-        <MudItem xs="12" md="8">
-            <MudPaper Elevation="2" Class="pa-4">
+<MudGrid Class="mt-4">
+    <MudItem xs="12" md="8">
+        <div class="df-alert-card animate-fade-in-up animate-delay-1">
+            <div class="df-alert-header">
+                <div class="df-alert-title">
+                    <div class="df-alert-title-icon primary">
+                        <MudIcon Icon="@Icons.Material.Filled.Category" />
+                    </div>
+                    <span>Category Tree</span>
+                </div>
+            </div>
+            <div class="df-alert-body">
                 @if (_isLoading)
                 {
                     <div class="d-flex justify-center align-center pa-8">
@@ -56,28 +67,58 @@
                         </MudButton>
                     </div>
                 }
-            </MudPaper>
-        </MudItem>
+            </div>
+        </div>
+    </MudItem>
 
-        <MudItem xs="12" md="4">
-            <MudPaper Elevation="2" Class="pa-4 mb-4">
-                <MudText Typo="Typo.h6" Class="mb-3">Statistics</MudText>
-                <div class="mb-3">
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Categories</MudText>
-                    <MudText Typo="Typo.h5" Color="Color.Primary">@GetTotalCategories()</MudText>
+    <MudItem xs="12" md="4">
+        <!-- Statistics Card -->
+        <div class="df-kpi-card animate-fade-in-up animate-delay-2 mb-4">
+            <div class="df-kpi-header">
+                <div class="df-kpi-icon primary">
+                    <MudIcon Icon="@Icons.Material.Filled.Analytics" />
                 </div>
-                <div class="mb-3">
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">Parent Categories</MudText>
-                    <MudText Typo="Typo.h5">@_categories.Count</MudText>
-                </div>
-                <div>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Drugs</MudText>
-                    <MudText Typo="Typo.h5" Color="Color.Success">@GetTotalDrugs()</MudText>
-                </div>
-            </MudPaper>
+            </div>
+            <div class="df-kpi-body">
+                <div class="df-kpi-label">Total Categories</div>
+                <div class="df-kpi-value">@GetTotalCategories()</div>
+            </div>
+        </div>
 
-            <MudPaper Elevation="2" Class="pa-4">
-                <MudText Typo="Typo.h6" Class="mb-3">Quick Tips</MudText>
+        <div class="df-kpi-card animate-fade-in-up animate-delay-3 mb-4">
+            <div class="df-kpi-header">
+                <div class="df-kpi-icon info">
+                    <MudIcon Icon="@Icons.Material.Filled.AccountTree" />
+                </div>
+            </div>
+            <div class="df-kpi-body">
+                <div class="df-kpi-label">Parent Categories</div>
+                <div class="df-kpi-value">@_categories.Count</div>
+            </div>
+        </div>
+
+        <div class="df-kpi-card animate-fade-in-up animate-delay-4 mb-4">
+            <div class="df-kpi-header">
+                <div class="df-kpi-icon success">
+                    <MudIcon Icon="@Icons.Material.Filled.Medication" />
+                </div>
+            </div>
+            <div class="df-kpi-body">
+                <div class="df-kpi-label">Total Drugs</div>
+                <div class="df-kpi-value">@GetTotalDrugs()</div>
+            </div>
+        </div>
+
+        <div class="df-alert-card animate-fade-in-up animate-delay-4">
+            <div class="df-alert-header">
+                <div class="df-alert-title">
+                    <div class="df-alert-title-icon info">
+                        <MudIcon Icon="@Icons.Material.Filled.Lightbulb" />
+                    </div>
+                    <span>Quick Tips</span>
+                </div>
+            </div>
+            <div class="df-alert-body">
                 <MudList T="string" Dense="true">
                     <MudListItem T="string" Icon="@Icons.Material.Filled.Info" IconColor="Color.Info">
                         <MudText Typo="Typo.body2">Create parent categories first</MudText>
@@ -89,10 +130,10 @@
                         <MudText Typo="Typo.body2">Max depth: 3 levels</MudText>
                     </MudListItem>
                 </MudList>
-            </MudPaper>
-        </MudItem>
-    </MudGrid>
-</div>
+            </div>
+        </div>
+    </MudItem>
+</MudGrid>
 
 @code {
     private List<CategoryDto> _categories = new();

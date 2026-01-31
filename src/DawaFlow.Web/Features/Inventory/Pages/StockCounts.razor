@@ -9,11 +9,12 @@
 
 <PageTitle>Stock Counts - DawaFlow</PageTitle>
 
-<div class="mb-4">
-    <div class="d-flex justify-space-between align-center mb-4">
-        <div>
-            <MudText Typo="Typo.h4" Class="mb-1">Stock Counts</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">Physical inventory counting and reconciliation</MudText>
+<!-- Hero Section -->
+<div class="df-hero animate-fade-in-up">
+    <div class="df-hero-content">
+        <div class="df-hero-text">
+            <h1>Stock Counts</h1>
+            <p>Physical inventory counting and reconciliation</p>
         </div>
         <MudButton Variant="Variant.Filled"
                    Color="Color.Primary"
@@ -23,8 +24,19 @@
             Start New Count
         </MudButton>
     </div>
+</div>
 
-    <MudPaper Elevation="2" Class="pa-4">
+<!-- Stock Counts Table -->
+<div class="df-alert-card animate-fade-in-up animate-delay-1 mt-4">
+    <div class="df-alert-header">
+        <div class="df-alert-title">
+            <div class="df-alert-title-icon primary">
+                <MudIcon Icon="@Icons.Material.Filled.Checklist" />
+            </div>
+            <span>Count History</span>
+        </div>
+    </div>
+    <div class="df-alert-body">
         <MudTable T="StockCountSummaryDto" Items="@_stockCounts" Dense="true" Hover="true" Loading="@_loading">
             <HeaderContent>
                 <MudTh>Reference</MudTh>
@@ -91,7 +103,7 @@
                 </MudTd>
             </RowTemplate>
         </MudTable>
-    </MudPaper>
+    </div>
 </div>
 
 @code {
