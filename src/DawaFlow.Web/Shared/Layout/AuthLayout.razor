@@ -1,0 +1,63 @@
+@inherits LayoutComponentBase
+@using MudBlazor
+
+<MudThemeProvider Theme="_theme" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<div class="auth-layout">
+    <div class="auth-layout-background"></div>
+    <div class="auth-layout-content">
+        @Body
+    </div>
+</div>
+
+<style>
+    .auth-layout {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem 1rem;
+    }
+
+    .auth-layout-background {
+        position: absolute;
+        inset: 0;
+        background-image:
+            radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+        pointer-events: none;
+    }
+
+    .auth-layout-content {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 480px;
+    }
+
+    .auth-container {
+        width: 100%;
+    }
+
+    .auth-card {
+        background: white;
+        border-radius: 16px;
+        padding: 2.5rem 2rem;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    @@media (max-width: 600px) {
+        .auth-card {
+            padding: 2rem 1.5rem;
+        }
+    }
+</style>
+
+@code {
+    private MudTheme _theme = DawaFlow.Web.Shared.Extensions.MudThemeConfiguration.DawaFlowTheme;
+}

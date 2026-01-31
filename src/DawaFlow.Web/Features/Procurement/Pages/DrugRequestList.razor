@@ -1,0 +1,204 @@
+@page "/procurement/requests"
+@using MudBlazor
+@using DawaFlow.Web.Features.Procurement.Queries
+@using DawaFlow.Web.Data.Entities
+@using MediatR
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Drug Requests - DawaFlow</PageTitle>
+
+<div class="mb-4">
+    <div class="d-flex justify-space-between align-center mb-4">
+        <div>
+            <MudText Typo="Typo.h4" Class="mb-1">Drug Requests</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Procurement requests and supplier orders</MudText>
+        </div>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   Href="/procurement/requests/new">
+            New Request
+        </MudButton>
+    </div>
+
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <div class="d-flex align-center gap-3">
+                    <div class="kpi-icon warning">
+                        <MudIcon Icon="@Icons.Material.Filled.PendingActions" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Pending Approval</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Warning">@_requests.Count(r => r.Status == "PendingApproval")</MudText>
+                    </div>
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <div class="d-flex align-center gap-3">
+                    <div class="kpi-icon success">
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Approved</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Success">@_requests.Count(r => r.Status == "Approved")</MudText>
+                    </div>
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <div class="d-flex align-center gap-3">
+                    <div class="kpi-icon info">
+                        <MudIcon Icon="@Icons.Material.Filled.LocalShipping" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">In Transit</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Info">@_requests.Count(r => r.Status == "SentToSupplier" || r.Status == "SupplierConfirmed")</MudText>
+                    </div>
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <div class="d-flex align-center gap-3">
+                    <div class="kpi-icon primary">
+                        <MudIcon Icon="@Icons.Material.Filled.Receipt" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Total Value</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Primary">KES @_requests.Sum(r => r.TotalAmount).ToString("N0")</MudText>
+                    </div>
+                </div>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudPaper Elevation="2" Class="pa-4">
+        <div class="d-flex justify-space-between align-center mb-4">
+            <MudSelect T="string" @bind-Value="_selectedStatus" Label="Status Filter" Variant="Variant.Outlined" Dense="true" Style="max-width: 250px;" OnSelectedValuesChanged="@((IEnumerable<string> _) => LoadRequests())">
+                <MudSelectItem Value="@("All")">All Status</MudSelectItem>
+                <MudSelectItem Value="@("Draft")">Draft</MudSelectItem>
+                <MudSelectItem Value="@("PendingApproval")">Pending Approval</MudSelectItem>
+                <MudSelectItem Value="@("Approved")">Approved</MudSelectItem>
+                <MudSelectItem Value="@("Rejected")">Rejected</MudSelectItem>
+                <MudSelectItem Value="@("SentToSupplier")">Sent to Supplier</MudSelectItem>
+                <MudSelectItem Value="@("SupplierConfirmed")">Supplier Confirmed</MudSelectItem>
+                <MudSelectItem Value="@("Delivered")">Delivered</MudSelectItem>
+                <MudSelectItem Value="@("Completed")">Completed</MudSelectItem>
+            </MudSelect>
+        </div>
+
+        <MudTable T="DrugRequestSummaryDto" Items="@_requests" Dense="true" Hover="true" Loading="@_loading">
+            <HeaderContent>
+                <MudTh>Request #</MudTh>
+                <MudTh>Date</MudTh>
+                <MudTh>Supplier</MudTh>
+                <MudTh>Items</MudTh>
+                <MudTh>Total Amount</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Approved By</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Request #">
+                    <MudText Typo="Typo.body2" Class="fw-bold">@context.RequestNumber</MudText>
+                </MudTd>
+                <MudTd DataLabel="Date">@context.RequestDate.ToString("dd MMM yyyy")</MudTd>
+                <MudTd DataLabel="Supplier">@context.SupplierName</MudTd>
+                <MudTd DataLabel="Items">@context.ItemCount items</MudTd>
+                <MudTd DataLabel="Total Amount">KES @context.TotalAmount.ToString("N2")</MudTd>
+                <MudTd DataLabel="Status">
+                    <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">
+                        @FormatStatus(context.Status)
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Approved By">
+                    @if (!string.IsNullOrEmpty(context.ApprovedBy))
+                    {
+                        <div>
+                            <MudText Typo="Typo.body2">@context.ApprovedBy</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@context.ApprovedAt?.ToString("dd MMM HH:mm")</MudText>
+                        </div>
+                    }
+                    else
+                    {
+                        <MudText Color="Color.Secondary">-</MudText>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Actions">
+                    <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                   Size="Size.Small"
+                                   Color="Color.Info"
+                                   Href="@($"/procurement/requests/{context.Id}")"
+                                   Title="View Details" />
+                    @if (context.Status == "PendingApproval")
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Check"
+                                       Size="Size.Small"
+                                       Color="Color.Success"
+                                       Title="Approve" />
+                    }
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+</div>
+
+@code {
+    private List<DrugRequestSummaryDto> _requests = new();
+    private string _selectedStatus = "All";
+    private bool _loading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRequests();
+    }
+
+    private async Task LoadRequests()
+    {
+        _loading = true;
+        StateHasChanged();
+
+        try
+        {
+            DrugRequestStatus? status = _selectedStatus != "All" ? Enum.Parse<DrugRequestStatus>(_selectedStatus) : null;
+            _requests = await Mediator.Send(new GetDrugRequestsQuery(Status: status));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading drug requests: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Draft" => Color.Default,
+        "PendingApproval" => Color.Warning,
+        "Approved" => Color.Success,
+        "Rejected" => Color.Error,
+        "SentToSupplier" => Color.Info,
+        "SupplierConfirmed" => Color.Primary,
+        "Delivered" => Color.Success,
+        "Completed" => Color.Success,
+        _ => Color.Default
+    };
+
+    private string FormatStatus(string status) => status switch
+    {
+        "PendingApproval" => "Pending Approval",
+        "SentToSupplier" => "Sent to Supplier",
+        "SupplierConfirmed" => "Supplier Confirmed",
+        "PartiallyDelivered" => "Partially Delivered",
+        _ => status
+    };
+}

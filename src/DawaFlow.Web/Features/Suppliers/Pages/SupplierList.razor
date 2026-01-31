@@ -1,0 +1,204 @@
+@page "/suppliers"
+@using MudBlazor
+@using DawaFlow.Web.Features.Suppliers.Queries
+@using MediatR
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Suppliers - DawaFlow</PageTitle>
+
+<div class="mb-4">
+    <div class="d-flex justify-space-between align-center mb-4">
+        <div>
+            <MudText Typo="Typo.h4" Class="mb-1">Suppliers</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Manage supplier information and contacts</MudText>
+        </div>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   Href="/suppliers/new">
+            Add Supplier
+        </MudButton>
+    </div>
+
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <div class="d-flex align-center gap-3">
+                    <div class="kpi-icon success">
+                        <MudIcon Icon="@Icons.Material.Filled.Store" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Total Suppliers</MudText>
+                        <MudText Typo="Typo.h5">@_suppliers.Count</MudText>
+                    </div>
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <div class="d-flex align-center gap-3">
+                    <div class="kpi-icon primary">
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Active</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Success">@_suppliers.Count(s => s.IsActive)</MudText>
+                    </div>
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <div class="d-flex align-center gap-3">
+                    <div class="kpi-icon info">
+                        <MudIcon Icon="@Icons.Material.Filled.Email" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Email Enabled</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Info">@_suppliers.Count(s => s.EmailNotificationsEnabled)</MudText>
+                    </div>
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <div class="d-flex align-center gap-3">
+                    <div class="kpi-icon warning">
+                        <MudIcon Icon="@Icons.Material.Filled.Chat" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">WhatsApp Enabled</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Warning">@_suppliers.Count(s => s.WhatsAppNotificationsEnabled)</MudText>
+                    </div>
+                </div>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudPaper Elevation="2" Class="pa-4">
+        <div class="d-flex justify-space-between align-center mb-4">
+            <MudTextField @bind-Value="_searchTerm"
+                          Placeholder="Search suppliers..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium"
+                          Class="mt-0"
+                          Style="max-width: 400px;"
+                          Immediate="true"
+                          OnDebounceIntervalElapsed="LoadSuppliers"
+                          DebounceInterval="300" />
+
+            <MudSwitch @bind-Value="_showActiveOnly" Color="Color.Primary" Label="Active Only" OnChanged="@((bool _) => LoadSuppliers())" />
+        </div>
+
+        <MudTable T="SupplierDto" Items="@FilteredSuppliers" Dense="true" Hover="true" Loading="@_loading">
+            <HeaderContent>
+                <MudTh>Code</MudTh>
+                <MudTh>Name</MudTh>
+                <MudTh>Contact Info</MudTh>
+                <MudTh>Location</MudTh>
+                <MudTh>Notifications</MudTh>
+                <MudTh>Contacts</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Code">@context.Code</MudTd>
+                <MudTd DataLabel="Name">
+                    <MudText Typo="Typo.body2" Class="fw-bold">@context.Name</MudText>
+                </MudTd>
+                <MudTd DataLabel="Contact Info">
+                    <div>
+                        @if (!string.IsNullOrEmpty(context.Email))
+                        {
+                            <MudText Typo="Typo.body2">@context.Email</MudText>
+                        }
+                        @if (!string.IsNullOrEmpty(context.Phone))
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Phone</MudText>
+                        }
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Location">
+                    @if (!string.IsNullOrEmpty(context.City))
+                    {
+                        <span>@context.City, @context.Country</span>
+                    }
+                    else
+                    {
+                        <span>@context.Country</span>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Notifications">
+                    <div class="d-flex gap-1">
+                        @if (context.EmailNotificationsEnabled)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Info" Icon="@Icons.Material.Filled.Email">Email</MudChip>
+                        }
+                        @if (context.WhatsAppNotificationsEnabled)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Icon="@Icons.Material.Filled.Chat">WhatsApp</MudChip>
+                        }
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Contacts">@context.ContactCount</MudTd>
+                <MudTd DataLabel="Status">
+                    <MudChip T="string" Size="Size.Small" Color="@(context.IsActive ? Color.Success : Color.Default)">
+                        @(context.IsActive ? "Active" : "Inactive")
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Actions">
+                    <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                   Size="Size.Small"
+                                   Color="Color.Info"
+                                   Href="@($"/suppliers/{context.Id}")"
+                                   Title="View Details" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Send"
+                                   Size="Size.Small"
+                                   Color="Color.Primary"
+                                   Href="@($"/procurement/requests/new?supplierId={context.Id}")"
+                                   Title="Create Request" />
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+</div>
+
+@code {
+    private List<SupplierDto> _suppliers = new();
+    private string _searchTerm = string.Empty;
+    private bool _showActiveOnly = false;
+    private bool _loading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSuppliers();
+    }
+
+    private async Task LoadSuppliers()
+    {
+        _loading = true;
+        StateHasChanged();
+
+        try
+        {
+            _suppliers = await Mediator.Send(new GetSuppliersQuery(
+                SearchTerm: string.IsNullOrWhiteSpace(_searchTerm) ? null : _searchTerm,
+                IsActive: _showActiveOnly ? true : null
+            ));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading suppliers: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private IEnumerable<SupplierDto> FilteredSuppliers => _suppliers;
+}

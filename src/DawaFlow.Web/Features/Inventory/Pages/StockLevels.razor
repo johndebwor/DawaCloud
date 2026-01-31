@@ -1,0 +1,212 @@
+@page "/inventory"
+@page "/inventory/stock-levels"
+@using MudBlazor
+@using DawaFlow.Web.Features.Inventory.Queries
+@using MediatR
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+
+<PageTitle>Stock Levels - DawaFlow</PageTitle>
+
+<div class="mb-4">
+    <div class="d-flex justify-space-between align-center mb-4">
+        <div>
+            <MudText Typo="Typo.h4" Class="mb-1">Stock Levels</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Real-time inventory quantities across all batches</MudText>
+        </div>
+        <div class="d-flex gap-2">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.FileDownload">
+                Export
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       Href="/inventory/adjustments/new">
+                Stock Adjustment
+            </MudButton>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <div class="d-flex align-center gap-3">
+                    <div class="kpi-icon success">
+                        <MudIcon Icon="@Icons.Material.Filled.Inventory" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Total SKUs</MudText>
+                        <MudText Typo="Typo.h5">@_stockItems.Count</MudText>
+                    </div>
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <div class="d-flex align-center gap-3">
+                    <div class="kpi-icon warning">
+                        <MudIcon Icon="@Icons.Material.Filled.Warning" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Low Stock</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Warning">@_stockItems.Count(s => s.StockLevel == "Low")</MudText>
+                    </div>
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <div class="d-flex align-center gap-3">
+                    <div class="kpi-icon error">
+                        <MudIcon Icon="@Icons.Material.Filled.Error" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Out of Stock</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Error">@_stockItems.Count(s => s.StockLevel == "Out")</MudText>
+                    </div>
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <div class="d-flex align-center gap-3">
+                    <div class="kpi-icon primary">
+                        <MudIcon Icon="@Icons.Material.Filled.TrendingUp" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Stock Value</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Success">KES @_stockItems.Sum(s => s.TotalValue).ToString("N0")</MudText>
+                    </div>
+                </div>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Filters and Search -->
+    <MudPaper Elevation="2" Class="pa-4">
+        <div class="d-flex justify-space-between align-center mb-4">
+            <MudTextField @bind-Value="_searchString"
+                          Placeholder="Search by drug name or code..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium"
+                          Class="mt-0"
+                          Style="max-width: 400px;"
+                          Immediate="true" />
+
+            <div class="d-flex gap-2">
+                <MudSelect T="string" @bind-Value="_selectedCategory" Label="Category" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
+                    <MudSelectItem Value="@("All")">All Categories</MudSelectItem>
+                    <MudSelectItem Value="@("Analgesics")">Analgesics</MudSelectItem>
+                    <MudSelectItem Value="@("Antibiotics")">Antibiotics</MudSelectItem>
+                    <MudSelectItem Value="@("Cardiovascular")">Cardiovascular</MudSelectItem>
+                </MudSelect>
+
+                <MudSelect T="string" @bind-Value="_selectedStockLevel" Label="Stock Level" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
+                    <MudSelectItem Value="@("All")">All Levels</MudSelectItem>
+                    <MudSelectItem Value="@("Good")">Good Stock</MudSelectItem>
+                    <MudSelectItem Value="@("Low")">Low Stock</MudSelectItem>
+                    <MudSelectItem Value="@("Out")">Out of Stock</MudSelectItem>
+                </MudSelect>
+            </div>
+        </div>
+
+        <!-- Stock Table -->
+        <MudTable T="StockLevelDto" Items="@FilteredItems" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading">
+            <HeaderContent>
+                <MudTh>Drug</MudTh>
+                <MudTh>Category</MudTh>
+                <MudTh>Available</MudTh>
+                <MudTh>Reserved</MudTh>
+                <MudTh>Reorder Level</MudTh>
+                <MudTh>Total Value</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Drug">
+                    <div>
+                        <MudText Typo="Typo.body2" Class="fw-bold">@context.DrugName</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@context.DrugCode</MudText>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Category">@context.Category</MudTd>
+                <MudTd DataLabel="Available">
+                    <MudText Typo="Typo.body2">@context.AvailableQuantity @context.Unit</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.BatchCount batches</MudText>
+                </MudTd>
+                <MudTd DataLabel="Reserved">@context.ReservedQuantity @context.Unit</MudTd>
+                <MudTd DataLabel="Reorder Level">@context.ReorderLevel</MudTd>
+                <MudTd DataLabel="Total Value">KES @context.TotalValue.ToString("N2")</MudTd>
+                <MudTd DataLabel="Status">
+                    <MudChip T="string" Size="Size.Small" Color="@GetStockLevelColor(context.StockLevel)">@context.StockLevel</MudChip>
+                </MudTd>
+                <MudTd DataLabel="Actions">
+                    <MudIconButton Icon="@Icons.Material.Filled.History"
+                                   Size="Size.Small"
+                                   Color="Color.Info"
+                                   Href="@($"/inventory/movements?drugId={context.DrugId}")"
+                                   Title="View Movements" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Tune"
+                                   Size="Size.Small"
+                                   Color="Color.Default"
+                                   Href="@($"/inventory/adjustments/new?drugId={context.DrugId}")"
+                                   Title="Adjust Stock" />
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+</div>
+
+@code {
+    private List<StockLevelDto> _stockItems = new();
+    private string _searchString = string.Empty;
+    private string _selectedCategory = "All";
+    private string _selectedStockLevel = "All";
+    private bool _loading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStockLevels();
+    }
+
+    private async Task LoadStockLevels()
+    {
+        _loading = true;
+        StateHasChanged();
+
+        try
+        {
+            _stockItems = await Mediator.Send(new GetStockLevelsQuery());
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading stock levels: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private IEnumerable<StockLevelDto> FilteredItems =>
+        _stockItems.Where(s =>
+            (string.IsNullOrWhiteSpace(_searchString) ||
+             s.DrugName.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+             s.DrugCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) &&
+            (_selectedCategory == "All" || s.Category == _selectedCategory) &&
+            (_selectedStockLevel == "All" || s.StockLevel == _selectedStockLevel)
+        );
+
+    private Color GetStockLevelColor(string level) => level switch
+    {
+        "Good" => Color.Success,
+        "Low" => Color.Warning,
+        "Out" => Color.Error,
+        _ => Color.Default
+    };
+}

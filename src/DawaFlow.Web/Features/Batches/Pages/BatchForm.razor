@@ -1,0 +1,302 @@
+@page "/batches/new"
+@page "/batches/{id:int}/edit"
+@using MudBlazor
+
+<PageTitle>@(_isEditMode ? "Edit Batch" : "New Batch") - DawaFlow</PageTitle>
+
+<div class="mb-4">
+    <MudBreadcrumbs Items="_breadcrumbItems" Class="mb-4" />
+
+    <div class="d-flex justify-space-between align-center mb-4">
+        <div>
+            <MudText Typo="Typo.h4" Class="mb-1">@(_isEditMode ? "Edit Batch" : "Add New Batch")</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                @(_isEditMode ? "Update batch information" : "Record a new drug batch")
+            </MudText>
+        </div>
+    </div>
+
+    <MudGrid>
+        <MudItem xs="12" md="8">
+            <MudPaper Elevation="2" Class="pa-6">
+                <MudForm @ref="_form" @bind-IsValid="@_isValid">
+                    <MudText Typo="Typo.h6" Class="mb-4">Batch Information</MudText>
+
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.BatchNumber"
+                                          Label="Batch Number"
+                                          Variant="Variant.Outlined"
+                                          Required="true"
+                                          RequiredError="Batch number is required"
+                                          HelperText="Unique batch identifier" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="string" @bind-Value="_model.DrugId"
+                                       Label="Drug"
+                                       Variant="Variant.Outlined"
+                                       Required="true"
+                                       AnchorOrigin="Origin.BottomCenter">
+                                <MudSelectItem Value="@("1")">Paracetamol 500mg</MudSelectItem>
+                                <MudSelectItem Value="@("2")">Amoxicillin 250mg</MudSelectItem>
+                                <MudSelectItem Value="@("3")">Ibuprofen 400mg</MudSelectItem>
+                                <MudSelectItem Value="@("4")">Ciprofloxacin 500mg</MudSelectItem>
+                                <MudSelectItem Value="@("5")">Metformin 500mg</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudDatePicker @bind-Date="_manufactureDate"
+                                           Label="Manufacture Date"
+                                           Variant="Variant.Outlined"
+                                           Required="true"
+                                           MaxDate="DateTime.Today"
+                                           HelperText="When the batch was manufactured" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudDatePicker @bind-Date="_expiryDate"
+                                           Label="Expiry Date"
+                                           Variant="Variant.Outlined"
+                                           Required="true"
+                                           MinDate="DateTime.Today"
+                                           HelperText="When the batch expires" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudNumericField @bind-Value="_model.InitialQuantity"
+                                             Label="Initial Quantity"
+                                             Variant="Variant.Outlined"
+                                             Min="1"
+                                             Required="true"
+                                             HelperText="Total units in the batch" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudNumericField @bind-Value="_model.CostPrice"
+                                             Label="Cost Price per Unit (KES)"
+                                             Variant="Variant.Outlined"
+                                             Min="0m"
+                                             Step="0.01m"
+                                             Required="true"
+                                             HelperText="Purchase cost per unit" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.SupplierBatchRef"
+                                          Label="Supplier Batch Reference"
+                                          Variant="Variant.Outlined"
+                                          HelperText="Supplier's batch reference number" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="string" @bind-Value="_model.Status"
+                                       Label="Status"
+                                       Variant="Variant.Outlined">
+                                <MudSelectItem Value="@("Active")">Active</MudSelectItem>
+                                <MudSelectItem Value="@("Quarantined")">Quarantined</MudSelectItem>
+                                <MudSelectItem Value="@("Expired")">Expired</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                    </MudGrid>
+
+                    @if (_isEditMode)
+                    {
+                        <MudDivider Class="my-6" />
+                        <MudText Typo="Typo.h6" Class="mb-4">Current Stock</MudText>
+
+                        <MudGrid>
+                            <MudItem xs="12" md="6">
+                                <MudNumericField @bind-Value="_model.CurrentQuantity"
+                                                 Label="Current Quantity"
+                                                 Variant="Variant.Outlined"
+                                                 Min="0"
+                                                 Max="_model.InitialQuantity"
+                                                 HelperText="Current available units" />
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudNumericField @bind-Value="_model.ReservedQuantity"
+                                                 Label="Reserved Quantity"
+                                                 Variant="Variant.Outlined"
+                                                 Min="0"
+                                                 ReadOnly="true"
+                                                 HelperText="Units reserved for orders" />
+                            </MudItem>
+                        </MudGrid>
+                    }
+
+                    <MudDivider Class="my-6" />
+
+                    <div class="d-flex justify-space-between">
+                        <MudButton Variant="Variant.Text"
+                                   Color="Color.Default"
+                                   Href="/batches"
+                                   StartIcon="@Icons.Material.Filled.ArrowBack">
+                            Cancel
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Disabled="@(!_isValid || _isSaving)"
+                                   OnClick="HandleSubmit"
+                                   StartIcon="@Icons.Material.Filled.Save">
+                            @if (_isSaving)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                                <span class="ml-2">Saving...</span>
+                            }
+                            else
+                            {
+                                <span>@(_isEditMode ? "Update Batch" : "Save Batch")</span>
+                            }
+                        </MudButton>
+                    </div>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="2" Class="pa-4 mb-4">
+                <MudText Typo="Typo.h6" Class="mb-3">Batch Summary</MudText>
+                <div class="mb-3">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Shelf Life</MudText>
+                    <MudText Typo="Typo.h6">
+                        @GetShelfLifeDays() days
+                    </MudText>
+                </div>
+                <div class="mb-3">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Days to Expiry</MudText>
+                    <MudText Typo="Typo.h6" Color="@GetExpiryColor()">
+                        @GetDaysToExpiry() days
+                    </MudText>
+                </div>
+                <div class="mb-3">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Value</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Success">
+                        KES @((_model.InitialQuantity * _model.CostPrice).ToString("N2"))
+                    </MudText>
+                </div>
+            </MudPaper>
+
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-3">Guidelines</MudText>
+                <MudList T="string" Dense="true">
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
+                        <MudText Typo="Typo.body2">Use unique batch numbers</MudText>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
+                        <MudText Typo="Typo.body2">Verify expiry dates carefully</MudText>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
+                        <MudText Typo="Typo.body2">Match supplier documentation</MudText>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Info" IconColor="Color.Info">
+                        <MudText Typo="Typo.body2">Batches near expiry are auto-flagged</MudText>
+                    </MudListItem>
+                </MudList>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</div>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private MudForm? _form;
+    private bool _isValid;
+    private bool _isSaving;
+    private bool _isEditMode => Id.HasValue;
+
+    private BatchFormModel _model = new();
+    private DateTime? _manufactureDate;
+    private DateTime? _expiryDate;
+
+    private List<BreadcrumbItem> _breadcrumbItems = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _breadcrumbItems = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Home", href: "/"),
+            new BreadcrumbItem("Batches", href: "/batches"),
+            new BreadcrumbItem(_isEditMode ? "Edit" : "New", href: null, disabled: true)
+        };
+
+        if (_isEditMode)
+        {
+            await LoadBatch(Id!.Value);
+        }
+        else
+        {
+            _manufactureDate = DateTime.Today;
+            _expiryDate = DateTime.Today.AddYears(2);
+        }
+    }
+
+    private async Task LoadBatch(int id)
+    {
+        // Simulate API call
+        await Task.Delay(300);
+        // TODO: Load actual batch data
+        _model = new BatchFormModel
+        {
+            BatchNumber = "BTH-2024-001",
+            DrugId = "1",
+            InitialQuantity = 5000,
+            CurrentQuantity = 3200,
+            ReservedQuantity = 150,
+            CostPrice = 3.50m,
+            SupplierBatchRef = "SUP-BTH-2024-001",
+            Status = "Active"
+        };
+        _manufactureDate = new DateTime(2024, 1, 15);
+        _expiryDate = new DateTime(2026, 1, 15);
+    }
+
+    private async Task HandleSubmit()
+    {
+        _isSaving = true;
+        StateHasChanged();
+
+        // Simulate API call
+        await Task.Delay(1000);
+
+        // TODO: Implement actual save logic
+        // NavigationManager.NavigateTo("/batches");
+
+        _isSaving = false;
+        StateHasChanged();
+    }
+
+    private int GetShelfLifeDays()
+    {
+        if (_manufactureDate.HasValue && _expiryDate.HasValue)
+        {
+            return (_expiryDate.Value - _manufactureDate.Value).Days;
+        }
+        return 0;
+    }
+
+    private int GetDaysToExpiry()
+    {
+        if (_expiryDate.HasValue)
+        {
+            return (_expiryDate.Value - DateTime.Today).Days;
+        }
+        return 0;
+    }
+
+    private Color GetExpiryColor()
+    {
+        var days = GetDaysToExpiry();
+        if (days <= 0) return Color.Error;
+        if (days <= 30) return Color.Warning;
+        if (days <= 90) return Color.Info;
+        return Color.Success;
+    }
+
+    private class BatchFormModel
+    {
+        public string BatchNumber { get; set; } = string.Empty;
+        public string DrugId { get; set; } = string.Empty;
+        public int InitialQuantity { get; set; } = 1;
+        public int CurrentQuantity { get; set; }
+        public int ReservedQuantity { get; set; }
+        public decimal CostPrice { get; set; }
+        public string? SupplierBatchRef { get; set; }
+        public string Status { get; set; } = "Active";
+    }
+}

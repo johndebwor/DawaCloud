@@ -1,0 +1,100 @@
+@using MudBlazor
+@using DawaFlow.Web.Features.Categories.Queries
+
+<MudListItem T="string" @bind-Expanded="@_isExpanded" Style="@($"padding-left: {Level * 24 + 16}px;")">
+    <div class="d-flex align-center justify-space-between" style="width: 100%;">
+        <div class="d-flex align-center gap-2">
+            @if (Category.Children.Any())
+            {
+                <MudIcon Icon="@(_isExpanded ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ChevronRight)"
+                         Size="Size.Small"
+                         Style="cursor: pointer;"
+                         @onclick="() => _isExpanded = !_isExpanded" />
+            }
+            else
+            {
+                <div style="width: 24px;"></div>
+            }
+            <MudIcon Icon="@GetCategoryIcon()" Color="@GetCategoryColor()" Size="Size.Small" />
+            <MudText Typo="Typo.body1">@Category.Name</MudText>
+            <MudChip T="string" Size="Size.Small" Color="Color.Info">@Category.DrugCount drugs</MudChip>
+            @if (!Category.IsActive)
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Default">Inactive</MudChip>
+            }
+        </div>
+        <div class="d-flex gap-1">
+            <MudIconButton Icon="@Icons.Material.Filled.Add"
+                           Size="Size.Small"
+                           Color="Color.Success"
+                           OnClick="@(() => OnAdd(Category.Id))"
+                           Title="Add Subcategory" />
+            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                           Size="Size.Small"
+                           Color="Color.Info"
+                           OnClick="@(() => OnEdit(Category.Id))"
+                           Title="Edit" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                           Size="Size.Small"
+                           Color="Color.Error"
+                           OnClick="@(() => OnDelete(Category.Id))"
+                           Title="Delete" />
+        </div>
+    </div>
+</MudListItem>
+
+@if (_isExpanded && Category.Children.Any())
+{
+    @foreach (var child in Category.Children)
+    {
+        <CategoryTreeItem Category="child"
+                          OnAdd="OnAdd"
+                          OnEdit="OnEdit"
+                          OnDelete="OnDelete"
+                          Level="Level + 1" />
+    }
+}
+
+@code {
+    [Parameter] public CategoryDto Category { get; set; } = null!;
+    [Parameter] public Func<int?, Task> OnAdd { get; set; } = null!;
+    [Parameter] public Func<int, Task> OnEdit { get; set; } = null!;
+    [Parameter] public Func<int, Task> OnDelete { get; set; } = null!;
+    [Parameter] public int Level { get; set; }
+
+    private bool _isExpanded = true;
+
+    private string GetCategoryIcon()
+    {
+        if (Category.ParentId == null)
+        {
+            return Category.Name.ToLower() switch
+            {
+                var n when n.Contains("analgesic") => Icons.Material.Filled.Healing,
+                var n when n.Contains("antibiotic") => Icons.Material.Filled.Biotech,
+                var n when n.Contains("cardiovascular") => Icons.Material.Filled.Favorite,
+                var n when n.Contains("gastrointestinal") => Icons.Material.Filled.Restaurant,
+                var n when n.Contains("respiratory") => Icons.Material.Filled.Air,
+                _ => Icons.Material.Filled.Category
+            };
+        }
+        return Icons.Material.Filled.Circle;
+    }
+
+    private Color GetCategoryColor()
+    {
+        if (Category.ParentId == null)
+        {
+            return Category.Name.ToLower() switch
+            {
+                var n when n.Contains("analgesic") => Color.Primary,
+                var n when n.Contains("antibiotic") => Color.Success,
+                var n when n.Contains("cardiovascular") => Color.Error,
+                var n when n.Contains("gastrointestinal") => Color.Warning,
+                var n when n.Contains("respiratory") => Color.Info,
+                _ => Color.Default
+            };
+        }
+        return Color.Secondary;
+    }
+}

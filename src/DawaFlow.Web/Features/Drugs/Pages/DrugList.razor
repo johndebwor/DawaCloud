@@ -1,0 +1,209 @@
+@page "/drugs"
+@using MudBlazor
+
+<PageTitle>Drugs - DawaFlow</PageTitle>
+
+<div class="mb-4">
+    <div class="d-flex justify-space-between align-center mb-4">
+        <div>
+            <MudText Typo="Typo.h4" Class="mb-1">Drug Inventory</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Manage your pharmaceutical products</MudText>
+        </div>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   Href="/drugs/new">
+            Add New Drug
+        </MudButton>
+    </div>
+
+    <!-- Search and Filters -->
+    <MudPaper Elevation="2" Class="pa-4 mb-4">
+        <MudGrid>
+            <MudItem xs="12" md="4">
+                <MudTextField @bind-Value="_searchString"
+                              Placeholder="Search by name, code, or manufacturer..."
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Immediate="true" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudSelect T="string" @bind-Value="_selectedCategory"
+                           Label="Category"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           AnchorOrigin="Origin.BottomCenter">
+                    <MudSelectItem Value="@("All")">All Categories</MudSelectItem>
+                    <MudSelectItem Value="@("Analgesics")">Analgesics</MudSelectItem>
+                    <MudSelectItem Value="@("Antibiotics")">Antibiotics</MudSelectItem>
+                    <MudSelectItem Value="@("Antihistamines")">Antihistamines</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudSelect T="string" @bind-Value="_selectedStatus"
+                           Label="Status"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           AnchorOrigin="Origin.BottomCenter">
+                    <MudSelectItem Value="@("All")">All Status</MudSelectItem>
+                    <MudSelectItem Value="@("Active")">Active</MudSelectItem>
+                    <MudSelectItem Value="@("Low Stock")">Low Stock</MudSelectItem>
+                    <MudSelectItem Value="@("Out of Stock")">Out of Stock</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="2">
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           FullWidth="true"
+                           StartIcon="@Icons.Material.Filled.FilterList">
+                    More Filters
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <!-- Data Table -->
+    <MudTable Items="@FilteredDrugs"
+              Hover="true"
+              Breakpoint="Breakpoint.Sm"
+              Loading="@_loading"
+              LoadingProgressColor="Color.Primary"
+              Elevation="2"
+              Dense="true">
+        <HeaderContent>
+            <MudTh>Code</MudTh>
+            <MudTh>Drug Name</MudTh>
+            <MudTh>Category</MudTh>
+            <MudTh>Stock</MudTh>
+            <MudTh>Retail Price</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh Style="text-align: right;">Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Code">
+                <MudText Typo="Typo.body2" Class="font-weight-medium">@context.Code</MudText>
+            </MudTd>
+            <MudTd DataLabel="Drug Name">
+                <div>
+                    <MudText Typo="Typo.body2" Class="font-weight-medium">@context.Name</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Manufacturer</MudText>
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Category">
+                <MudChip T="string" Size="Size.Small" Color="Color.Info">@context.Category</MudChip>
+            </MudTd>
+            <MudTd DataLabel="Stock">
+                <div>
+                    <MudText Typo="Typo.body2">@context.CurrentStock units</MudText>
+                    @if (context.CurrentStock <= context.ReorderLevel)
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Error">Below reorder level</MudText>
+                    }
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Retail Price">
+                <MudText Typo="Typo.body2">KES @context.RetailPrice.ToString("N2")</MudText>
+            </MudTd>
+            <MudTd DataLabel="Status">
+                @if (context.CurrentStock == 0)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Error">Out of Stock</MudChip>
+                }
+                else if (context.CurrentStock <= context.ReorderLevel)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Warning">Low Stock</MudChip>
+                }
+                else
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Success">In Stock</MudChip>
+                }
+            </MudTd>
+            <MudTd DataLabel="Actions" Style="text-align: right;">
+                <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               Href="@($"/drugs/{context.Id}")" />
+                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                               Color="Color.Info"
+                               Size="Size.Small"
+                               Href="@($"/drugs/{context.Id}/edit")" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                               Color="Color.Error"
+                               Size="Size.Small"
+                               OnClick="@(() => DeleteDrug(context.Id))" />
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+        </PagerContent>
+    </MudTable>
+</div>
+
+@code {
+    private bool _loading = false;
+    private string _searchString = string.Empty;
+    private string _selectedCategory = "All";
+    private string _selectedStatus = "All";
+
+    private List<DrugListItem> _drugs = new();
+
+    private IEnumerable<DrugListItem> FilteredDrugs =>
+        _drugs.Where(d =>
+            (string.IsNullOrWhiteSpace(_searchString) ||
+             d.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+             d.Code.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+             d.Manufacturer.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) &&
+            (_selectedCategory == "All" || d.Category == _selectedCategory) &&
+            (_selectedStatus == "All" || GetStatus(d) == _selectedStatus)
+        );
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        await Task.Delay(500); // Simulate API call
+        LoadSampleData();
+        _loading = false;
+    }
+
+    private void LoadSampleData()
+    {
+        _drugs = new List<DrugListItem>
+        {
+            new() { Id = 1, Code = "PARA500", Name = "Paracetamol 500mg", Category = "Analgesics", Manufacturer = "GSK", CurrentStock = 450, ReorderLevel = 100, RetailPrice = 5.00m },
+            new() { Id = 2, Code = "AMOX250", Name = "Amoxicillin 250mg", Category = "Antibiotics", Manufacturer = "Pfizer", CurrentStock = 30, ReorderLevel = 120, RetailPrice = 15.00m },
+            new() { Id = 3, Code = "IBU400", Name = "Ibuprofen 400mg", Category = "Analgesics", Manufacturer = "Novartis", CurrentStock = 200, ReorderLevel = 100, RetailPrice = 8.00m },
+            new() { Id = 4, Code = "CETR10", Name = "Cetirizine 10mg", Category = "Antihistamines", Manufacturer = "Cipla", CurrentStock = 0, ReorderLevel = 80, RetailPrice = 3.50m },
+            new() { Id = 5, Code = "METRO400", Name = "Metronidazole 400mg", Category = "Antibiotics", Manufacturer = "Unichem", CurrentStock = 150, ReorderLevel = 100, RetailPrice = 6.00m },
+            new() { Id = 6, Code = "OMEP20", Name = "Omeprazole 20mg", Category = "Antacids", Manufacturer = "AstraZeneca", CurrentStock = 180, ReorderLevel = 100, RetailPrice = 12.00m },
+            new() { Id = 7, Code = "CIPR500", Name = "Ciprofloxacin 500mg", Category = "Antibiotics", Manufacturer = "Ranbaxy", CurrentStock = 85, ReorderLevel = 100, RetailPrice = 18.00m },
+            new() { Id = 8, Code = "METF500", Name = "Metformin 500mg", Category = "Antidiabetics", Manufacturer = "Bristol-Myers", CurrentStock = 300, ReorderLevel = 150, RetailPrice = 7.50m },
+        };
+    }
+
+    private string GetStatus(DrugListItem drug)
+    {
+        if (drug.CurrentStock == 0) return "Out of Stock";
+        if (drug.CurrentStock <= drug.ReorderLevel) return "Low Stock";
+        return "Active";
+    }
+
+    private async Task DeleteDrug(int id)
+    {
+        // TODO: Implement delete confirmation dialog and actual deletion
+        await Task.CompletedTask;
+    }
+
+    private class DrugListItem
+    {
+        public int Id { get; set; }
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public string Manufacturer { get; set; } = string.Empty;
+        public int CurrentStock { get; set; }
+        public int ReorderLevel { get; set; }
+        public decimal RetailPrice { get; set; }
+    }
+}

@@ -1,0 +1,152 @@
+@using Microsoft.AspNetCore.Components.Web
+@using MudBlazor
+@inject NavigationManager NavigationManager
+
+@if (_isOpen)
+{
+    <div class="command-palette-overlay" @onclick="Close">
+        <div class="command-palette" @onclick:stopPropagation="true">
+            <div class="command-palette-search">
+                <MudTextField Value="@_searchQuery"
+                              ValueChanged="@((string val) => _searchQuery = val)"
+                              Placeholder="Type a command or search..."
+                              Variant="Variant.Outlined"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Immediate="true"
+                              @ref="_searchField"
+                              OnKeyDown="HandleKeyDown" />
+            </div>
+
+            <div class="command-palette-results">
+                @if (string.IsNullOrWhiteSpace(_searchQuery))
+                {
+                    <!-- Recent Items -->
+                    <div class="command-palette-section">
+                        <div class="command-palette-section-title">RECENT</div>
+                        <div class="command-palette-item" @onclick='() => Navigate("/")'>
+                            <MudIcon Icon="@Icons.Material.Filled.Dashboard" Class="command-palette-item-icon" />
+                            <div class="command-palette-item-text">Dashboard</div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="command-palette-section">
+                        <div class="command-palette-section-title">QUICK ACTIONS</div>
+                        <div class="command-palette-item" @onclick='() => Navigate("/drugs/new")'>
+                            <MudIcon Icon="@Icons.Material.Filled.Add" Class="command-palette-item-icon" />
+                            <div class="command-palette-item-text">New Drug</div>
+                            <div class="command-palette-item-shortcut">⌘N</div>
+                        </div>
+                        <div class="command-palette-item" @onclick='() => Navigate("/pos")'>
+                            <MudIcon Icon="@Icons.Material.Filled.PointOfSale" Class="command-palette-item-icon" />
+                            <div class="command-palette-item-text">New Sale</div>
+                            <div class="command-palette-item-shortcut">⌘S</div>
+                        </div>
+                        <div class="command-palette-item" @onclick='() => Navigate("/inventory/receive")'>
+                            <MudIcon Icon="@Icons.Material.Filled.Inventory" Class="command-palette-item-icon" />
+                            <div class="command-palette-item-text">Receive Stock</div>
+                            <div class="command-palette-item-shortcut">⌘R</div>
+                        </div>
+                        <div class="command-palette-item" @onclick='() => Navigate("/reports")'>
+                            <MudIcon Icon="@Icons.Material.Filled.Assessment" Class="command-palette-item-icon" />
+                            <div class="command-palette-item-text">Generate Report</div>
+                            <div class="command-palette-item-shortcut">⌘G</div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation -->
+                    <div class="command-palette-section">
+                        <div class="command-palette-section-title">NAVIGATION</div>
+                        <div class="command-palette-item" @onclick='() => Navigate("/")'>
+                            <MudIcon Icon="@Icons.Material.Filled.Dashboard" Class="command-palette-item-icon" />
+                            <div class="command-palette-item-text">Go to Dashboard</div>
+                        </div>
+                        <div class="command-palette-item" @onclick='() => Navigate("/drugs")'>
+                            <MudIcon Icon="@Icons.Material.Filled.Medication" Class="command-palette-item-icon" />
+                            <div class="command-palette-item-text">Go to Drugs</div>
+                        </div>
+                        <div class="command-palette-item" @onclick='() => Navigate("/inventory")'>
+                            <MudIcon Icon="@Icons.Material.Filled.Inventory" Class="command-palette-item-icon" />
+                            <div class="command-palette-item-text">Go to Inventory</div>
+                        </div>
+                        <div class="command-palette-item" @onclick='() => Navigate("/pos")'>
+                            <MudIcon Icon="@Icons.Material.Filled.PointOfSale" Class="command-palette-item-icon" />
+                            <div class="command-palette-item-text">Go to POS</div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <!-- Search Results -->
+                    <div class="command-palette-section">
+                        <div class="command-palette-section-title">RESULTS</div>
+                        @foreach (var result in GetSearchResults())
+                        {
+                            <div class="command-palette-item" @onclick="() => Navigate(result.Url)">
+                                <MudIcon Icon="@result.Icon" Class="command-palette-item-icon" />
+                                <div class="command-palette-item-text">@result.Title</div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _isOpen = false;
+    private string _searchQuery = string.Empty;
+    private MudTextField<string>? _searchField;
+
+    public void Open()
+    {
+        _isOpen = true;
+        StateHasChanged();
+    }
+
+    public void Close()
+    {
+        _isOpen = false;
+        _searchQuery = string.Empty;
+        StateHasChanged();
+    }
+
+    private void Navigate(string url)
+    {
+        Close();
+        NavigationManager.NavigateTo(url);
+    }
+
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            Close();
+        }
+    }
+
+    private List<SearchResult> GetSearchResults()
+    {
+        var query = _searchQuery.ToLower();
+        var allItems = new List<SearchResult>
+        {
+            new("Dashboard", "/", Icons.Material.Filled.Dashboard),
+            new("Drugs", "/drugs", Icons.Material.Filled.Medication),
+            new("Inventory", "/inventory", Icons.Material.Filled.Inventory),
+            new("Procurement", "/procurement", Icons.Material.Filled.ShoppingCart),
+            new("Suppliers", "/suppliers", Icons.Material.Filled.LocalShipping),
+            new("Wholesale", "/wholesale", Icons.Material.Filled.BusinessCenter),
+            new("POS", "/pos", Icons.Material.Filled.PointOfSale),
+            new("Reports", "/reports", Icons.Material.Filled.Assessment),
+            new("Settings", "/settings", Icons.Material.Filled.Settings),
+        };
+
+        return allItems
+            .Where(item => item.Title.ToLower().Contains(query))
+            .ToList();
+    }
+
+    private record SearchResult(string Title, string Url, string Icon);
+}

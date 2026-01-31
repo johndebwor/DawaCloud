@@ -1,0 +1,165 @@
+/* Modern Layout Overrides for DawaFlow */
+
+/* Remove all default MudBlazor layout styles */
+.mud-layout,
+.mud-appbar,
+.mud-drawer {
+    box-shadow: none !important;
+}
+
+/* Modern AppBar */
+.modern-appbar {
+    background: linear-gradient(135deg, #00897b 0%, #00695c 100%) !important;
+    color: white !important;
+    padding: 0 24px !important;
+    height: 64px !important;
+}
+
+.modern-appbar .mud-icon-button {
+    color: white !important;
+}
+
+.modern-logo {
+    font-weight: 700 !important;
+    letter-spacing: -0.5px !important;
+    color: white !important;
+}
+
+.modern-search .mud-input {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-radius: 24px !important;
+}
+
+.modern-search .mud-input-root {
+    color: white !important;
+}
+
+.modern-search .mud-input::placeholder {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.modern-search .mud-input-adornment {
+    color: white !important;
+}
+
+.modern-search fieldset {
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.modern-search:hover fieldset {
+    border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Modern Drawer/Sidebar */
+.modern-drawer {
+    background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%) !important;
+    border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+.modern-drawer .mud-drawer-content {
+    padding-top: 16px !important;
+}
+
+/* Modern NavMenu */
+.modern-navmenu .mud-nav-item {
+    border-radius: 12px !important;
+    margin: 4px 12px !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.modern-navmenu .mud-nav-item:hover {
+    background: rgba(0, 137, 123, 0.08) !important;
+    transform: translateX(4px) !important;
+}
+
+.modern-navmenu .mud-nav-item.active,
+.modern-navmenu .mud-nav-link-active {
+    background: linear-gradient(135deg, rgba(0, 137, 123, 0.12) 0%, rgba(0, 105, 92, 0.08) 100%) !important;
+    color: #00897b !important;
+    font-weight: 600 !important;
+    border-left: 3px solid #00897b !important;
+}
+
+.modern-navmenu .mud-nav-item .mud-icon-root {
+    color: #64748b !important;
+    transition: color 0.2s !important;
+}
+
+.modern-navmenu .mud-nav-item:hover .mud-icon-root,
+.modern-navmenu .mud-nav-item.active .mud-icon-root {
+    color: #00897b !important;
+}
+
+/* Modern Main Content */
+.modern-main-content {
+    background: #f5f7fa !important;
+    min-height: calc(100vh - 64px) !important;
+}
+
+.modern-main-content > div {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* MudPaper enhancements */
+.mud-paper {
+    border-radius: 16px !important;
+    border: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+/* MudButton enhancements */
+.mud-button-filled-primary {
+    background: linear-gradient(135deg, #00897b 0%, #00695c 100%) !important;
+    box-shadow: 0 4px 12px rgba(0, 137, 123, 0.25) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.mud-button-filled-primary:hover {
+    box-shadow: 0 6px 20px rgba(0, 137, 123, 0.35) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* MudCard enhancements */
+.mud-card {
+    border-radius: 16px !important;
+    border: 1px solid rgba(0, 0, 0, 0.06) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.mud-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+    transform: translateY(-4px) !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 960px) {
+    .modern-appbar {
+        padding: 0 16px !important;
+    }
+
+    .modern-main-content > div {
+        padding: 16px !important;
+    }
+}
+
+/* Mini drawer enhancements */
+.mud-drawer-mini {
+    width: 80px !important;
+}
+
+.mud-drawer-mini .mud-nav-item {
+    justify-content: center !important;
+}
+
+.mud-drawer-open-mini:hover {
+    width: 280px !important;
+}
+
+/* Smooth transitions */
+.mud-drawer {
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.mud-main-content {
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}

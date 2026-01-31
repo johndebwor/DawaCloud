@@ -1,0 +1,189 @@
+@page "/categories"
+@using MudBlazor
+@using DawaFlow.Web.Features.Categories.Queries
+@using DawaFlow.Web.Features.Categories.Commands
+@using DawaFlow.Web.Features.Categories.Components
+@using MediatR
+@inject IMediator Mediator
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>Categories - DawaFlow</PageTitle>
+
+<div class="mb-4">
+    <div class="d-flex justify-space-between align-center mb-4">
+        <div>
+            <MudText Typo="Typo.h4" Class="mb-1">Drug Categories</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Manage hierarchical drug classifications</MudText>
+        </div>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="@(() => OpenDialog(null))">
+            Add Category
+        </MudButton>
+    </div>
+
+    <MudGrid>
+        <MudItem xs="12" md="8">
+            <MudPaper Elevation="2" Class="pa-4">
+                @if (_isLoading)
+                {
+                    <div class="d-flex justify-center align-center pa-8">
+                        <MudProgressCircular Indeterminate="true" />
+                    </div>
+                }
+                else if (_categories.Any())
+                {
+                    <MudList T="string" Dense="true">
+                        @foreach (var category in _categories)
+                        {
+                            <CategoryTreeItem Category="category"
+                                              OnAdd="OpenDialog"
+                                              OnEdit="EditCategory"
+                                              OnDelete="DeleteCategory"
+                                              Level="0" />
+                        }
+                    </MudList>
+                }
+                else
+                {
+                    <div class="text-center pa-8">
+                        <MudIcon Icon="@Icons.Material.Filled.Category" Size="Size.Large" Color="Color.Default" Class="mb-3" />
+                        <MudText Typo="Typo.h6" Color="Color.Secondary">No categories yet</MudText>
+                        <MudButton Color="Color.Primary" Variant="Variant.Text" OnClick="@(() => OpenDialog(null))" Class="mt-3">
+                            Create your first category
+                        </MudButton>
+                    </div>
+                }
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="2" Class="pa-4 mb-4">
+                <MudText Typo="Typo.h6" Class="mb-3">Statistics</MudText>
+                <div class="mb-3">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Categories</MudText>
+                    <MudText Typo="Typo.h5" Color="Color.Primary">@GetTotalCategories()</MudText>
+                </div>
+                <div class="mb-3">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Parent Categories</MudText>
+                    <MudText Typo="Typo.h5">@_categories.Count</MudText>
+                </div>
+                <div>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Drugs</MudText>
+                    <MudText Typo="Typo.h5" Color="Color.Success">@GetTotalDrugs()</MudText>
+                </div>
+            </MudPaper>
+
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-3">Quick Tips</MudText>
+                <MudList T="string" Dense="true">
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Info" IconColor="Color.Info">
+                        <MudText Typo="Typo.body2">Create parent categories first</MudText>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Info" IconColor="Color.Info">
+                        <MudText Typo="Typo.body2">Use subcategories for specifics</MudText>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Info" IconColor="Color.Info">
+                        <MudText Typo="Typo.body2">Max depth: 3 levels</MudText>
+                    </MudListItem>
+                </MudList>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</div>
+
+@code {
+    private List<CategoryDto> _categories = new();
+    private List<CategoryDto> _allCategories = new();
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategories();
+    }
+
+    private async Task LoadCategories()
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            _categories = await Mediator.Send(new GetCategoriesQuery());
+            _allCategories = FlattenCategories(_categories);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading categories: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private List<CategoryDto> FlattenCategories(List<CategoryDto> categories)
+    {
+        var result = new List<CategoryDto>();
+        foreach (var cat in categories)
+        {
+            result.Add(cat);
+            if (cat.Children.Any())
+                result.AddRange(FlattenCategories(cat.Children));
+        }
+        return result;
+    }
+
+    private async Task OpenDialog(int? parentId)
+    {
+        // TODO: Implement add category dialog
+        Snackbar.Add("Add category feature coming soon", Severity.Info);
+        await Task.CompletedTask;
+    }
+
+    private async Task EditCategory(int categoryId)
+    {
+        // TODO: Implement edit category dialog
+        Snackbar.Add("Edit category feature coming soon", Severity.Info);
+        await Task.CompletedTask;
+    }
+
+    private async Task DeleteCategory(int id)
+    {
+        var category = _allCategories.FirstOrDefault(c => c.Id == id);
+        if (category == null) return;
+
+        var confirmed = await DialogService.ShowMessageBox(
+            "Confirm Delete",
+            $"Are you sure you want to delete '{category.Name}'?",
+            yesText: "Delete",
+            cancelText: "Cancel");
+
+        if (confirmed == true)
+        {
+            try
+            {
+                await Mediator.Send(new DeleteCategoryCommand(id));
+                Snackbar.Add("Category deleted successfully", Severity.Success);
+                await LoadCategories();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
+        }
+    }
+
+    private int GetTotalCategories()
+    {
+        return _allCategories.Count;
+    }
+
+    private int GetTotalDrugs()
+    {
+        return _allCategories.Sum(c => c.DrugCount);
+    }
+}

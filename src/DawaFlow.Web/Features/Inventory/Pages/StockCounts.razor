@@ -1,0 +1,175 @@
+@page "/inventory/stock-counts"
+@using MudBlazor
+@using DawaFlow.Web.Features.Inventory.Commands
+@using DawaFlow.Web.Features.Inventory.Queries
+@using MediatR
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Stock Counts - DawaFlow</PageTitle>
+
+<div class="mb-4">
+    <div class="d-flex justify-space-between align-center mb-4">
+        <div>
+            <MudText Typo="Typo.h4" Class="mb-1">Stock Counts</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Physical inventory counting and reconciliation</MudText>
+        </div>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="StartNewCount"
+                   Disabled="@_processing">
+            Start New Count
+        </MudButton>
+    </div>
+
+    <MudPaper Elevation="2" Class="pa-4">
+        <MudTable T="StockCountSummaryDto" Items="@_stockCounts" Dense="true" Hover="true" Loading="@_loading">
+            <HeaderContent>
+                <MudTh>Reference</MudTh>
+                <MudTh>Count Date</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Progress</MudTh>
+                <MudTh>Variances</MudTh>
+                <MudTh>Variance Value</MudTh>
+                <MudTh>Completed</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Reference">@context.ReferenceNumber</MudTd>
+                <MudTd DataLabel="Count Date">@context.CountDate.ToString("dd MMM yyyy")</MudTd>
+                <MudTd DataLabel="Status">
+                    <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">@context.Status</MudChip>
+                </MudTd>
+                <MudTd DataLabel="Progress">
+                    <div>
+                        <MudText Typo="Typo.body2">@context.TotalItemsCounted / @context.TotalItems</MudText>
+                        <MudProgressLinear Value="@GetProgress(context)" Color="Color.Primary" Size="Size.Small" Class="mt-1" />
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Variances">
+                    <MudText Typo="Typo.body2" Color="@(context.ItemsWithVariance > 0 ? Color.Warning : Color.Success)">
+                        @context.ItemsWithVariance
+                    </MudText>
+                </MudTd>
+                <MudTd DataLabel="Variance Value">
+                    <MudText Typo="Typo.body2" Color="@GetVarianceColor(context.TotalVarianceValue)">
+                        KES @context.TotalVarianceValue.ToString("N2")
+                    </MudText>
+                </MudTd>
+                <MudTd DataLabel="Completed">
+                    @if (context.CompletedAt.HasValue)
+                    {
+                        <div>
+                            <MudText Typo="Typo.body2">@context.CompletedAt.Value.ToString("dd MMM yyyy HH:mm")</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@context.CompletedBy</MudText>
+                        </div>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">-</MudText>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Actions">
+                    @if (context.Status == "InProgress")
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                       Size="Size.Small"
+                                       Color="Color.Primary"
+                                       Href="@($"/inventory/stock-counts/{context.Id}/count")"
+                                       Title="Perform Count" />
+                    }
+                    else
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                       Size="Size.Small"
+                                       Color="Color.Info"
+                                       Href="@($"/inventory/stock-counts/{context.Id}")"
+                                       Title="View Details" />
+                    }
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+</div>
+
+@code {
+    private List<StockCountSummaryDto> _stockCounts = new();
+    private bool _loading = false;
+    private bool _processing = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStockCounts();
+    }
+
+    private async Task LoadStockCounts()
+    {
+        _loading = true;
+        StateHasChanged();
+
+        try
+        {
+            _stockCounts = await Mediator.Send(new GetStockCountsQuery());
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading stock counts: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task StartNewCount()
+    {
+        _processing = true;
+        StateHasChanged();
+
+        try
+        {
+            var result = await Mediator.Send(new StartStockCountCommand());
+
+            if (result.Success && result.StockCountId.HasValue)
+            {
+                Snackbar.Add(result.Message, Severity.Success);
+                Navigation.NavigateTo($"/inventory/stock-counts/{result.StockCountId.Value}/count");
+            }
+            else
+            {
+                Snackbar.Add(result.Message, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error starting stock count: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _processing = false;
+            StateHasChanged();
+        }
+    }
+
+    private double GetProgress(StockCountSummaryDto count)
+    {
+        return count.TotalItems > 0 ? (double)count.TotalItemsCounted / count.TotalItems * 100 : 0;
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "InProgress" => Color.Info,
+        "Completed" => Color.Success,
+        "Cancelled" => Color.Error,
+        _ => Color.Default
+    };
+
+    private Color GetVarianceColor(decimal variance)
+    {
+        if (variance == 0) return Color.Success;
+        return Math.Abs(variance) > 1000 ? Color.Error : Color.Warning;
+    }
+}

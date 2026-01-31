@@ -1,0 +1,281 @@
+@page "/inventory/movements"
+@using MudBlazor
+@using DawaFlow.Web.Features.Inventory.Queries
+@using DawaFlow.Web.Data.Entities
+@using MediatR
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Stock Movements - DawaFlow</PageTitle>
+
+<div class="mb-4">
+    <div class="d-flex justify-space-between align-center mb-4">
+        <div>
+            <MudText Typo="Typo.h4" Class="mb-1">Stock Movements</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Complete history of all inventory transactions</MudText>
+        </div>
+        <div class="d-flex gap-2">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.FileDownload">
+                Export
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       Href="/inventory/adjustments/new">
+                New Adjustment
+            </MudButton>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <div class="d-flex align-center gap-3">
+                    <div class="kpi-icon success">
+                        <MudIcon Icon="@Icons.Material.Filled.TrendingUp" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Total Movements</MudText>
+                        <MudText Typo="Typo.h5">@_totalCount</MudText>
+                    </div>
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <div class="d-flex align-center gap-3">
+                    <div class="kpi-icon primary">
+                        <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Purchases</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Primary">@_movements.Count(m => m.Type == "Purchase")</MudText>
+                    </div>
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <div class="d-flex align-center gap-3">
+                    <div class="kpi-icon info">
+                        <MudIcon Icon="@Icons.Material.Filled.PointOfSale" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Sales</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Info">@_movements.Count(m => m.Type == "Sale")</MudText>
+                    </div>
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <div class="d-flex align-center gap-3">
+                    <div class="kpi-icon warning">
+                        <MudIcon Icon="@Icons.Material.Filled.Tune" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Adjustments</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Warning">@_movements.Count(m => m.Type == "Adjustment")</MudText>
+                    </div>
+                </div>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Filters -->
+    <MudPaper Elevation="2" Class="pa-4">
+        <MudGrid Class="mb-4">
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="string" @bind-Value="_selectedType" Label="Movement Type" Variant="Variant.Outlined" Dense="true" OnSelectedValuesChanged="@((IEnumerable<string> _) => LoadMovements())">
+                    <MudSelectItem Value="@("All")">All Types</MudSelectItem>
+                    <MudSelectItem Value="@("Purchase")">Purchase</MudSelectItem>
+                    <MudSelectItem Value="@("Sale")">Sale</MudSelectItem>
+                    <MudSelectItem Value="@("Return")">Return</MudSelectItem>
+                    <MudSelectItem Value="@("Adjustment")">Adjustment</MudSelectItem>
+                    <MudSelectItem Value="@("Transfer")">Transfer</MudSelectItem>
+                    <MudSelectItem Value="@("WriteOff")">Write Off</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudDatePicker Label="From Date" @bind-Date="_fromDate" Variant="Variant.Outlined" Dense="true" OnClosed="@(() => LoadMovements())" Clearable="true" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudDatePicker Label="To Date" @bind-Date="_toDate" Variant="Variant.Outlined" Dense="true" OnClosed="@(() => LoadMovements())" Clearable="true" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Default"
+                           FullWidth="true"
+                           OnClick="ClearFilters">
+                    Clear Filters
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+
+        <!-- Movements Table -->
+        <MudTable T="StockMovementDto" Items="@_movements" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading">
+            <HeaderContent>
+                <MudTh>Date & Time</MudTh>
+                <MudTh>Drug</MudTh>
+                <MudTh>Batch</MudTh>
+                <MudTh>Type</MudTh>
+                <MudTh>Quantity</MudTh>
+                <MudTh>Balance</MudTh>
+                <MudTh>Reference</MudTh>
+                <MudTh>Reason</MudTh>
+                <MudTh>Created By</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Date & Time">
+                    <div>
+                        <MudText Typo="Typo.body2">@context.CreatedAt.ToString("dd MMM yyyy")</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@context.CreatedAt.ToString("HH:mm:ss")</MudText>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Drug">
+                    <div>
+                        <MudText Typo="Typo.body2" Class="fw-bold">@context.DrugName</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@context.DrugCode</MudText>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Batch">@context.BatchNumber</MudTd>
+                <MudTd DataLabel="Type">
+                    <MudChip T="string" Size="Size.Small" Color="@GetMovementTypeColor(context.Type)">@context.Type</MudChip>
+                </MudTd>
+                <MudTd DataLabel="Quantity">
+                    <MudText Typo="Typo.body2" Color="@GetQuantityColor(context.Type)">
+                        @GetQuantitySign(context.Type)@Math.Abs(context.Quantity)
+                    </MudText>
+                </MudTd>
+                <MudTd DataLabel="Balance">
+                    <div>
+                        <MudText Typo="Typo.body2">@context.BalanceBefore → @context.BalanceAfter</MudText>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Reference">@context.Reference</MudTd>
+                <MudTd DataLabel="Reason">
+                    @if (!string.IsNullOrEmpty(context.Reason))
+                    {
+                        <MudTooltip Text="@context.Notes">
+                            <MudText Typo="Typo.body2">@context.Reason</MudText>
+                        </MudTooltip>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Created By">@context.CreatedBy</MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="@(new[] { 25, 50, 100 })" />
+            </PagerContent>
+        </MudTable>
+
+        @if (_totalCount > _pageSize)
+        {
+            <div class="d-flex justify-center mt-4">
+                <MudPagination Count="@GetTotalPages()" Selected="@_pageNumber" SelectedChanged="OnPageChanged" Color="Color.Primary" />
+            </div>
+        }
+    </MudPaper>
+</div>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int? DrugId { get; set; }
+
+    private List<StockMovementDto> _movements = new();
+    private int _totalCount = 0;
+    private int _pageNumber = 1;
+    private int _pageSize = 50;
+    private bool _loading = false;
+
+    private string _selectedType = "All";
+    private DateTime? _fromDate;
+    private DateTime? _toDate;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMovements();
+    }
+
+    private async Task LoadMovements()
+    {
+        _loading = true;
+        StateHasChanged();
+
+        try
+        {
+            MovementType? movementType = _selectedType != "All" ? Enum.Parse<MovementType>(_selectedType) : null;
+
+            var query = new GetStockMovementsQuery(
+                DrugId: DrugId,
+                Type: movementType,
+                FromDate: _fromDate,
+                ToDate: _toDate,
+                PageNumber: _pageNumber,
+                PageSize: _pageSize
+            );
+
+            var result = await Mediator.Send(query);
+            _movements = result.Movements;
+            _totalCount = result.TotalCount;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading stock movements: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnPageChanged(int page)
+    {
+        _pageNumber = page;
+        await LoadMovements();
+    }
+
+    private async Task ClearFilters()
+    {
+        _selectedType = "All";
+        _fromDate = null;
+        _toDate = null;
+        _pageNumber = 1;
+        await LoadMovements();
+    }
+
+    private int GetTotalPages()
+    {
+        return (int)Math.Ceiling((double)_totalCount / _pageSize);
+    }
+
+    private Color GetMovementTypeColor(string type) => type switch
+    {
+        "Purchase" => Color.Success,
+        "Sale" => Color.Info,
+        "Return" => Color.Warning,
+        "Adjustment" => Color.Primary,
+        "Transfer" => Color.Default,
+        "WriteOff" => Color.Error,
+        _ => Color.Default
+    };
+
+    private Color GetQuantityColor(string type) => type switch
+    {
+        "Purchase" or "Return" => Color.Success,
+        "Sale" or "WriteOff" or "Transfer" => Color.Error,
+        _ => Color.Default
+    };
+
+    private string GetQuantitySign(string type) => type switch
+    {
+        "Purchase" or "Return" => "+",
+        "Sale" or "WriteOff" or "Transfer" => "-",
+        _ => ""
+    };
+}
