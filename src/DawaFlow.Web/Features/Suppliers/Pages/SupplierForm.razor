@@ -1,0 +1,312 @@
+@page "/suppliers/new"
+@page "/suppliers/{Id:int}"
+@using MudBlazor
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>@(_isViewMode ? "Supplier Details" : _isEditMode ? "Edit Supplier" : "New Supplier") - DawaFlow</PageTitle>
+
+<div class="mb-4">
+    <MudBreadcrumbs Items="_breadcrumbItems" Class="mb-4" />
+
+    <div class="d-flex justify-space-between align-center mb-4">
+        <div>
+            <MudText Typo="Typo.h4" Class="mb-1">@GetPageTitle()</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                @GetPageSubtitle()
+            </MudText>
+        </div>
+        <div class="d-flex gap-2">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       Href="/suppliers">
+                Back to List
+            </MudButton>
+            @if (_isViewMode)
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Edit"
+                           OnClick="EnableEdit">
+                    Edit
+                </MudButton>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Send"
+                           Href="@($"/procurement/requests/new?supplierId={Id}")">
+                    Create Request
+                </MudButton>
+            }
+        </div>
+    </div>
+
+    <MudGrid>
+        <MudItem xs="12" md="8">
+            <MudPaper Elevation="2" Class="pa-6">
+                <MudForm @ref="_form">
+                    <MudText Typo="Typo.h6" Class="mb-4">Company Information</MudText>
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.Name"
+                                          Label="Company Name"
+                                          Variant="Variant.Outlined"
+                                          Required="true"
+                                          ReadOnly="@_isViewMode" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.Code"
+                                          Label="Supplier Code"
+                                          Variant="Variant.Outlined"
+                                          ReadOnly="true"
+                                          HelperText="Auto-generated" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.Email"
+                                          Label="Email"
+                                          InputType="InputType.Email"
+                                          Variant="Variant.Outlined"
+                                          ReadOnly="@_isViewMode" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.Phone"
+                                          Label="Phone"
+                                          Variant="Variant.Outlined"
+                                          ReadOnly="@_isViewMode" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="_model.Address"
+                                          Label="Address"
+                                          Variant="Variant.Outlined"
+                                          Lines="2"
+                                          ReadOnly="@_isViewMode" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.City"
+                                          Label="City"
+                                          Variant="Variant.Outlined"
+                                          ReadOnly="@_isViewMode" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.Country"
+                                          Label="Country"
+                                          Variant="Variant.Outlined"
+                                          ReadOnly="@_isViewMode" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.TaxId"
+                                          Label="Tax ID / PIN"
+                                          Variant="Variant.Outlined"
+                                          ReadOnly="@_isViewMode" />
+                        </MudItem>
+                    </MudGrid>
+
+                    <MudDivider Class="my-4" />
+
+                    <MudText Typo="Typo.h6" Class="mb-4">Contact Person</MudText>
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.ContactPersonName"
+                                          Label="Contact Name"
+                                          Variant="Variant.Outlined"
+                                          ReadOnly="@_isViewMode" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.ContactPersonPhone"
+                                          Label="Contact Phone"
+                                          Variant="Variant.Outlined"
+                                          ReadOnly="@_isViewMode" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.ContactPersonEmail"
+                                          Label="Contact Email"
+                                          InputType="InputType.Email"
+                                          Variant="Variant.Outlined"
+                                          ReadOnly="@_isViewMode" />
+                        </MudItem>
+                    </MudGrid>
+
+                    <MudDivider Class="my-4" />
+
+                    <MudText Typo="Typo.h6" Class="mb-4">Notification Preferences</MudText>
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudSwitch @bind-Value="_model.EmailNotificationsEnabled"
+                                       Label="Email Notifications"
+                                       Color="Color.Primary"
+                                       Disabled="@_isViewMode" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudSwitch @bind-Value="_model.WhatsAppNotificationsEnabled"
+                                       Label="WhatsApp Notifications"
+                                       Color="Color.Success"
+                                       Disabled="@_isViewMode" />
+                        </MudItem>
+                    </MudGrid>
+                </MudForm>
+
+                @if (!_isViewMode)
+                {
+                    <div class="d-flex justify-end gap-2 mt-4">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Default" Href="/suppliers">
+                            Cancel
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveSupplier">
+                            @(_isEditMode ? "Save Changes" : "Create Supplier")
+                        </MudButton>
+                    </div>
+                }
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            @if (_isViewMode || _isEditMode)
+            {
+                <!-- Stats Card -->
+                <MudPaper Elevation="2" Class="pa-4 mb-4">
+                    <MudText Typo="Typo.h6" Class="mb-3">Supplier Statistics</MudText>
+                    <div class="d-flex flex-column gap-3">
+                        <div>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Total Orders</MudText>
+                            <MudText Typo="Typo.h5">24</MudText>
+                        </div>
+                        <div>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Total Value</MudText>
+                            <MudText Typo="Typo.h5" Color="Color.Primary">KES 2.4M</MudText>
+                        </div>
+                        <div>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Last Order</MudText>
+                            <MudText Typo="Typo.body1">15 Jan 2024</MudText>
+                        </div>
+                    </div>
+                </MudPaper>
+
+                <!-- Status Card -->
+                <MudPaper Elevation="2" Class="pa-4">
+                    <MudText Typo="Typo.h6" Class="mb-3">Status</MudText>
+                    <div class="d-flex flex-column gap-2">
+                        <div class="d-flex justify-space-between">
+                            <MudText Typo="Typo.body2">Active</MudText>
+                            <MudChip T="string" Size="Size.Small" Color="@(_model.IsActive ? Color.Success : Color.Default)">
+                                @(_model.IsActive ? "Yes" : "No")
+                            </MudChip>
+                        </div>
+                        <div class="d-flex justify-space-between">
+                            <MudText Typo="Typo.body2">Email Notifications</MudText>
+                            <MudChip T="string" Size="Size.Small" Color="@(_model.EmailNotificationsEnabled ? Color.Info : Color.Default)">
+                                @(_model.EmailNotificationsEnabled ? "On" : "Off")
+                            </MudChip>
+                        </div>
+                        <div class="d-flex justify-space-between">
+                            <MudText Typo="Typo.body2">WhatsApp Notifications</MudText>
+                            <MudChip T="string" Size="Size.Small" Color="@(_model.WhatsAppNotificationsEnabled ? Color.Success : Color.Default)">
+                                @(_model.WhatsAppNotificationsEnabled ? "On" : "Off")
+                            </MudChip>
+                        </div>
+                    </div>
+                </MudPaper>
+            }
+        </MudItem>
+    </MudGrid>
+</div>
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+
+    private bool _isViewMode = true;
+    private bool _isEditMode => Id.HasValue && !_isViewMode;
+    private bool _isCreateMode => !Id.HasValue;
+    private MudForm? _form;
+    private SupplierModel _model = new();
+    private List<BreadcrumbItem> _breadcrumbItems = new();
+
+    protected override void OnInitialized()
+    {
+        if (Id.HasValue)
+        {
+            LoadSupplier();
+            _isViewMode = true;
+        }
+        else
+        {
+            _isViewMode = false;
+            _model.Code = $"SUP-{DateTime.Now:yyyyMMddHHmm}";
+        }
+
+        _breadcrumbItems = new List<BreadcrumbItem>
+        {
+            new("Home", href: "/"),
+            new("Suppliers", href: "/suppliers"),
+            new(GetPageTitle(), href: null, disabled: true)
+        };
+    }
+
+    private void LoadSupplier()
+    {
+        // Sample data
+        _model = new SupplierModel
+        {
+            Id = Id ?? 0,
+            Code = "SUP-001",
+            Name = "ABC Pharmaceuticals Ltd",
+            Email = "orders@abcpharma.co.ke",
+            Phone = "+254 722 123456",
+            Address = "123 Industrial Area, Off Mombasa Road",
+            City = "Nairobi",
+            Country = "Kenya",
+            TaxId = "A123456789Z",
+            ContactPersonName = "John Kimani",
+            ContactPersonPhone = "+254 733 234567",
+            ContactPersonEmail = "john.kimani@abcpharma.co.ke",
+            EmailNotificationsEnabled = true,
+            WhatsAppNotificationsEnabled = true,
+            IsActive = true
+        };
+    }
+
+    private string GetPageTitle()
+    {
+        if (_isCreateMode) return "New Supplier";
+        if (_isViewMode) return _model.Name;
+        return "Edit Supplier";
+    }
+
+    private string GetPageSubtitle()
+    {
+        if (_isCreateMode) return "Register a new supplier";
+        if (_isViewMode) return _model.Code;
+        return "Update supplier information";
+    }
+
+    private void EnableEdit()
+    {
+        _isViewMode = false;
+    }
+
+    private async Task SaveSupplier()
+    {
+        await Task.Delay(500);
+        Snackbar.Add(_isEditMode ? "Supplier updated successfully" : "Supplier created successfully", Severity.Success);
+        Navigation.NavigateTo("/suppliers");
+    }
+
+    private class SupplierModel
+    {
+        public int Id { get; set; }
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string? Email { get; set; }
+        public string? Phone { get; set; }
+        public string? Address { get; set; }
+        public string? City { get; set; }
+        public string? Country { get; set; }
+        public string? TaxId { get; set; }
+        public string? ContactPersonName { get; set; }
+        public string? ContactPersonPhone { get; set; }
+        public string? ContactPersonEmail { get; set; }
+        public bool EmailNotificationsEnabled { get; set; }
+        public bool WhatsAppNotificationsEnabled { get; set; }
+        public bool IsActive { get; set; } = true;
+    }
+}
