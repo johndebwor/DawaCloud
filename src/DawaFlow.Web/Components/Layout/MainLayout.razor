@@ -126,12 +126,26 @@
                     <MudNavLink Href="/drugs" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Medication">
                         @if (_drawerOpen) { <span>Drugs</span> }
                     </MudNavLink>
+                    <MudNavLink Href="/categories" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Category">
+                        @if (_drawerOpen) { <span>Categories</span> }
+                    </MudNavLink>
                     <MudNavLink Href="/batches" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.LocalOffer">
                         @if (_drawerOpen) { <span>Batches</span> }
                     </MudNavLink>
-                    <MudNavLink Href="/inventory/stock-levels" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Inventory">
-                        @if (_drawerOpen) { <span>Inventory</span> }
-                    </MudNavLink>
+                    @if (_drawerOpen)
+                    {
+                        <MudNavGroup Title="Inventory" Icon="@Icons.Material.Filled.Inventory" Expanded="@_inventoryExpanded" ExpandedChanged="@((bool expanded) => _inventoryExpanded = expanded)">
+                            <MudNavLink Href="/inventory/stock-levels" Match="NavLinkMatch.All">Stock Levels</MudNavLink>
+                            <MudNavLink Href="/inventory/movements" Match="NavLinkMatch.All">Stock Movements</MudNavLink>
+                            <MudNavLink Href="/inventory/stock-counts" Match="NavLinkMatch.All">Stock Counts</MudNavLink>
+                            <MudNavLink Href="/inventory/adjustments/new" Match="NavLinkMatch.All">Adjustments</MudNavLink>
+                        </MudNavGroup>
+                    }
+                    else
+                    {
+                        <MudNavLink Href="/inventory/stock-levels" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Inventory">
+                        </MudNavLink>
+                    }
                     <MudNavLink Href="/suppliers" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Store">
                         @if (_drawerOpen) { <span>Suppliers</span> }
                     </MudNavLink>
@@ -149,9 +163,18 @@
                     <MudNavLink Href="/pos" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PointOfSale">
                         @if (_drawerOpen) { <span>Point of Sale</span> }
                     </MudNavLink>
-                    <MudNavLink Href="/wholesale" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Business">
-                        @if (_drawerOpen) { <span>Wholesale</span> }
-                    </MudNavLink>
+                    @if (_drawerOpen)
+                    {
+                        <MudNavGroup Title="Wholesale" Icon="@Icons.Material.Filled.Business" Expanded="@_wholesaleExpanded" ExpandedChanged="@((bool expanded) => _wholesaleExpanded = expanded)">
+                            <MudNavLink Href="/wholesale/customers" Match="NavLinkMatch.All">Customers</MudNavLink>
+                            <MudNavLink Href="/wholesale/sales" Match="NavLinkMatch.All">Sales & Invoices</MudNavLink>
+                        </MudNavGroup>
+                    }
+                    else
+                    {
+                        <MudNavLink Href="/wholesale" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Business">
+                        </MudNavLink>
+                    }
                 </MudNavMenu>
 
                 @if (_drawerOpen)
@@ -287,6 +310,10 @@
     private bool _drawerOpen = false;
     private string _searchText = string.Empty;
     private int _notificationCount = 8;
+    
+    // Navigation group expansion state
+    private bool _inventoryExpanded = false;
+    private bool _wholesaleExpanded = false;
 
     // User info (would come from auth in real app)
     private string _userName = "John Doe";
