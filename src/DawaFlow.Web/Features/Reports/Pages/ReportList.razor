@@ -1,0 +1,429 @@
+@page "/reports"
+@using MudBlazor
+
+<PageTitle>Reports - DawaFlow</PageTitle>
+
+<!-- Hero Section -->
+<div class="df-hero animate-fade-in-up">
+    <div class="df-hero-content">
+        <div class="df-hero-text">
+            <h1>Reports & Analytics</h1>
+            <p>Generate insights from your pharmacy operations</p>
+        </div>
+    </div>
+</div>
+
+<!-- Report Categories -->
+<MudGrid Class="mt-4">
+    <!-- Inventory Reports -->
+    <MudItem xs="12" md="6" lg="4">
+        <div class="df-alert-card animate-fade-in-up animate-delay-1">
+            <div class="df-alert-header">
+                <div class="df-alert-title">
+                    <div class="df-alert-title-icon primary">
+                        <MudIcon Icon="@Icons.Material.Filled.Inventory" />
+                    </div>
+                    <span>Inventory Reports</span>
+                </div>
+            </div>
+            <div class="df-alert-body">
+                <MudList T="string" Dense="true" Class="report-list">
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("stock-levels"))">
+                        <div class="report-item">
+                            <span>Stock Levels Report</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("stock-valuation"))">
+                        <div class="report-item">
+                            <span>Stock Valuation Report</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("stock-movements"))">
+                        <div class="report-item">
+                            <span>Stock Movements Report</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("expiry"))">
+                        <div class="report-item">
+                            <span>Expiry Report</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("low-stock"))">
+                        <div class="report-item">
+                            <span>Low Stock Alert Report</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                </MudList>
+            </div>
+        </div>
+    </MudItem>
+
+    <!-- Sales Reports -->
+    <MudItem xs="12" md="6" lg="4">
+        <div class="df-alert-card animate-fade-in-up animate-delay-2">
+            <div class="df-alert-header">
+                <div class="df-alert-title">
+                    <div class="df-alert-title-icon success">
+                        <MudIcon Icon="@Icons.Material.Filled.PointOfSale" />
+                    </div>
+                    <span>Sales Reports</span>
+                </div>
+            </div>
+            <div class="df-alert-body">
+                <MudList T="string" Dense="true" Class="report-list">
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("daily-sales"))">
+                        <div class="report-item">
+                            <span>Daily Sales Report</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("monthly-sales"))">
+                        <div class="report-item">
+                            <span>Monthly Sales Summary</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("sales-by-product"))">
+                        <div class="report-item">
+                            <span>Sales by Product</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("sales-by-customer"))">
+                        <div class="report-item">
+                            <span>Sales by Customer</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("cashier-summary"))">
+                        <div class="report-item">
+                            <span>Cashier Summary</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                </MudList>
+            </div>
+        </div>
+    </MudItem>
+
+    <!-- Financial Reports -->
+    <MudItem xs="12" md="6" lg="4">
+        <div class="df-alert-card animate-fade-in-up animate-delay-3">
+            <div class="df-alert-header">
+                <div class="df-alert-title">
+                    <div class="df-alert-title-icon warning">
+                        <MudIcon Icon="@Icons.Material.Filled.AccountBalance" />
+                    </div>
+                    <span>Financial Reports</span>
+                </div>
+            </div>
+            <div class="df-alert-body">
+                <MudList T="string" Dense="true" Class="report-list">
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("profit-loss"))">
+                        <div class="report-item">
+                            <span>Profit & Loss Statement</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("outstanding-payments"))">
+                        <div class="report-item">
+                            <span>Outstanding Payments</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("receivables-aging"))">
+                        <div class="report-item">
+                            <span>Receivables Aging</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("payment-history"))">
+                        <div class="report-item">
+                            <span>Payment History</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("tax-summary"))">
+                        <div class="report-item">
+                            <span>Tax Summary Report</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                </MudList>
+            </div>
+        </div>
+    </MudItem>
+
+    <!-- Supplier Reports -->
+    <MudItem xs="12" md="6" lg="4">
+        <div class="df-alert-card animate-fade-in-up animate-delay-4">
+            <div class="df-alert-header">
+                <div class="df-alert-title">
+                    <div class="df-alert-title-icon info">
+                        <MudIcon Icon="@Icons.Material.Filled.LocalShipping" />
+                    </div>
+                    <span>Supplier Reports</span>
+                </div>
+            </div>
+            <div class="df-alert-body">
+                <MudList T="string" Dense="true" Class="report-list">
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("purchase-summary"))">
+                        <div class="report-item">
+                            <span>Purchase Summary</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("supplier-performance"))">
+                        <div class="report-item">
+                            <span>Supplier Performance</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("goods-received"))">
+                        <div class="report-item">
+                            <span>Goods Received Notes</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("pending-orders"))">
+                        <div class="report-item">
+                            <span>Pending Orders</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                </MudList>
+            </div>
+        </div>
+    </MudItem>
+
+    <!-- Compliance Reports -->
+    <MudItem xs="12" md="6" lg="4">
+        <div class="df-alert-card animate-fade-in-up animate-delay-4">
+            <div class="df-alert-header">
+                <div class="df-alert-title">
+                    <div class="df-alert-title-icon danger">
+                        <MudIcon Icon="@Icons.Material.Filled.Gavel" />
+                    </div>
+                    <span>Compliance Reports</span>
+                </div>
+            </div>
+            <div class="df-alert-body">
+                <MudList T="string" Dense="true" Class="report-list">
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("controlled-drugs"))">
+                        <div class="report-item">
+                            <span>Controlled Drugs Log</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("prescription-log"))">
+                        <div class="report-item">
+                            <span>Prescription Log</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("batch-traceability"))">
+                        <div class="report-item">
+                            <span>Batch Traceability</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("disposal-log"))">
+                        <div class="report-item">
+                            <span>Disposal/Write-off Log</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                </MudList>
+            </div>
+        </div>
+    </MudItem>
+
+    <!-- Audit Reports -->
+    <MudItem xs="12" md="6" lg="4">
+        <div class="df-alert-card animate-fade-in-up animate-delay-4">
+            <div class="df-alert-header">
+                <div class="df-alert-title">
+                    <div class="df-alert-title-icon default">
+                        <MudIcon Icon="@Icons.Material.Filled.Security" />
+                    </div>
+                    <span>Audit Reports</span>
+                </div>
+            </div>
+            <div class="df-alert-body">
+                <MudList T="string" Dense="true" Class="report-list">
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("user-activity"))">
+                        <div class="report-item">
+                            <span>User Activity Log</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("login-history"))">
+                        <div class="report-item">
+                            <span>Login History</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("data-changes"))">
+                        <div class="report-item">
+                            <span>Data Change Log</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("system-log"))">
+                        <div class="report-item">
+                            <span>System Events Log</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                </MudList>
+            </div>
+        </div>
+    </MudItem>
+</MudGrid>
+
+<!-- Report Viewer Dialog -->
+<MudDialog @bind-Visible="_showReportDialog" Options="_dialogOptions">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Assessment" />
+            <MudText Typo="Typo.h6">@_selectedReportTitle</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudDatePicker @bind-Date="_startDate" Label="Start Date" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudDatePicker @bind-Date="_endDate" Label="End Date" Variant="Variant.Outlined" />
+            </MudItem>
+            @if (_showCategoryFilter)
+            {
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" @bind-Value="_selectedCategory" Label="Category" Variant="Variant.Outlined">
+                        <MudSelectItem Value="@("All")">All Categories</MudSelectItem>
+                        <MudSelectItem Value="@("Analgesics")">Analgesics</MudSelectItem>
+                        <MudSelectItem Value="@("Antibiotics")">Antibiotics</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+            }
+            @if (_showSupplierFilter)
+            {
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" @bind-Value="_selectedSupplier" Label="Supplier" Variant="Variant.Outlined">
+                        <MudSelectItem Value="@("All")">All Suppliers</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+            }
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showReportDialog = false)">Cancel</MudButton>
+        <MudButton Color="Color.Default" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.PictureAsPdf" OnClick="ExportPdf">
+            Export PDF
+        </MudButton>
+        <MudButton Color="Color.Default" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.TableChart" OnClick="ExportExcel">
+            Export Excel
+        </MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.PlayArrow" OnClick="GenerateReport">
+            Generate
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<style>
+    .report-list .mud-list-item {
+        border-radius: 8px;
+        margin-bottom: 4px;
+    }
+
+    .report-list .mud-list-item:hover {
+        background: var(--df-primary-50);
+    }
+
+    .report-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+</style>
+
+@code {
+    private bool _showReportDialog = false;
+    private string _selectedReportTitle = string.Empty;
+    private string _selectedReportType = string.Empty;
+    private DateTime? _startDate = DateTime.Today.AddMonths(-1);
+    private DateTime? _endDate = DateTime.Today;
+    private string _selectedCategory = "All";
+    private string _selectedSupplier = "All";
+    private bool _showCategoryFilter = false;
+    private bool _showSupplierFilter = false;
+
+    private DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    private void OpenReport(string reportType)
+    {
+        _selectedReportType = reportType;
+        _selectedReportTitle = GetReportTitle(reportType);
+        _showCategoryFilter = reportType.Contains("stock") || reportType.Contains("sales-by-product");
+        _showSupplierFilter = reportType.Contains("supplier") || reportType.Contains("purchase");
+        _showReportDialog = true;
+    }
+
+    private string GetReportTitle(string reportType) => reportType switch
+    {
+        "stock-levels" => "Stock Levels Report",
+        "stock-valuation" => "Stock Valuation Report",
+        "stock-movements" => "Stock Movements Report",
+        "expiry" => "Expiry Report",
+        "low-stock" => "Low Stock Alert Report",
+        "daily-sales" => "Daily Sales Report",
+        "monthly-sales" => "Monthly Sales Summary",
+        "sales-by-product" => "Sales by Product Report",
+        "sales-by-customer" => "Sales by Customer Report",
+        "cashier-summary" => "Cashier Summary Report",
+        "profit-loss" => "Profit & Loss Statement",
+        "outstanding-payments" => "Outstanding Payments Report",
+        "receivables-aging" => "Receivables Aging Report",
+        "payment-history" => "Payment History Report",
+        "tax-summary" => "Tax Summary Report",
+        "purchase-summary" => "Purchase Summary Report",
+        "supplier-performance" => "Supplier Performance Report",
+        "goods-received" => "Goods Received Notes Report",
+        "pending-orders" => "Pending Orders Report",
+        "controlled-drugs" => "Controlled Drugs Log",
+        "prescription-log" => "Prescription Log",
+        "batch-traceability" => "Batch Traceability Report",
+        "disposal-log" => "Disposal/Write-off Log",
+        "user-activity" => "User Activity Log",
+        "login-history" => "Login History Report",
+        "data-changes" => "Data Change Log",
+        "system-log" => "System Events Log",
+        _ => "Report"
+    };
+
+    private async Task GenerateReport()
+    {
+        // TODO: Generate and display report
+        await Task.Delay(500);
+        _showReportDialog = false;
+    }
+
+    private async Task ExportPdf()
+    {
+        // TODO: Export report to PDF
+        await Task.Delay(500);
+    }
+
+    private async Task ExportExcel()
+    {
+        // TODO: Export report to Excel
+        await Task.Delay(500);
+    }
+}

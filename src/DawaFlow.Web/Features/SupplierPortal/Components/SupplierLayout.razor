@@ -1,0 +1,72 @@
+@inherits LayoutComponentBase
+@using MudBlazor
+
+<MudThemeProvider Theme="@_supplierTheme" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<div class="supplier-layout">
+    <MudAppBar Elevation="1" Color="Color.Surface" Fixed="true">
+        <MudIcon Icon="@Icons.Material.Filled.MedicalServices" Size="Size.Large" Color="Color.Primary" />
+        <MudText Typo="Typo.h6" Class="ml-3" Color="Color.Primary">DawaFlow</MudText>
+        <MudText Typo="Typo.caption" Class="ml-2" Color="Color.Secondary">Supplier Portal</MudText>
+        <MudSpacer />
+        <MudText Typo="Typo.body2" Class="mr-4">MedSupply Ltd</MudText>
+        <MudMenu Icon="@Icons.Material.Filled.Person" Color="Color.Default">
+            <MudMenuItem Icon="@Icons.Material.Filled.AccountCircle" Href="/supplier/profile">Profile</MudMenuItem>
+            <MudDivider />
+            <MudMenuItem Icon="@Icons.Material.Filled.Logout" Href="/auth/logout">Logout</MudMenuItem>
+        </MudMenu>
+    </MudAppBar>
+
+    <MudDrawer @bind-Open="@_drawerOpen" Elevation="1" Variant="DrawerVariant.Mini" OpenMiniOnHover="true">
+        <MudNavMenu>
+            <MudNavLink Href="/supplier/dashboard" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
+            <MudNavLink Href="/supplier/requests" Icon="@Icons.Material.Filled.Assignment">Requests</MudNavLink>
+            <MudNavLink Href="/supplier/deliveries" Icon="@Icons.Material.Filled.LocalShipping">Deliveries</MudNavLink>
+            <MudNavLink Href="/supplier/history" Icon="@Icons.Material.Filled.History">Order History</MudNavLink>
+            <MudNavLink Href="/supplier/profile" Icon="@Icons.Material.Filled.Settings">Settings</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+
+    <MudMainContent Class="supplier-main-content">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-8">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</div>
+
+<style>
+    .supplier-layout {
+        min-height: 100vh;
+        background: var(--df-background);
+    }
+
+    .supplier-main-content {
+        padding-top: 64px;
+        padding-left: 56px;
+        min-height: calc(100vh - 64px);
+    }
+</style>
+
+@code {
+    private bool _drawerOpen = true;
+
+    private MudTheme _supplierTheme = new MudTheme()
+    {
+        PaletteLight = new PaletteLight()
+        {
+            Primary = "#00897b",
+            PrimaryDarken = "#00695c",
+            PrimaryLighten = "#4db6ac",
+            Secondary = "#ffb300",
+            Background = "#f5f7fa",
+            Surface = "#ffffff",
+            AppbarBackground = "#ffffff",
+            DrawerBackground = "#ffffff",
+            TextPrimary = "#1a1a2e",
+            TextSecondary = "#64748b",
+        }
+    };
+}

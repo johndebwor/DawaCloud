@@ -1,0 +1,680 @@
+@page "/pos"
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Web
+
+<PageTitle>Point of Sale - DawaFlow</PageTitle>
+
+<div class="pos-container">
+    <!-- Left Panel - Product Search & Grid -->
+    <div class="pos-left-panel">
+        <!-- Search Bar -->
+        <div class="pos-search-bar">
+            <MudTextField @bind-Value="_searchQuery"
+                          Placeholder="Scan barcode or search products... (F2)"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Variant="Variant.Outlined"
+                          Immediate="true"
+                          FullWidth="true"
+                          OnKeyDown="@HandleSearchKeyDown" />
+        </div>
+
+        <!-- Category Tabs -->
+        <div class="pos-categories">
+            <MudChipSet T="string" @bind-SelectedValue="_selectedCategory" SelectionMode="SelectionMode.SingleSelection" Class="pos-category-chips">
+                <MudChip Value="@("All")" Color="Color.Primary" Variant="Variant.Text">All</MudChip>
+                <MudChip Value="@("Analgesics")" Color="Color.Default" Variant="Variant.Text">Analgesics</MudChip>
+                <MudChip Value="@("Antibiotics")" Color="Color.Default" Variant="Variant.Text">Antibiotics</MudChip>
+                <MudChip Value="@("Antacids")" Color="Color.Default" Variant="Variant.Text">Antacids</MudChip>
+                <MudChip Value="@("Vitamins")" Color="Color.Default" Variant="Variant.Text">Vitamins</MudChip>
+            </MudChipSet>
+        </div>
+
+        <!-- Product Grid -->
+        <div class="pos-product-grid">
+            @foreach (var product in FilteredProducts)
+            {
+                <div class="pos-product-card @(product.Stock == 0 ? "out-of-stock" : "")" @onclick="@(() => AddToCart(product))">
+                    <div class="pos-product-icon">
+                        <MudIcon Icon="@Icons.Material.Filled.Medication" Size="Size.Large" />
+                    </div>
+                    <div class="pos-product-name">@product.Name</div>
+                    <div class="pos-product-price">KES @product.Price.ToString("N0")</div>
+                    @if (product.Stock <= 10)
+                    {
+                        <div class="pos-product-stock warning">@product.Stock left</div>
+                    }
+                    @if (product.RequiresPrescription)
+                    {
+                        <div class="pos-product-rx">
+                            <MudIcon Icon="@Icons.Material.Filled.MedicalServices" Size="Size.Small" />
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="pos-quick-actions">
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.Pause" OnClick="HoldSale">
+                Hold (F4)
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.Replay" OnClick="RecallSale">
+                Recall (F5)
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.History" OnClick="ShowLastReceipt">
+                Last Receipt
+            </MudButton>
+        </div>
+    </div>
+
+    <!-- Right Panel - Cart -->
+    <div class="pos-right-panel">
+        <!-- Customer Info -->
+        <div class="pos-customer-bar">
+            <MudTextField @bind-Value="_customerName"
+                          Placeholder="Customer Name (Optional)"
+                          Variant="Variant.Text"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Person"
+                          Dense="true" />
+        </div>
+
+        <!-- Cart Items -->
+        <div class="pos-cart">
+            @if (_cartItems.Count == 0)
+            {
+                <div class="pos-cart-empty">
+                    <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Size="Size.Large" Color="Color.Secondary" />
+                    <MudText Color="Color.Secondary">Cart is empty</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Scan or search to add items</MudText>
+                </div>
+            }
+            else
+            {
+                @foreach (var item in _cartItems)
+                {
+                    <div class="pos-cart-item">
+                        <div class="pos-cart-item-info">
+                            <div class="pos-cart-item-name">@item.Name</div>
+                            <div class="pos-cart-item-price">KES @item.UnitPrice.ToString("N0") × @item.Quantity</div>
+                        </div>
+                        <div class="pos-cart-item-controls">
+                            <MudIconButton Icon="@Icons.Material.Filled.Remove" Size="Size.Small" OnClick="@(() => DecreaseQuantity(item))" />
+                            <span class="pos-cart-item-qty">@item.Quantity</span>
+                            <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" OnClick="@(() => IncreaseQuantity(item))" />
+                        </div>
+                        <div class="pos-cart-item-total">
+                            KES @item.LineTotal.ToString("N0")
+                        </div>
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => RemoveFromCart(item))" />
+                    </div>
+                }
+            }
+        </div>
+
+        <!-- Cart Totals -->
+        <div class="pos-totals">
+            <div class="pos-total-row">
+                <span>Subtotal</span>
+                <span>KES @_subtotal.ToString("N2")</span>
+            </div>
+            <div class="pos-total-row">
+                <span>Tax (16%)</span>
+                <span>KES @_taxAmount.ToString("N2")</span>
+            </div>
+            @if (_discountAmount > 0)
+            {
+                <div class="pos-total-row discount">
+                    <span>Discount</span>
+                    <span>- KES @_discountAmount.ToString("N2")</span>
+                </div>
+            }
+            <div class="pos-total-row grand-total">
+                <span>TOTAL</span>
+                <span>KES @_grandTotal.ToString("N2")</span>
+            </div>
+        </div>
+
+        <!-- Payment Buttons -->
+        <div class="pos-payment-buttons">
+            <div class="pos-payment-row">
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" FullWidth="true" StartIcon="@Icons.Material.Filled.Percent" OnClick="ApplyDiscount">
+                    Discount
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" FullWidth="true" StartIcon="@Icons.Material.Filled.Clear" OnClick="ClearCart">
+                    Clear
+                </MudButton>
+            </div>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Large" 
+                       StartIcon="@Icons.Material.Filled.Payment" OnClick="ProcessPayment"
+                       Disabled="@(_cartItems.Count == 0)">
+                PAY KES @_grandTotal.ToString("N0") (F12)
+            </MudButton>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Dialog -->
+<MudDialog @bind-Visible="_showPaymentDialog" Options="_dialogOptions">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Payment" />
+            <MudText Typo="Typo.h6">Complete Payment</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="payment-dialog-total">
+            <MudText Typo="Typo.h4" Color="Color.Primary">KES @_grandTotal.ToString("N2")</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Amount Due</MudText>
+        </div>
+
+        <MudDivider Class="my-4" />
+
+        <MudText Typo="Typo.subtitle2" Class="mb-2">Select Payment Method</MudText>
+        <div class="payment-methods">
+            <div class="payment-method @(_selectedPaymentMethod == "Cash" ? "selected" : "")" @onclick="@(() => _selectedPaymentMethod = "Cash")">
+                <MudIcon Icon="@Icons.Material.Filled.Money" />
+                <span>Cash</span>
+            </div>
+            <div class="payment-method @(_selectedPaymentMethod == "Mpesa" ? "selected" : "")" @onclick="@(() => _selectedPaymentMethod = "Mpesa")">
+                <MudIcon Icon="@Icons.Material.Filled.PhoneAndroid" />
+                <span>M-Pesa</span>
+            </div>
+            <div class="payment-method @(_selectedPaymentMethod == "Card" ? "selected" : "")" @onclick="@(() => _selectedPaymentMethod = "Card")">
+                <MudIcon Icon="@Icons.Material.Filled.CreditCard" />
+                <span>Card</span>
+            </div>
+        </div>
+
+        @if (_selectedPaymentMethod == "Cash")
+        {
+            <MudNumericField @bind-Value="_amountTendered" Label="Amount Tendered (KES)" Variant="Variant.Outlined" 
+                            Class="mt-4" Min="0m" />
+            @if (_amountTendered >= _grandTotal)
+            {
+                <MudAlert Severity="Severity.Success" Class="mt-2">
+                    Change: <strong>KES @((_amountTendered - _grandTotal).ToString("N2"))</strong>
+                </MudAlert>
+            }
+        }
+        else if (_selectedPaymentMethod == "Mpesa")
+        {
+            <MudTextField @bind-Value="_mpesaRef" Label="M-Pesa Transaction Code" Variant="Variant.Outlined" Class="mt-4" />
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showPaymentDialog = false)">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="CompleteSale" 
+                   Disabled="@(!CanCompleteSale)">
+            Complete Sale
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<!-- Success Dialog -->
+<MudDialog @bind-Visible="_showSuccessDialog" Options="_successDialogOptions">
+    <DialogContent>
+        <div class="text-center py-4">
+            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" Class="mb-3" />
+            <MudText Typo="Typo.h5" Color="Color.Success">Payment Successful!</MudText>
+            <MudText Typo="Typo.body1" Class="mt-2">Receipt #: @_lastReceiptNumber</MudText>
+            @if (_changeAmount > 0)
+            {
+                <MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-2">Change: KES @_changeAmount.ToString("N2")</MudText>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showSuccessDialog = false)">Close</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Print">
+            Print Receipt
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<style>
+    .pos-container {
+        display: flex;
+        gap: 24px;
+        height: calc(100vh - 100px);
+        margin: -24px;
+    }
+
+    .pos-left-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        overflow: hidden;
+    }
+
+    .pos-right-panel {
+        width: 400px;
+        display: flex;
+        flex-direction: column;
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: var(--df-shadow-lg);
+    }
+
+    .pos-search-bar {
+        margin-bottom: 16px;
+    }
+
+    .pos-categories {
+        margin-bottom: 16px;
+        overflow-x: auto;
+    }
+
+    .pos-product-grid {
+        flex: 1;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 12px;
+        overflow-y: auto;
+        padding: 4px;
+    }
+
+    .pos-product-card {
+        background: var(--df-surface-variant);
+        border: 1px solid var(--df-border);
+        border-radius: 12px;
+        padding: 16px 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+    }
+
+    .pos-product-card:hover {
+        border-color: var(--df-primary-500);
+        transform: translateY(-2px);
+        box-shadow: var(--df-shadow-md);
+    }
+
+    .pos-product-card.out-of-stock {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+
+    .pos-product-icon {
+        color: var(--df-primary-500);
+        margin-bottom: 8px;
+    }
+
+    .pos-product-name {
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-bottom: 4px;
+        line-height: 1.2;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .pos-product-price {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: var(--df-primary-700);
+    }
+
+    .pos-product-stock {
+        font-size: 0.65rem;
+        margin-top: 4px;
+    }
+
+    .pos-product-stock.warning {
+        color: var(--df-warning);
+    }
+
+    .pos-product-rx {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        color: var(--df-danger);
+    }
+
+    .pos-quick-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--df-border);
+    }
+
+    .pos-customer-bar {
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--df-border);
+        margin-bottom: 12px;
+    }
+
+    .pos-cart {
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .pos-cart-empty {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .pos-cart-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px;
+        background: var(--df-surface-variant);
+        border-radius: 8px;
+        margin-bottom: 8px;
+    }
+
+    .pos-cart-item-info {
+        flex: 1;
+    }
+
+    .pos-cart-item-name {
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+
+    .pos-cart-item-price {
+        font-size: 0.75rem;
+        color: var(--df-text-secondary);
+    }
+
+    .pos-cart-item-controls {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .pos-cart-item-qty {
+        width: 32px;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .pos-cart-item-total {
+        font-weight: 700;
+        color: var(--df-primary-700);
+        min-width: 80px;
+        text-align: right;
+    }
+
+    .pos-totals {
+        padding: 16px 0;
+        border-top: 1px solid var(--df-border);
+        border-bottom: 1px solid var(--df-border);
+        margin-bottom: 16px;
+    }
+
+    .pos-total-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 4px 0;
+    }
+
+    .pos-total-row.discount {
+        color: var(--df-success);
+    }
+
+    .pos-total-row.grand-total {
+        font-size: 1.25rem;
+        font-weight: 700;
+        padding-top: 12px;
+        margin-top: 8px;
+        border-top: 2px solid var(--df-primary-500);
+        color: var(--df-primary-700);
+    }
+
+    .pos-payment-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .pos-payment-row {
+        display: flex;
+        gap: 8px;
+    }
+
+    .payment-dialog-total {
+        text-align: center;
+        padding: 16px;
+        background: var(--df-surface-variant);
+        border-radius: 12px;
+    }
+
+    .payment-methods {
+        display: flex;
+        gap: 12px;
+    }
+
+    .payment-method {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 16px;
+        border: 2px solid var(--df-border);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .payment-method:hover {
+        border-color: var(--df-primary-300);
+    }
+
+    .payment-method.selected {
+        border-color: var(--df-primary-500);
+        background: var(--df-primary-50);
+        color: var(--df-primary-700);
+    }
+
+    @@media (max-width: 960px) {
+        .pos-container {
+            flex-direction: column;
+            height: auto;
+        }
+
+        .pos-right-panel {
+            width: 100%;
+        }
+    }
+</style>
+
+@code {
+    private string _searchQuery = string.Empty;
+    private string _selectedCategory = "All";
+    private string _customerName = string.Empty;
+    private List<CartItem> _cartItems = new();
+    private List<ProductDto> _products = new();
+    
+    private decimal _subtotal => _cartItems.Sum(i => i.LineTotal);
+    private decimal _taxAmount => _subtotal * 0.16m;
+    private decimal _discountAmount = 0;
+    private decimal _grandTotal => _subtotal + _taxAmount - _discountAmount;
+
+    private bool _showPaymentDialog = false;
+    private bool _showSuccessDialog = false;
+    private string _selectedPaymentMethod = "Cash";
+    private decimal _amountTendered = 0;
+    private string _mpesaRef = string.Empty;
+    private decimal _changeAmount = 0;
+    private string _lastReceiptNumber = string.Empty;
+    
+    private DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Small, FullWidth = true };
+    private DialogOptions _successDialogOptions = new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+
+    private bool CanCompleteSale => _selectedPaymentMethod switch
+    {
+        "Cash" => _amountTendered >= _grandTotal,
+        "Mpesa" => !string.IsNullOrWhiteSpace(_mpesaRef),
+        "Card" => true,
+        _ => false
+    };
+
+    private IEnumerable<ProductDto> FilteredProducts =>
+        _products.Where(p =>
+            (string.IsNullOrWhiteSpace(_searchQuery) ||
+             p.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
+             p.Code.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase)) &&
+            (_selectedCategory == "All" || p.Category == _selectedCategory)
+        );
+
+    protected override void OnInitialized()
+    {
+        LoadProducts();
+    }
+
+    private void LoadProducts()
+    {
+        _products = new List<ProductDto>
+        {
+            new() { Id = 1, Code = "PARA500", Name = "Paracetamol 500mg", Category = "Analgesics", Price = 50, Stock = 450 },
+            new() { Id = 2, Code = "IBU400", Name = "Ibuprofen 400mg", Category = "Analgesics", Price = 80, Stock = 200 },
+            new() { Id = 3, Code = "AMOX250", Name = "Amoxicillin 250mg", Category = "Antibiotics", Price = 150, Stock = 30, RequiresPrescription = true },
+            new() { Id = 4, Code = "OMEP20", Name = "Omeprazole 20mg", Category = "Antacids", Price = 120, Stock = 180 },
+            new() { Id = 5, Code = "CIPR500", Name = "Ciprofloxacin 500mg", Category = "Antibiotics", Price = 180, Stock = 85, RequiresPrescription = true },
+            new() { Id = 6, Code = "VITC500", Name = "Vitamin C 500mg", Category = "Vitamins", Price = 35, Stock = 320 },
+            new() { Id = 7, Code = "CETR10", Name = "Cetirizine 10mg", Category = "Antihistamines", Price = 35, Stock = 0 },
+            new() { Id = 8, Code = "METRO400", Name = "Metronidazole 400mg", Category = "Antibiotics", Price = 60, Stock = 150, RequiresPrescription = true },
+            new() { Id = 9, Code = "PANA500", Name = "Panadol Extra", Category = "Analgesics", Price = 70, Stock = 280 },
+            new() { Id = 10, Code = "DOLO650", Name = "Doliprane 650mg", Category = "Analgesics", Price = 65, Stock = 195 },
+            new() { Id = 11, Code = "VITB12", Name = "Vitamin B12", Category = "Vitamins", Price = 45, Stock = 150 },
+            new() { Id = 12, Code = "ANTACID", Name = "ENO Antacid", Category = "Antacids", Price = 55, Stock = 220 },
+        };
+    }
+
+    private void AddToCart(ProductDto product)
+    {
+        if (product.Stock == 0) return;
+
+        var existing = _cartItems.FirstOrDefault(i => i.ProductId == product.Id);
+        if (existing != null)
+        {
+            existing.Quantity++;
+        }
+        else
+        {
+            _cartItems.Add(new CartItem
+            {
+                ProductId = product.Id,
+                Name = product.Name,
+                UnitPrice = product.Price,
+                Quantity = 1
+            });
+        }
+    }
+
+    private void IncreaseQuantity(CartItem item)
+    {
+        item.Quantity++;
+    }
+
+    private void DecreaseQuantity(CartItem item)
+    {
+        if (item.Quantity > 1)
+            item.Quantity--;
+        else
+            RemoveFromCart(item);
+    }
+
+    private void RemoveFromCart(CartItem item)
+    {
+        _cartItems.Remove(item);
+    }
+
+    private void ClearCart()
+    {
+        _cartItems.Clear();
+        _discountAmount = 0;
+        _customerName = string.Empty;
+    }
+
+    private void ApplyDiscount()
+    {
+        // TODO: Show discount dialog
+    }
+
+    private void ProcessPayment()
+    {
+        _amountTendered = _grandTotal;
+        _showPaymentDialog = true;
+    }
+
+    private async Task CompleteSale()
+    {
+        _changeAmount = _amountTendered - _grandTotal;
+        _lastReceiptNumber = $"RCP-{DateTime.Now:yyyyMMddHHmmss}";
+        
+        // TODO: Save sale to database
+        await Task.Delay(500);
+        
+        _showPaymentDialog = false;
+        _showSuccessDialog = true;
+        
+        // Clear cart after successful sale
+        ClearCart();
+    }
+
+    private void HoldSale()
+    {
+        // TODO: Implement hold sale
+    }
+
+    private void RecallSale()
+    {
+        // TODO: Implement recall sale
+    }
+
+    private void ShowLastReceipt()
+    {
+        // TODO: Show last receipt
+    }
+
+    private void HandleSearchKeyDown(KeyboardEventArgs e)
+    {
+        // Handle barcode scanner input (typically ends with Enter)
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(_searchQuery))
+        {
+            var product = _products.FirstOrDefault(p => 
+                p.Code.Equals(_searchQuery, StringComparison.OrdinalIgnoreCase));
+            if (product != null)
+            {
+                AddToCart(product);
+                _searchQuery = string.Empty;
+            }
+        }
+    }
+
+    private class ProductDto
+    {
+        public int Id { get; set; }
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public int Stock { get; set; }
+        public bool RequiresPrescription { get; set; }
+    }
+
+    private class CartItem
+    {
+        public int ProductId { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public decimal UnitPrice { get; set; }
+        public int Quantity { get; set; }
+        public decimal LineTotal => UnitPrice * Quantity;
+    }
+}

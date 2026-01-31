@@ -23,11 +23,34 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
     // Procurement
     public DbSet<DrugRequest> DrugRequests => Set<DrugRequest>();
     public DbSet<DrugRequestItem> DrugRequestItems => Set<DrugRequestItem>();
+    public DbSet<GoodsReceipt> GoodsReceipts => Set<GoodsReceipt>();
+    public DbSet<GoodsReceiptItem> GoodsReceiptItems => Set<GoodsReceiptItem>();
 
     // Inventory Management
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
     public DbSet<StockCount> StockCounts => Set<StockCount>();
     public DbSet<StockCountItem> StockCountItems => Set<StockCountItem>();
+
+    // Wholesale
+    public DbSet<WholesaleCustomer> WholesaleCustomers => Set<WholesaleCustomer>();
+    public DbSet<WholesaleSale> WholesaleSales => Set<WholesaleSale>();
+    public DbSet<WholesaleSaleItem> WholesaleSaleItems => Set<WholesaleSaleItem>();
+    public DbSet<Quotation> Quotations => Set<Quotation>();
+    public DbSet<QuotationItem> QuotationItems => Set<QuotationItem>();
+    public DbSet<Payment> Payments => Set<Payment>();
+
+    // Retail
+    public DbSet<RetailSale> RetailSales => Set<RetailSale>();
+    public DbSet<RetailSaleItem> RetailSaleItems => Set<RetailSaleItem>();
+    public DbSet<HeldSale> HeldSales => Set<HeldSale>();
+    public DbSet<CashierShift> CashierShifts => Set<CashierShift>();
+
+    // Notifications
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<NotificationTemplate> NotificationTemplates => Set<NotificationTemplate>();
+
+    // Settings
+    public DbSet<CompanySettings> CompanySettings => Set<CompanySettings>();
 
     // Audit
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();

@@ -1,0 +1,291 @@
+@page "/wholesale/sales"
+@page "/wholesale/invoices"
+@using MudBlazor
+
+<PageTitle>Wholesale Sales - DawaFlow</PageTitle>
+
+<!-- Hero Section -->
+<div class="df-hero animate-fade-in-up">
+    <div class="df-hero-content">
+        <div class="df-hero-text">
+            <h1>Wholesale Sales</h1>
+            <p>Manage invoices, orders, and wholesale transactions</p>
+        </div>
+        <div class="d-flex gap-2">
+            <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.Description" Href="/wholesale/quotations">
+                Quotations
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Href="/wholesale/sales/new">
+                New Sale
+            </MudButton>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="df-kpi-grid">
+    <div class="df-kpi-card featured animate-fade-in-up animate-delay-1">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon primary">
+                <MudIcon Icon="@Icons.Material.Filled.TrendingUp" />
+            </div>
+            <div class="df-kpi-trend up">
+                <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Size="Size.Small" />
+                <span>8.2%</span>
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">This Month's Sales</div>
+            <div class="df-kpi-value">KES 2.4M</div>
+            <div class="df-kpi-subtitle">32 invoices</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-2">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon success">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Paid Invoices</div>
+            <div class="df-kpi-value">KES 1.8M</div>
+            <div class="df-kpi-subtitle">24 invoices</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-3">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon warning">
+                <MudIcon Icon="@Icons.Material.Filled.Pending" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Pending Payment</div>
+            <div class="df-kpi-value">KES 450K</div>
+            <div class="df-kpi-subtitle">6 invoices</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-4">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon danger">
+                <MudIcon Icon="@Icons.Material.Filled.Warning" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Overdue</div>
+            <div class="df-kpi-value">KES 150K</div>
+            <div class="df-kpi-subtitle">2 invoices</div>
+        </div>
+    </div>
+</div>
+
+<!-- Sales Table -->
+<div class="df-alert-card animate-fade-in-up animate-delay-2 mt-4">
+    <div class="df-alert-header">
+        <MudTextField @bind-Value="_searchString"
+                      Placeholder="Search invoices..."
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      IconSize="Size.Medium"
+                      Immediate="true"
+                      Style="max-width: 400px;" />
+        <div class="d-flex gap-2">
+            <MudSelect T="string" @bind-Value="_selectedStatus" Label="Status" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
+                <MudSelectItem Value="@("All")">All Status</MudSelectItem>
+                <MudSelectItem Value="@("Draft")">Draft</MudSelectItem>
+                <MudSelectItem Value="@("Confirmed")">Confirmed</MudSelectItem>
+                <MudSelectItem Value="@("Delivered")">Delivered</MudSelectItem>
+                <MudSelectItem Value="@("Paid")">Paid</MudSelectItem>
+                <MudSelectItem Value="@("Overdue")">Overdue</MudSelectItem>
+            </MudSelect>
+            <MudSelect T="string" @bind-Value="_selectedPayment" Label="Payment" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
+                <MudSelectItem Value="@("All")">All</MudSelectItem>
+                <MudSelectItem Value="@("Pending")">Pending</MudSelectItem>
+                <MudSelectItem Value="@("Partial")">Partial</MudSelectItem>
+                <MudSelectItem Value="@("Paid")">Paid</MudSelectItem>
+            </MudSelect>
+        </div>
+    </div>
+
+    <MudTable T="SaleDto" Items="@FilteredSales" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Class="mt-4">
+        <HeaderContent>
+            <MudTh>Invoice #</MudTh>
+            <MudTh>Customer</MudTh>
+            <MudTh>Date</MudTh>
+            <MudTh>Amount</MudTh>
+            <MudTh>Paid</MudTh>
+            <MudTh>Balance</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Payment</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Invoice #">
+                <MudText Typo="Typo.body2" Class="fw-bold">@context.InvoiceNumber</MudText>
+            </MudTd>
+            <MudTd DataLabel="Customer">
+                <div>
+                    <MudText Typo="Typo.body2">@context.CustomerName</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.CustomerCode</MudText>
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Date">@context.SaleDate.ToString("dd MMM yyyy")</MudTd>
+            <MudTd DataLabel="Amount">KES @context.TotalAmount.ToString("N0")</MudTd>
+            <MudTd DataLabel="Paid">KES @context.PaidAmount.ToString("N0")</MudTd>
+            <MudTd DataLabel="Balance">
+                <MudText Color="@(context.BalanceAmount > 0 ? Color.Warning : Color.Success)">
+                    KES @context.BalanceAmount.ToString("N0")
+                </MudText>
+            </MudTd>
+            <MudTd DataLabel="Status">
+                <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">@context.Status</MudChip>
+            </MudTd>
+            <MudTd DataLabel="Payment">
+                <MudChip T="string" Size="Size.Small" Color="@GetPaymentColor(context.PaymentStatus)">@context.PaymentStatus</MudChip>
+            </MudTd>
+            <MudTd DataLabel="Actions">
+                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Color="Color.Info" Href="@($"/wholesale/sales/{context.Id}")" />
+                <MudIconButton Icon="@Icons.Material.Filled.Print" Size="Size.Small" Color="Color.Default" OnClick="@(() => PrintInvoice(context.Id))" />
+                @if (context.BalanceAmount > 0)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Payment" Size="Size.Small" Color="Color.Success" OnClick="@(() => RecordPayment(context))" />
+                }
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+        </PagerContent>
+    </MudTable>
+</div>
+
+<!-- Payment Dialog -->
+<MudDialog @bind-Visible="_showPaymentDialog" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Record Payment - @_selectedSale?.InvoiceNumber</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12">
+                <MudAlert Severity="Severity.Info" Class="mb-4">
+                    Outstanding Balance: <strong>KES @_selectedSale?.BalanceAmount.ToString("N2")</strong>
+                </MudAlert>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudNumericField @bind-Value="_paymentAmount" Label="Payment Amount (KES)" Variant="Variant.Outlined" Min="0m" Max="@(_selectedSale?.BalanceAmount ?? 0)" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="string" @bind-Value="_paymentMethod" Label="Payment Method" Variant="Variant.Outlined">
+                    <MudSelectItem Value="@("Cash")">Cash</MudSelectItem>
+                    <MudSelectItem Value="@("Mpesa")">M-Pesa</MudSelectItem>
+                    <MudSelectItem Value="@("Bank Transfer")">Bank Transfer</MudSelectItem>
+                    <MudSelectItem Value="@("Cheque")">Cheque</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="_paymentReference" Label="Reference / Transaction ID" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="_paymentNotes" Label="Notes" Variant="Variant.Outlined" Lines="2" />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showPaymentDialog = false)">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SavePayment">Record Payment</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<SaleDto> _sales = new();
+    private string _searchString = string.Empty;
+    private string _selectedStatus = "All";
+    private string _selectedPayment = "All";
+    private bool _showPaymentDialog = false;
+    private SaleDto? _selectedSale;
+    private decimal _paymentAmount;
+    private string _paymentMethod = "Cash";
+    private string _paymentReference = string.Empty;
+    private string _paymentNotes = string.Empty;
+    
+    private DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Small, FullWidth = true };
+
+    private IEnumerable<SaleDto> FilteredSales =>
+        _sales.Where(s =>
+            (string.IsNullOrWhiteSpace(_searchString) ||
+             s.InvoiceNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+             s.CustomerName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) &&
+            (_selectedStatus == "All" || s.Status == _selectedStatus) &&
+            (_selectedPayment == "All" || s.PaymentStatus == _selectedPayment)
+        );
+
+    protected override void OnInitialized()
+    {
+        LoadSales();
+    }
+
+    private void LoadSales()
+    {
+        _sales = new List<SaleDto>
+        {
+            new() { Id = 1, InvoiceNumber = "INV-2024-0032", CustomerCode = "WC-001", CustomerName = "Nairobi Pharmacy Ltd", SaleDate = DateTime.Now.AddDays(-2), TotalAmount = 125000, PaidAmount = 125000, Status = "Delivered", PaymentStatus = "Paid" },
+            new() { Id = 2, InvoiceNumber = "INV-2024-0031", CustomerCode = "WC-002", CustomerName = "Mombasa Medicals", SaleDate = DateTime.Now.AddDays(-5), TotalAmount = 85000, PaidAmount = 50000, Status = "Delivered", PaymentStatus = "Partial" },
+            new() { Id = 3, InvoiceNumber = "INV-2024-0030", CustomerCode = "WC-004", CustomerName = "Eldoret Pharmacy Group", SaleDate = DateTime.Now.AddDays(-7), TotalAmount = 250000, PaidAmount = 250000, Status = "Completed", PaymentStatus = "Paid" },
+            new() { Id = 4, InvoiceNumber = "INV-2024-0029", CustomerCode = "WC-003", CustomerName = "Kisumu Healthcare", SaleDate = DateTime.Now.AddDays(-10), TotalAmount = 45000, PaidAmount = 0, Status = "Delivered", PaymentStatus = "Pending" },
+            new() { Id = 5, InvoiceNumber = "INV-2024-0028", CustomerCode = "WC-001", CustomerName = "Nairobi Pharmacy Ltd", SaleDate = DateTime.Now.AddDays(-15), TotalAmount = 180000, PaidAmount = 180000, Status = "Completed", PaymentStatus = "Paid" },
+            new() { Id = 6, InvoiceNumber = "INV-2024-0027", CustomerCode = "WC-005", CustomerName = "Coast General Supplies", SaleDate = DateTime.Now.AddDays(-35), TotalAmount = 150000, PaidAmount = 0, Status = "Delivered", PaymentStatus = "Overdue" },
+        };
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Draft" => Color.Default,
+        "Confirmed" => Color.Info,
+        "Processing" => Color.Primary,
+        "Delivered" => Color.Success,
+        "Completed" => Color.Success,
+        "Cancelled" => Color.Error,
+        _ => Color.Default
+    };
+
+    private Color GetPaymentColor(string status) => status switch
+    {
+        "Paid" => Color.Success,
+        "Partial" => Color.Warning,
+        "Pending" => Color.Info,
+        "Overdue" => Color.Error,
+        _ => Color.Default
+    };
+
+    private void RecordPayment(SaleDto sale)
+    {
+        _selectedSale = sale;
+        _paymentAmount = sale.BalanceAmount;
+        _showPaymentDialog = true;
+    }
+
+    private async Task SavePayment()
+    {
+        // TODO: Implement payment recording
+        await Task.Delay(500);
+        _showPaymentDialog = false;
+        LoadSales();
+    }
+
+    private void PrintInvoice(int id)
+    {
+        // TODO: Implement invoice printing
+    }
+
+    private class SaleDto
+    {
+        public int Id { get; set; }
+        public string InvoiceNumber { get; set; } = string.Empty;
+        public string CustomerCode { get; set; } = string.Empty;
+        public string CustomerName { get; set; } = string.Empty;
+        public DateTime SaleDate { get; set; }
+        public decimal TotalAmount { get; set; }
+        public decimal PaidAmount { get; set; }
+        public decimal BalanceAmount => TotalAmount - PaidAmount;
+        public string Status { get; set; } = string.Empty;
+        public string PaymentStatus { get; set; } = string.Empty;
+    }
+}

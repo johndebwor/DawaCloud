@@ -1,0 +1,277 @@
+@page "/audit"
+@page "/audit/logs"
+@using MudBlazor
+
+<PageTitle>Audit Logs - DawaFlow</PageTitle>
+
+<!-- Hero Section -->
+<div class="df-hero animate-fade-in-up">
+    <div class="df-hero-content">
+        <div class="df-hero-text">
+            <h1>Audit Logs</h1>
+            <p>Track all system activities and changes</p>
+        </div>
+        <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.FileDownload">
+            Export Logs
+        </MudButton>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="df-alert-card animate-fade-in-up animate-delay-1 mt-4">
+    <MudGrid>
+        <MudItem xs="12" md="3">
+            <MudTextField @bind-Value="_searchString"
+                          Placeholder="Search logs..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Variant="Variant.Outlined"
+                          Immediate="true"
+                          Dense="true" />
+        </MudItem>
+        <MudItem xs="12" md="2">
+            <MudSelect T="string" @bind-Value="_selectedAction" Label="Action" Variant="Variant.Outlined" Dense="true">
+                <MudSelectItem Value="@("All")">All Actions</MudSelectItem>
+                <MudSelectItem Value="@("Create")">Create</MudSelectItem>
+                <MudSelectItem Value="@("Update")">Update</MudSelectItem>
+                <MudSelectItem Value="@("Delete")">Delete</MudSelectItem>
+                <MudSelectItem Value="@("Login")">Login</MudSelectItem>
+                <MudSelectItem Value="@("Logout")">Logout</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" md="2">
+            <MudSelect T="string" @bind-Value="_selectedEntity" Label="Entity Type" Variant="Variant.Outlined" Dense="true">
+                <MudSelectItem Value="@("All")">All Types</MudSelectItem>
+                <MudSelectItem Value="@("Drug")">Drug</MudSelectItem>
+                <MudSelectItem Value="@("Batch")">Batch</MudSelectItem>
+                <MudSelectItem Value="@("Sale")">Sale</MudSelectItem>
+                <MudSelectItem Value="@("User")">User</MudSelectItem>
+                <MudSelectItem Value="@("StockMovement")">Stock Movement</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" md="2">
+            <MudDatePicker @bind-Date="_startDate" Label="From Date" Variant="Variant.Outlined" Dense="true" />
+        </MudItem>
+        <MudItem xs="12" md="2">
+            <MudDatePicker @bind-Date="_endDate" Label="To Date" Variant="Variant.Outlined" Dense="true" />
+        </MudItem>
+        <MudItem xs="12" md="1" Class="d-flex align-end">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ApplyFilters" FullWidth="true">
+                Filter
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+</div>
+
+<!-- Audit Logs Table -->
+<div class="df-alert-card animate-fade-in-up animate-delay-2 mt-4">
+    <MudTable T="AuditLogDto" Items="@FilteredLogs" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading">
+        <HeaderContent>
+            <MudTh>Timestamp</MudTh>
+            <MudTh>User</MudTh>
+            <MudTh>Action</MudTh>
+            <MudTh>Entity</MudTh>
+            <MudTh>Description</MudTh>
+            <MudTh>IP Address</MudTh>
+            <MudTh>Details</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Timestamp">
+                <div>
+                    <MudText Typo="Typo.body2">@context.Timestamp.ToString("dd MMM yyyy")</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Timestamp.ToString("HH:mm:ss")</MudText>
+                </div>
+            </MudTd>
+            <MudTd DataLabel="User">
+                <div class="d-flex align-center gap-2">
+                    <MudAvatar Size="Size.Small" Color="Color.Primary">@context.UserName.Substring(0, 1).ToUpper()</MudAvatar>
+                    <MudText Typo="Typo.body2">@context.UserName</MudText>
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Action">
+                <MudChip T="string" Size="Size.Small" Color="@GetActionColor(context.Action)">@context.Action</MudChip>
+            </MudTd>
+            <MudTd DataLabel="Entity">
+                <div>
+                    <MudText Typo="Typo.body2">@context.EntityType</MudText>
+                    @if (!string.IsNullOrEmpty(context.EntityId))
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">ID: @context.EntityId</MudText>
+                    }
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Description">
+                <MudText Typo="Typo.body2" Style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    @context.Description
+                </MudText>
+            </MudTd>
+            <MudTd DataLabel="IP Address">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">@context.IpAddress</MudText>
+            </MudTd>
+            <MudTd DataLabel="Details">
+                @if (context.HasChanges)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Color="Color.Info" OnClick="@(() => ViewDetails(context))" />
+                }
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] { 25, 50, 100 }" />
+        </PagerContent>
+    </MudTable>
+</div>
+
+<!-- Details Dialog -->
+<MudDialog @bind-Visible="_showDetailsDialog" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Audit Log Details</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_selectedLog != null)
+        {
+            <MudGrid>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Timestamp</MudText>
+                    <MudText Typo="Typo.body1">@_selectedLog.Timestamp.ToString("dd MMM yyyy HH:mm:ss")</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">User</MudText>
+                    <MudText Typo="Typo.body1">@_selectedLog.UserName</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Action</MudText>
+                    <MudChip T="string" Size="Size.Small" Color="@GetActionColor(_selectedLog.Action)">@_selectedLog.Action</MudChip>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Entity</MudText>
+                    <MudText Typo="Typo.body1">@_selectedLog.EntityType (@_selectedLog.EntityId)</MudText>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Description</MudText>
+                    <MudText Typo="Typo.body1">@_selectedLog.Description</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">IP Address</MudText>
+                    <MudText Typo="Typo.body1">@_selectedLog.IpAddress</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">User Agent</MudText>
+                    <MudText Typo="Typo.body2" Style="font-size: 0.75rem;">@_selectedLog.UserAgent</MudText>
+                </MudItem>
+            </MudGrid>
+
+            @if (!string.IsNullOrEmpty(_selectedLog.OldValues) || !string.IsNullOrEmpty(_selectedLog.NewValues))
+            {
+                <MudDivider Class="my-4" />
+                <MudText Typo="Typo.subtitle2" Class="mb-2">Changes</MudText>
+                <MudGrid>
+                    @if (!string.IsNullOrEmpty(_selectedLog.OldValues))
+                    {
+                        <MudItem xs="6">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Old Values</MudText>
+                            <MudPaper Elevation="0" Class="pa-2 mt-1" Style="background: #ffeaea; border-radius: 4px;">
+                                <pre style="margin: 0; font-size: 0.75rem; white-space: pre-wrap;">@_selectedLog.OldValues</pre>
+                            </MudPaper>
+                        </MudItem>
+                    }
+                    @if (!string.IsNullOrEmpty(_selectedLog.NewValues))
+                    {
+                        <MudItem xs="6">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">New Values</MudText>
+                            <MudPaper Elevation="0" Class="pa-2 mt-1" Style="background: #e8f5e9; border-radius: 4px;">
+                                <pre style="margin: 0; font-size: 0.75rem; white-space: pre-wrap;">@_selectedLog.NewValues</pre>
+                            </MudPaper>
+                        </MudItem>
+                    }
+                </MudGrid>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showDetailsDialog = false)">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<AuditLogDto> _logs = new();
+    private string _searchString = string.Empty;
+    private string _selectedAction = "All";
+    private string _selectedEntity = "All";
+    private DateTime? _startDate = DateTime.Today.AddDays(-7);
+    private DateTime? _endDate = DateTime.Today;
+    private bool _loading = false;
+    private bool _showDetailsDialog = false;
+    private AuditLogDto? _selectedLog = null;
+
+    private DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    private IEnumerable<AuditLogDto> FilteredLogs =>
+        _logs.Where(l =>
+            (string.IsNullOrWhiteSpace(_searchString) ||
+             l.UserName.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+             l.Description.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+             l.EntityType.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) &&
+            (_selectedAction == "All" || l.Action == _selectedAction) &&
+            (_selectedEntity == "All" || l.EntityType == _selectedEntity) &&
+            (!_startDate.HasValue || l.Timestamp.Date >= _startDate.Value.Date) &&
+            (!_endDate.HasValue || l.Timestamp.Date <= _endDate.Value.Date)
+        );
+
+    protected override void OnInitialized()
+    {
+        LoadAuditLogs();
+    }
+
+    private void LoadAuditLogs()
+    {
+        _logs = new List<AuditLogDto>
+        {
+            new() { Id = 1, Timestamp = DateTime.Now.AddMinutes(-5), UserId = "1", UserName = "Admin User", Action = "Create", EntityType = "Drug", EntityId = "25", Description = "Created new drug: Paracetamol Extra 650mg", IpAddress = "192.168.1.100", UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", NewValues = "{\n  \"Name\": \"Paracetamol Extra 650mg\",\n  \"Code\": \"PARA650\",\n  \"Price\": 75.00\n}" },
+            new() { Id = 2, Timestamp = DateTime.Now.AddMinutes(-15), UserId = "2", UserName = "John Kamau", Action = "Update", EntityType = "Batch", EntityId = "102", Description = "Updated batch status to Quarantined", IpAddress = "192.168.1.105", UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", OldValues = "{\n  \"Status\": \"Active\"\n}", NewValues = "{\n  \"Status\": \"Quarantined\"\n}" },
+            new() { Id = 3, Timestamp = DateTime.Now.AddMinutes(-30), UserId = "3", UserName = "Sarah Wanjiku", Action = "Create", EntityType = "Sale", EntityId = "1045", Description = "Completed retail sale RCP-2024012815301", IpAddress = "192.168.1.110", UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", NewValues = "{\n  \"TotalAmount\": 2350.00,\n  \"Items\": 5\n}" },
+            new() { Id = 4, Timestamp = DateTime.Now.AddHours(-1), UserId = "1", UserName = "Admin User", Action = "Login", EntityType = "User", EntityId = "1", Description = "User logged in successfully", IpAddress = "192.168.1.100", UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+            new() { Id = 5, Timestamp = DateTime.Now.AddHours(-2), UserId = "4", UserName = "Peter Otieno", Action = "Update", EntityType = "StockMovement", EntityId = "567", Description = "Stock adjustment: Added 500 units of Amoxicillin 250mg", IpAddress = "192.168.1.115", UserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", OldValues = "{\n  \"Quantity\": 150\n}", NewValues = "{\n  \"Quantity\": 650,\n  \"Reason\": \"New shipment received\"\n}" },
+            new() { Id = 6, Timestamp = DateTime.Now.AddHours(-3), UserId = "5", UserName = "Grace Muthoni", Action = "Create", EntityType = "Payment", EntityId = "234", Description = "Recorded payment of KES 125,000 for Invoice INV-2024-0032", IpAddress = "192.168.1.120", UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", NewValues = "{\n  \"Amount\": 125000,\n  \"Method\": \"Bank Transfer\"\n}" },
+            new() { Id = 7, Timestamp = DateTime.Now.AddDays(-1), UserId = "1", UserName = "Admin User", Action = "Delete", EntityType = "User", EntityId = "8", Description = "Deactivated user account: Test User", IpAddress = "192.168.1.100", UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", OldValues = "{\n  \"IsActive\": true\n}", NewValues = "{\n  \"IsActive\": false\n}" },
+            new() { Id = 8, Timestamp = DateTime.Now.AddDays(-1).AddHours(-5), UserId = "2", UserName = "John Kamau", Action = "Logout", EntityType = "User", EntityId = "2", Description = "User logged out", IpAddress = "192.168.1.105", UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+        };
+    }
+
+    private Color GetActionColor(string action) => action switch
+    {
+        "Create" => Color.Success,
+        "Update" => Color.Info,
+        "Delete" => Color.Error,
+        "Login" => Color.Primary,
+        "Logout" => Color.Default,
+        _ => Color.Default
+    };
+
+    private void ApplyFilters()
+    {
+        StateHasChanged();
+    }
+
+    private void ViewDetails(AuditLogDto log)
+    {
+        _selectedLog = log;
+        _showDetailsDialog = true;
+    }
+
+    private class AuditLogDto
+    {
+        public long Id { get; set; }
+        public DateTime Timestamp { get; set; }
+        public string UserId { get; set; } = string.Empty;
+        public string UserName { get; set; } = string.Empty;
+        public string Action { get; set; } = string.Empty;
+        public string EntityType { get; set; } = string.Empty;
+        public string? EntityId { get; set; }
+        public string Description { get; set; } = string.Empty;
+        public string? OldValues { get; set; }
+        public string? NewValues { get; set; }
+        public string IpAddress { get; set; } = string.Empty;
+        public string UserAgent { get; set; } = string.Empty;
+        public bool HasChanges => !string.IsNullOrEmpty(OldValues) || !string.IsNullOrEmpty(NewValues);
+    }
+}
