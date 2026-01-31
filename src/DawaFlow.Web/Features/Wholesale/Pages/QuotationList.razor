@@ -1,0 +1,212 @@
+@page "/wholesale/quotations"
+@using MudBlazor
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Quotations - DawaFlow</PageTitle>
+
+<!-- Hero Section -->
+<div class="df-hero animate-fade-in-up">
+    <div class="df-hero-content">
+        <div class="df-hero-text">
+            <h1>Quotations</h1>
+            <p>Manage price quotations and proposals for wholesale customers</p>
+        </div>
+        <div class="d-flex gap-2">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="CreateQuotation">
+                New Quotation
+            </MudButton>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="df-kpi-grid">
+    <div class="df-kpi-card animate-fade-in-up animate-delay-1">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon primary">
+                <MudIcon Icon="@Icons.Material.Filled.Description" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Total Quotations</div>
+            <div class="df-kpi-value">@_quotations.Count</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-2">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon warning">
+                <MudIcon Icon="@Icons.Material.Filled.Pending" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Pending Response</div>
+            <div class="df-kpi-value">@_quotations.Count(q => q.Status == "Pending")</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-3">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon success">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Accepted</div>
+            <div class="df-kpi-value">@_quotations.Count(q => q.Status == "Accepted")</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-4">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon info">
+                <MudIcon Icon="@Icons.Material.Filled.TrendingUp" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Total Value</div>
+            <div class="df-kpi-value">KES @_quotations.Sum(q => q.TotalAmount).ToString("N0")</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quotations Table -->
+<div class="df-alert-card animate-fade-in-up animate-delay-2 mt-4">
+    <div class="df-alert-header">
+        <MudTextField @bind-Value="_searchString"
+                      Placeholder="Search quotations..."
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      IconSize="Size.Medium"
+                      Immediate="true"
+                      Style="max-width: 400px;" />
+        <div class="d-flex gap-2">
+            <MudSelect T="string" @bind-Value="_selectedStatus" Label="Status" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
+                <MudSelectItem Value="@("All")">All Status</MudSelectItem>
+                <MudSelectItem Value="@("Draft")">Draft</MudSelectItem>
+                <MudSelectItem Value="@("Pending")">Pending</MudSelectItem>
+                <MudSelectItem Value="@("Accepted")">Accepted</MudSelectItem>
+                <MudSelectItem Value="@("Rejected")">Rejected</MudSelectItem>
+                <MudSelectItem Value="@("Expired")">Expired</MudSelectItem>
+            </MudSelect>
+        </div>
+    </div>
+
+    <MudTable T="QuotationDto" Items="@FilteredQuotations" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Class="mt-4">
+        <HeaderContent>
+            <MudTh>Quotation #</MudTh>
+            <MudTh>Customer</MudTh>
+            <MudTh>Date</MudTh>
+            <MudTh>Valid Until</MudTh>
+            <MudTh>Items</MudTh>
+            <MudTh>Total Amount</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Quotation #">
+                <MudText Typo="Typo.body2" Class="fw-bold">@context.QuotationNumber</MudText>
+            </MudTd>
+            <MudTd DataLabel="Customer">
+                <div>
+                    <MudText Typo="Typo.body2">@context.CustomerName</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.CustomerCode</MudText>
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Date">@context.QuotationDate.ToString("dd MMM yyyy")</MudTd>
+            <MudTd DataLabel="Valid Until">
+                <MudText Color="@(context.ValidUntil < DateTime.Now ? Color.Error : Color.Default)">
+                    @context.ValidUntil.ToString("dd MMM yyyy")
+                </MudText>
+            </MudTd>
+            <MudTd DataLabel="Items">@context.ItemCount items</MudTd>
+            <MudTd DataLabel="Total Amount">KES @context.TotalAmount.ToString("N0")</MudTd>
+            <MudTd DataLabel="Status">
+                <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">@context.Status</MudChip>
+            </MudTd>
+            <MudTd DataLabel="Actions">
+                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Color="Color.Info" OnClick="@(() => ViewQuotation(context))" />
+                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" Color="Color.Default" OnClick="@(() => DuplicateQuotation(context))" />
+                @if (context.Status == "Accepted")
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.ShoppingCart" Size="Size.Small" Color="Color.Success" OnClick="@(() => ConvertToSale(context))" />
+                }
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+        </PagerContent>
+    </MudTable>
+</div>
+
+@code {
+    private List<QuotationDto> _quotations = new();
+    private string _searchString = string.Empty;
+    private string _selectedStatus = "All";
+
+    private IEnumerable<QuotationDto> FilteredQuotations =>
+        _quotations.Where(q =>
+            (string.IsNullOrWhiteSpace(_searchString) ||
+             q.QuotationNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+             q.CustomerName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) &&
+            (_selectedStatus == "All" || q.Status == _selectedStatus)
+        );
+
+    protected override void OnInitialized()
+    {
+        LoadQuotations();
+    }
+
+    private void LoadQuotations()
+    {
+        _quotations = new List<QuotationDto>
+        {
+            new() { Id = 1, QuotationNumber = "QT-2024-0025", CustomerCode = "WC-001", CustomerName = "Nairobi Pharmacy Ltd", QuotationDate = DateTime.Now.AddDays(-3), ValidUntil = DateTime.Now.AddDays(27), ItemCount = 8, TotalAmount = 185000, Status = "Pending" },
+            new() { Id = 2, QuotationNumber = "QT-2024-0024", CustomerCode = "WC-002", CustomerName = "Mombasa Medicals", QuotationDate = DateTime.Now.AddDays(-5), ValidUntil = DateTime.Now.AddDays(25), ItemCount = 5, TotalAmount = 92000, Status = "Accepted" },
+            new() { Id = 3, QuotationNumber = "QT-2024-0023", CustomerCode = "WC-004", CustomerName = "Eldoret Pharmacy Group", QuotationDate = DateTime.Now.AddDays(-8), ValidUntil = DateTime.Now.AddDays(-1), ItemCount = 12, TotalAmount = 320000, Status = "Expired" },
+            new() { Id = 4, QuotationNumber = "QT-2024-0022", CustomerCode = "WC-003", CustomerName = "Kisumu Healthcare", QuotationDate = DateTime.Now.AddDays(-10), ValidUntil = DateTime.Now.AddDays(20), ItemCount = 4, TotalAmount = 45000, Status = "Draft" },
+            new() { Id = 5, QuotationNumber = "QT-2024-0021", CustomerCode = "WC-001", CustomerName = "Nairobi Pharmacy Ltd", QuotationDate = DateTime.Now.AddDays(-15), ValidUntil = DateTime.Now.AddDays(-5), ItemCount = 6, TotalAmount = 125000, Status = "Rejected" },
+        };
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Draft" => Color.Default,
+        "Pending" => Color.Warning,
+        "Accepted" => Color.Success,
+        "Rejected" => Color.Error,
+        "Expired" => Color.Secondary,
+        _ => Color.Default
+    };
+
+    private void CreateQuotation()
+    {
+        Snackbar.Add("Create quotation form coming soon", Severity.Info);
+    }
+
+    private void ViewQuotation(QuotationDto quotation)
+    {
+        Snackbar.Add($"Viewing quotation {quotation.QuotationNumber}", Severity.Info);
+    }
+
+    private void DuplicateQuotation(QuotationDto quotation)
+    {
+        Snackbar.Add($"Duplicating quotation {quotation.QuotationNumber}", Severity.Info);
+    }
+
+    private void ConvertToSale(QuotationDto quotation)
+    {
+        Navigation.NavigateTo($"/wholesale/sales/new?quotationId={quotation.Id}");
+    }
+
+    private class QuotationDto
+    {
+        public int Id { get; set; }
+        public string QuotationNumber { get; set; } = string.Empty;
+        public string CustomerCode { get; set; } = string.Empty;
+        public string CustomerName { get; set; } = string.Empty;
+        public DateTime QuotationDate { get; set; }
+        public DateTime ValidUntil { get; set; }
+        public int ItemCount { get; set; }
+        public decimal TotalAmount { get; set; }
+        public string Status { get; set; } = string.Empty;
+    }
+}
