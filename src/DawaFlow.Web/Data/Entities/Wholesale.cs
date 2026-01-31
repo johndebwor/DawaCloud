@@ -32,7 +32,7 @@ public class WholesaleSale : BaseAuditableEntity
     public decimal DiscountAmount { get; set; }
     public decimal TotalAmount { get; set; }
     public decimal PaidAmount { get; set; }
-    public decimal BalanceAmount => TotalAmount - PaidAmount;
+    public decimal BalanceAmount => Math.Max(0, TotalAmount - PaidAmount);
     public PaymentStatus PaymentStatus { get; set; } = PaymentStatus.Pending;
     public SaleStatus Status { get; set; } = SaleStatus.Draft;
     public string? DeliveryAddress { get; set; }
