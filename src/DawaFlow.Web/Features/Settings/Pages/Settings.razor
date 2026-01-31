@@ -1,0 +1,370 @@
+@page "/settings"
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Forms
+
+<PageTitle>Settings - DawaFlow</PageTitle>
+
+<!-- Hero Section -->
+<div class="df-hero animate-fade-in-up">
+    <div class="df-hero-content">
+        <div class="df-hero-text">
+            <h1>System Settings</h1>
+            <p>Configure your pharmacy system preferences</p>
+        </div>
+    </div>
+</div>
+
+<MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" Class="mt-4" PanelClass="pa-4">
+    <!-- Company Profile Tab -->
+    <MudTabPanel Text="Company Profile" Icon="@Icons.Material.Filled.Business">
+        <MudPaper Elevation="0" Class="pa-4">
+            <MudForm @ref="_companyForm">
+                <MudGrid>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_companySettings.CompanyName" Label="Company Name" Variant="Variant.Outlined" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_companySettings.PharmacyLicenseNumber" Label="Pharmacy License Number" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_companySettings.TaxId" Label="Tax ID / KRA PIN" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_companySettings.Email" Label="Email" InputType="InputType.Email" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_companySettings.Phone" Label="Phone" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_companySettings.Website" Label="Website" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="_companySettings.Address" Label="Address" Variant="Variant.Outlined" Lines="2" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_companySettings.City" Label="City" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_companySettings.Country" Label="Country" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudFileUpload T="IBrowserFile" Accept="image/*" MaximumFileCount="1">
+                            <ActivatorContent>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload">
+                                    Upload Logo
+                                </MudButton>
+                            </ActivatorContent>
+                        </MudFileUpload>
+                    </MudItem>
+                </MudGrid>
+                <div class="mt-4">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveCompanySettings">
+                        Save Changes
+                    </MudButton>
+                </div>
+            </MudForm>
+        </MudPaper>
+    </MudTabPanel>
+
+    <!-- Tax Configuration Tab -->
+    <MudTabPanel Text="Tax Configuration" Icon="@Icons.Material.Filled.Receipt">
+        <MudPaper Elevation="0" Class="pa-4">
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" @bind-Value="_companySettings.Currency" Label="Currency" Variant="Variant.Outlined">
+                        <MudSelectItem Value="@("KES")">KES - Kenyan Shilling</MudSelectItem>
+                        <MudSelectItem Value="@("USD")">USD - US Dollar</MudSelectItem>
+                        <MudSelectItem Value="@("TZS")">TZS - Tanzanian Shilling</MudSelectItem>
+                        <MudSelectItem Value="@("UGX")">UGX - Ugandan Shilling</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField @bind-Value="_companySettings.DefaultTaxRate" Label="Default VAT Rate (%)" Variant="Variant.Outlined" Min="0m" Max="100m" />
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-6" />
+
+            <MudText Typo="Typo.h6" Class="mb-4">Tax Categories</MudText>
+            <MudTable Items="@_taxCategories" Dense="true" Hover="true">
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Rate (%)</MudTh>
+                    <MudTh>Description</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Name</MudTd>
+                    <MudTd>@context.Rate%</MudTd>
+                    <MudTd>@context.Description</MudTd>
+                    <MudTd>
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Info" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" />
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+
+            <div class="mt-4">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">
+                    Add Tax Category
+                </MudButton>
+            </div>
+        </MudPaper>
+    </MudTabPanel>
+
+    <!-- Alert Thresholds Tab -->
+    <MudTabPanel Text="Alert Thresholds" Icon="@Icons.Material.Filled.NotificationsActive">
+        <MudPaper Elevation="0" Class="pa-4">
+            <MudText Typo="Typo.h6" Class="mb-4">Stock Alerts</MudText>
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudNumericField @bind-Value="_companySettings.LowStockThresholdDays" Label="Low Stock Alert (Days of Supply)" Variant="Variant.Outlined" Min="1" />
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-6" />
+
+            <MudText Typo="Typo.h6" Class="mb-4">Expiry Alerts</MudText>
+            <MudGrid>
+                <MudItem xs="12" md="4">
+                    <MudNumericField @bind-Value="_companySettings.ExpiryAlertDays90" Label="First Alert (Days Before Expiry)" Variant="Variant.Outlined" Min="1" HelperText="Typically 90 days" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudNumericField @bind-Value="_companySettings.ExpiryAlertDays60" Label="Second Alert (Days Before Expiry)" Variant="Variant.Outlined" Min="1" HelperText="Typically 60 days" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudNumericField @bind-Value="_companySettings.ExpiryAlertDays30" Label="Urgent Alert (Days Before Expiry)" Variant="Variant.Outlined" Min="1" HelperText="Typically 30 days" />
+                </MudItem>
+            </MudGrid>
+
+            <div class="mt-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAlertSettings">
+                    Save Changes
+                </MudButton>
+            </div>
+        </MudPaper>
+    </MudTabPanel>
+
+    <!-- Email Configuration Tab -->
+    <MudTabPanel Text="Email / SMS" Icon="@Icons.Material.Filled.Email">
+        <MudPaper Elevation="0" Class="pa-4">
+            <MudText Typo="Typo.h6" Class="mb-4">Email (SMTP) Configuration</MudText>
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_emailSettings.SmtpHost" Label="SMTP Host" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField @bind-Value="_emailSettings.SmtpPort" Label="SMTP Port" Variant="Variant.Outlined" Min="1" Max="65535" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_emailSettings.Username" Label="Username" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_emailSettings.Password" Label="Password" InputType="InputType.Password" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_emailSettings.FromEmail" Label="From Email" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_emailSettings.FromName" Label="From Name" Variant="Variant.Outlined" />
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-6" />
+
+            <MudText Typo="Typo.h6" Class="mb-4">WhatsApp / Twilio Configuration</MudText>
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_whatsAppSettings.AccountSid" Label="Twilio Account SID" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_whatsAppSettings.AuthToken" Label="Auth Token" InputType="InputType.Password" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_whatsAppSettings.FromNumber" Label="WhatsApp Number" Variant="Variant.Outlined" HelperText="Format: +254XXXXXXXXX" />
+                </MudItem>
+            </MudGrid>
+
+            <div class="mt-4">
+                <MudButton Variant="Variant.Outlined" Color="Color.Info" Class="mr-2" OnClick="TestEmailConnection">
+                    Test Email Connection
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveNotificationSettings">
+                    Save Changes
+                </MudButton>
+            </div>
+        </MudPaper>
+    </MudTabPanel>
+
+    <!-- Notification Templates Tab -->
+    <MudTabPanel Text="Templates" Icon="@Icons.Material.Filled.Description">
+        <MudPaper Elevation="0" Class="pa-4">
+            <div class="d-flex justify-space-between align-center mb-4">
+                <MudText Typo="Typo.h6">Notification Templates</MudText>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">
+                    New Template
+                </MudButton>
+            </div>
+
+            <MudTable Items="@_templates" Dense="true" Hover="true">
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Type</MudTh>
+                    <MudTh>Channel</MudTh>
+                    <MudTh>Subject</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Name</MudTd>
+                    <MudTd>@context.Type</MudTd>
+                    <MudTd>
+                        <MudChip T="string" Size="Size.Small" Color="@GetChannelColor(context.Channel)">@context.Channel</MudChip>
+                    </MudTd>
+                    <MudTd>@context.Subject</MudTd>
+                    <MudTd>
+                        <MudChip T="string" Size="Size.Small" Color="@(context.IsActive ? Color.Success : Color.Default)">
+                            @(context.IsActive ? "Active" : "Inactive")
+                        </MudChip>
+                    </MudTd>
+                    <MudTd>
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Info" />
+                        <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" Color="Color.Default" />
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudPaper>
+    </MudTabPanel>
+</MudTabs>
+
+@code {
+    private MudForm? _companyForm;
+    private CompanySettingsModel _companySettings = new();
+    private EmailSettingsModel _emailSettings = new();
+    private WhatsAppSettingsModel _whatsAppSettings = new();
+    private List<TaxCategoryModel> _taxCategories = new();
+    private List<TemplateModel> _templates = new();
+
+    protected override void OnInitialized()
+    {
+        LoadSettings();
+    }
+
+    private void LoadSettings()
+    {
+        _companySettings = new CompanySettingsModel
+        {
+            CompanyName = "DawaFlow Pharmacy",
+            PharmacyLicenseNumber = "PPB/LIC/12345",
+            TaxId = "A123456789Z",
+            Email = "info@dawaflow.co.ke",
+            Phone = "+254 720 123456",
+            Website = "www.dawaflow.co.ke",
+            Address = "123 Kenyatta Avenue",
+            City = "Nairobi",
+            Country = "Kenya",
+            Currency = "KES",
+            DefaultTaxRate = 16,
+            LowStockThresholdDays = 14,
+            ExpiryAlertDays30 = 30,
+            ExpiryAlertDays60 = 60,
+            ExpiryAlertDays90 = 90
+        };
+
+        _taxCategories = new List<TaxCategoryModel>
+        {
+            new() { Name = "Standard VAT", Rate = 16, Description = "Standard VAT rate for most products" },
+            new() { Name = "Zero Rated", Rate = 0, Description = "Zero-rated essential medicines" },
+            new() { Name = "Exempt", Rate = 0, Description = "Tax exempt items" }
+        };
+
+        _templates = new List<TemplateModel>
+        {
+            new() { Name = "Low Stock Alert", Type = "Stock Alert", Channel = "Email", Subject = "Low Stock Alert - Action Required", IsActive = true },
+            new() { Name = "Expiry Warning", Type = "Expiry Alert", Channel = "Email", Subject = "Drug Expiry Warning", IsActive = true },
+            new() { Name = "Order Confirmation", Type = "Order Update", Channel = "WhatsApp", Subject = "Order Confirmed", IsActive = true },
+            new() { Name = "Delivery Notification", Type = "Delivery Update", Channel = "WhatsApp", Subject = "Delivery Scheduled", IsActive = true },
+            new() { Name = "Payment Reminder", Type = "Payment", Channel = "Email", Subject = "Payment Reminder", IsActive = false }
+        };
+    }
+
+    private Color GetChannelColor(string channel) => channel switch
+    {
+        "Email" => Color.Info,
+        "WhatsApp" => Color.Success,
+        "SMS" => Color.Warning,
+        _ => Color.Default
+    };
+
+    private async Task SaveCompanySettings()
+    {
+        await Task.Delay(500);
+    }
+
+    private async Task SaveAlertSettings()
+    {
+        await Task.Delay(500);
+    }
+
+    private async Task SaveNotificationSettings()
+    {
+        await Task.Delay(500);
+    }
+
+    private async Task TestEmailConnection()
+    {
+        await Task.Delay(1000);
+    }
+
+    private class CompanySettingsModel
+    {
+        public string CompanyName { get; set; } = string.Empty;
+        public string? PharmacyLicenseNumber { get; set; }
+        public string? TaxId { get; set; }
+        public string? Email { get; set; }
+        public string? Phone { get; set; }
+        public string? Website { get; set; }
+        public string? Address { get; set; }
+        public string? City { get; set; }
+        public string? Country { get; set; }
+        public string Currency { get; set; } = "KES";
+        public decimal DefaultTaxRate { get; set; } = 16;
+        public int LowStockThresholdDays { get; set; } = 14;
+        public int ExpiryAlertDays30 { get; set; } = 30;
+        public int ExpiryAlertDays60 { get; set; } = 60;
+        public int ExpiryAlertDays90 { get; set; } = 90;
+    }
+
+    private class EmailSettingsModel
+    {
+        public string? SmtpHost { get; set; }
+        public int SmtpPort { get; set; } = 587;
+        public string? Username { get; set; }
+        public string? Password { get; set; }
+        public string? FromEmail { get; set; }
+        public string? FromName { get; set; }
+    }
+
+    private class WhatsAppSettingsModel
+    {
+        public string? AccountSid { get; set; }
+        public string? AuthToken { get; set; }
+        public string? FromNumber { get; set; }
+    }
+
+    private class TaxCategoryModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public decimal Rate { get; set; }
+        public string? Description { get; set; }
+    }
+
+    private class TemplateModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
+        public string Channel { get; set; } = string.Empty;
+        public string Subject { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
+    }
+}

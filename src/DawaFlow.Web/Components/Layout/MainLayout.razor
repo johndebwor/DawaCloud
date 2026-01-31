@@ -126,6 +126,9 @@
                     <MudNavLink Href="/drugs" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Medication">
                         @if (_drawerOpen) { <span>Drugs</span> }
                     </MudNavLink>
+                    <MudNavLink Href="/batches" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.LocalOffer">
+                        @if (_drawerOpen) { <span>Batches</span> }
+                    </MudNavLink>
                     <MudNavLink Href="/inventory/stock-levels" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Inventory">
                         @if (_drawerOpen) { <span>Inventory</span> }
                     </MudNavLink>
@@ -139,12 +142,29 @@
 
                 @if (_drawerOpen)
                 {
+                    <div class="df-nav-section-title" style="margin-top: 16px;">Sales</div>
+                }
+
+                <MudNavMenu>
+                    <MudNavLink Href="/pos" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PointOfSale">
+                        @if (_drawerOpen) { <span>Point of Sale</span> }
+                    </MudNavLink>
+                    <MudNavLink Href="/wholesale" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Business">
+                        @if (_drawerOpen) { <span>Wholesale</span> }
+                    </MudNavLink>
+                </MudNavMenu>
+
+                @if (_drawerOpen)
+                {
                     <div class="df-nav-section-title" style="margin-top: 16px;">Analytics</div>
                 }
 
                 <MudNavMenu>
                     <MudNavLink Href="/reports" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assessment">
                         @if (_drawerOpen) { <span>Reports</span> }
+                    </MudNavLink>
+                    <MudNavLink Href="/audit" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.History">
+                        @if (_drawerOpen) { <span>Audit Logs</span> }
                     </MudNavLink>
                 </MudNavMenu>
 
@@ -154,6 +174,9 @@
                 }
 
                 <MudNavMenu>
+                    <MudNavLink Href="/users" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.People">
+                        @if (_drawerOpen) { <span>Users</span> }
+                    </MudNavLink>
                     <MudNavLink Href="/settings" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Settings">
                         @if (_drawerOpen) { <span>Settings</span> }
                     </MudNavLink>

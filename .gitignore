@@ -1,0 +1,88 @@
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Visual Studio
+.vs/
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+*.sln.iml
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# NuGet packages
+packages/
+*.nupkg
+*.snupkg
+*.nuget.props
+*.nuget.targets
+nuget.config
+
+# SQL Server files
+*.mdf
+*.ldf
+*.ndf
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Mac OS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Application logs
+*.log
+app.log
+
+# Build artifacts
+publish/
+wwwroot/dist/
+node_modules/
+
+# Entity Framework migrations
+*.Designer.cs.bak
+
+# Local settings
+appsettings.Local.json
+appsettings.*.Local.json
+secrets.json
