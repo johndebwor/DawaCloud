@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DawaFlow.Web")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ac5ca8dbc5d900ad716051f4560c46a8c148ec7d")]
 [assembly: System.Reflection.AssemblyProductAttribute("DawaFlow.Web")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DawaFlow.Web")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
