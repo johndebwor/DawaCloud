@@ -9,11 +9,12 @@
 
 <PageTitle>Drug Requests - DawaFlow</PageTitle>
 
-<div class="mb-4">
-    <div class="d-flex justify-space-between align-center mb-4">
-        <div>
-            <MudText Typo="Typo.h4" Class="mb-1">Drug Requests</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">Procurement requests and supplier orders</MudText>
+<!-- Hero Section -->
+<div class="df-hero animate-fade-in-up">
+    <div class="df-hero-content">
+        <div class="df-hero-text">
+            <h1>Drug Requests</h1>
+            <p>Procurement requests and supplier orders</p>
         </div>
         <MudButton Variant="Variant.Filled"
                    Color="Color.Primary"
@@ -22,78 +23,73 @@
             New Request
         </MudButton>
     </div>
+</div>
 
-    <MudGrid Class="mb-4">
-        <MudItem xs="12" sm="6" md="3">
-            <MudPaper Elevation="2" Class="pa-4">
-                <div class="d-flex align-center gap-3">
-                    <div class="kpi-icon warning">
-                        <MudIcon Icon="@Icons.Material.Filled.PendingActions" />
-                    </div>
-                    <div>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">Pending Approval</MudText>
-                        <MudText Typo="Typo.h5" Color="Color.Warning">@_requests.Count(r => r.Status == "PendingApproval")</MudText>
-                    </div>
-                </div>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="3">
-            <MudPaper Elevation="2" Class="pa-4">
-                <div class="d-flex align-center gap-3">
-                    <div class="kpi-icon success">
-                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
-                    </div>
-                    <div>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">Approved</MudText>
-                        <MudText Typo="Typo.h5" Color="Color.Success">@_requests.Count(r => r.Status == "Approved")</MudText>
-                    </div>
-                </div>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="3">
-            <MudPaper Elevation="2" Class="pa-4">
-                <div class="d-flex align-center gap-3">
-                    <div class="kpi-icon info">
-                        <MudIcon Icon="@Icons.Material.Filled.LocalShipping" />
-                    </div>
-                    <div>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">In Transit</MudText>
-                        <MudText Typo="Typo.h5" Color="Color.Info">@_requests.Count(r => r.Status == "SentToSupplier" || r.Status == "SupplierConfirmed")</MudText>
-                    </div>
-                </div>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="3">
-            <MudPaper Elevation="2" Class="pa-4">
-                <div class="d-flex align-center gap-3">
-                    <div class="kpi-icon primary">
-                        <MudIcon Icon="@Icons.Material.Filled.Receipt" />
-                    </div>
-                    <div>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">Total Value</MudText>
-                        <MudText Typo="Typo.h5" Color="Color.Primary">KES @_requests.Sum(r => r.TotalAmount).ToString("N0")</MudText>
-                    </div>
-                </div>
-            </MudPaper>
-        </MudItem>
-    </MudGrid>
-
-    <MudPaper Elevation="2" Class="pa-4">
-        <div class="d-flex justify-space-between align-center mb-4">
-            <MudSelect T="string" @bind-Value="_selectedStatus" Label="Status Filter" Variant="Variant.Outlined" Dense="true" Style="max-width: 250px;" OnSelectedValuesChanged="@((IEnumerable<string> _) => LoadRequests())">
-                <MudSelectItem Value="@("All")">All Status</MudSelectItem>
-                <MudSelectItem Value="@("Draft")">Draft</MudSelectItem>
-                <MudSelectItem Value="@("PendingApproval")">Pending Approval</MudSelectItem>
-                <MudSelectItem Value="@("Approved")">Approved</MudSelectItem>
-                <MudSelectItem Value="@("Rejected")">Rejected</MudSelectItem>
-                <MudSelectItem Value="@("SentToSupplier")">Sent to Supplier</MudSelectItem>
-                <MudSelectItem Value="@("SupplierConfirmed")">Supplier Confirmed</MudSelectItem>
-                <MudSelectItem Value="@("Delivered")">Delivered</MudSelectItem>
-                <MudSelectItem Value="@("Completed")">Completed</MudSelectItem>
-            </MudSelect>
+<!-- KPI Cards -->
+<div class="df-kpi-grid">
+    <div class="df-kpi-card animate-fade-in-up animate-delay-1">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon warning">
+                <MudIcon Icon="@Icons.Material.Filled.PendingActions" />
+            </div>
         </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Pending Approval</div>
+            <div class="df-kpi-value">@_requests.Count(r => r.Status == "PendingApproval")</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-2">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon success">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Approved</div>
+            <div class="df-kpi-value">@_requests.Count(r => r.Status == "Approved")</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-3">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon info">
+                <MudIcon Icon="@Icons.Material.Filled.LocalShipping" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">In Transit</div>
+            <div class="df-kpi-value">@_requests.Count(r => r.Status == "SentToSupplier" || r.Status == "SupplierConfirmed")</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-4">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon primary">
+                <MudIcon Icon="@Icons.Material.Filled.Receipt" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Total Value</div>
+            <div class="df-kpi-value">KES @_requests.Sum(r => r.TotalAmount).ToString("N0")</div>
+        </div>
+    </div>
+</div>
 
-        <MudTable T="DrugRequestSummaryDto" Items="@_requests" Dense="true" Hover="true" Loading="@_loading">
+<!-- Requests Table -->
+<div class="df-alert-card animate-fade-in-up animate-delay-2 mt-4">
+    <div class="df-alert-header">
+        <MudSelect T="string" @bind-Value="_selectedStatus" Label="Status Filter" Variant="Variant.Outlined" Dense="true" Style="max-width: 250px;" OnSelectedValuesChanged="@((IEnumerable<string> _) => LoadRequests())">
+            <MudSelectItem Value="@("All")">All Status</MudSelectItem>
+            <MudSelectItem Value="@("Draft")">Draft</MudSelectItem>
+            <MudSelectItem Value="@("PendingApproval")">Pending Approval</MudSelectItem>
+            <MudSelectItem Value="@("Approved")">Approved</MudSelectItem>
+            <MudSelectItem Value="@("Rejected")">Rejected</MudSelectItem>
+            <MudSelectItem Value="@("SentToSupplier")">Sent to Supplier</MudSelectItem>
+            <MudSelectItem Value="@("SupplierConfirmed")">Supplier Confirmed</MudSelectItem>
+            <MudSelectItem Value="@("Delivered")">Delivered</MudSelectItem>
+            <MudSelectItem Value="@("Completed")">Completed</MudSelectItem>
+        </MudSelect>
+    </div>
+
+    <MudTable T="DrugRequestSummaryDto" Items="@_requests" Dense="true" Hover="true" Loading="@_loading" Class="mt-4">
             <HeaderContent>
                 <MudTh>Request #</MudTh>
                 <MudTh>Date</MudTh>
@@ -146,8 +142,7 @@
                 </MudTd>
             </RowTemplate>
         </MudTable>
-    </MudPaper>
-</div>
+    </div>
 
 @code {
     private List<DrugRequestSummaryDto> _requests = new();

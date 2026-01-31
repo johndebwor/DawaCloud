@@ -8,11 +8,12 @@
 
 <PageTitle>Stock Levels - DawaFlow</PageTitle>
 
-<div class="mb-4">
-    <div class="d-flex justify-space-between align-center mb-4">
-        <div>
-            <MudText Typo="Typo.h4" Class="mb-1">Stock Levels</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">Real-time inventory quantities across all batches</MudText>
+<!-- Hero Section -->
+<div class="df-hero animate-fade-in-up">
+    <div class="df-hero-content">
+        <div class="df-hero-text">
+            <h1>Stock Levels</h1>
+            <p>Real-time inventory quantities across all batches</p>
         </div>
         <div class="d-flex gap-2">
             <MudButton Variant="Variant.Outlined"
@@ -28,94 +29,85 @@
             </MudButton>
         </div>
     </div>
+</div>
 
-    <!-- KPI Cards -->
-    <MudGrid Class="mb-4">
-        <MudItem xs="12" sm="6" md="3">
-            <MudPaper Elevation="2" Class="pa-4">
-                <div class="d-flex align-center gap-3">
-                    <div class="kpi-icon success">
-                        <MudIcon Icon="@Icons.Material.Filled.Inventory" />
-                    </div>
-                    <div>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">Total SKUs</MudText>
-                        <MudText Typo="Typo.h5">@_stockItems.Count</MudText>
-                    </div>
-                </div>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="3">
-            <MudPaper Elevation="2" Class="pa-4">
-                <div class="d-flex align-center gap-3">
-                    <div class="kpi-icon warning">
-                        <MudIcon Icon="@Icons.Material.Filled.Warning" />
-                    </div>
-                    <div>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">Low Stock</MudText>
-                        <MudText Typo="Typo.h5" Color="Color.Warning">@_stockItems.Count(s => s.StockLevel == "Low")</MudText>
-                    </div>
-                </div>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="3">
-            <MudPaper Elevation="2" Class="pa-4">
-                <div class="d-flex align-center gap-3">
-                    <div class="kpi-icon error">
-                        <MudIcon Icon="@Icons.Material.Filled.Error" />
-                    </div>
-                    <div>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">Out of Stock</MudText>
-                        <MudText Typo="Typo.h5" Color="Color.Error">@_stockItems.Count(s => s.StockLevel == "Out")</MudText>
-                    </div>
-                </div>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="3">
-            <MudPaper Elevation="2" Class="pa-4">
-                <div class="d-flex align-center gap-3">
-                    <div class="kpi-icon primary">
-                        <MudIcon Icon="@Icons.Material.Filled.TrendingUp" />
-                    </div>
-                    <div>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">Stock Value</MudText>
-                        <MudText Typo="Typo.h5" Color="Color.Success">KES @_stockItems.Sum(s => s.TotalValue).ToString("N0")</MudText>
-                    </div>
-                </div>
-            </MudPaper>
-        </MudItem>
-    </MudGrid>
-
-    <!-- Filters and Search -->
-    <MudPaper Elevation="2" Class="pa-4">
-        <div class="d-flex justify-space-between align-center mb-4">
-            <MudTextField @bind-Value="_searchString"
-                          Placeholder="Search by drug name or code..."
-                          Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Search"
-                          IconSize="Size.Medium"
-                          Class="mt-0"
-                          Style="max-width: 400px;"
-                          Immediate="true" />
-
-            <div class="d-flex gap-2">
-                <MudSelect T="string" @bind-Value="_selectedCategory" Label="Category" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
-                    <MudSelectItem Value="@("All")">All Categories</MudSelectItem>
-                    <MudSelectItem Value="@("Analgesics")">Analgesics</MudSelectItem>
-                    <MudSelectItem Value="@("Antibiotics")">Antibiotics</MudSelectItem>
-                    <MudSelectItem Value="@("Cardiovascular")">Cardiovascular</MudSelectItem>
-                </MudSelect>
-
-                <MudSelect T="string" @bind-Value="_selectedStockLevel" Label="Stock Level" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
-                    <MudSelectItem Value="@("All")">All Levels</MudSelectItem>
-                    <MudSelectItem Value="@("Good")">Good Stock</MudSelectItem>
-                    <MudSelectItem Value="@("Low")">Low Stock</MudSelectItem>
-                    <MudSelectItem Value="@("Out")">Out of Stock</MudSelectItem>
-                </MudSelect>
+<!-- KPI Cards -->
+<div class="df-kpi-grid">
+    <div class="df-kpi-card animate-fade-in-up animate-delay-1">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon success">
+                <MudIcon Icon="@Icons.Material.Filled.Inventory" />
             </div>
         </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Total SKUs</div>
+            <div class="df-kpi-value">@_stockItems.Count</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-2">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon warning">
+                <MudIcon Icon="@Icons.Material.Filled.Warning" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Low Stock</div>
+            <div class="df-kpi-value">@_stockItems.Count(s => s.StockLevel == "Low")</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-3">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon danger">
+                <MudIcon Icon="@Icons.Material.Filled.Error" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Out of Stock</div>
+            <div class="df-kpi-value">@_stockItems.Count(s => s.StockLevel == "Out")</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-4">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon primary">
+                <MudIcon Icon="@Icons.Material.Filled.TrendingUp" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Stock Value</div>
+            <div class="df-kpi-value">KES @_stockItems.Sum(s => s.TotalValue).ToString("N0")</div>
+        </div>
+    </div>
+</div>
 
-        <!-- Stock Table -->
-        <MudTable T="StockLevelDto" Items="@FilteredItems" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading">
+<!-- Filters and Table -->
+<div class="df-alert-card animate-fade-in-up animate-delay-2 mt-4">
+    <div class="df-alert-header">
+        <MudTextField @bind-Value="_searchString"
+                      Placeholder="Search by drug name or code..."
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Immediate="true"
+                      Style="max-width: 400px;" />
+
+        <div class="d-flex gap-2">
+            <MudSelect T="string" @bind-Value="_selectedCategory" Label="Category" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
+                <MudSelectItem Value="@("All")">All Categories</MudSelectItem>
+                <MudSelectItem Value="@("Analgesics")">Analgesics</MudSelectItem>
+                <MudSelectItem Value="@("Antibiotics")">Antibiotics</MudSelectItem>
+                <MudSelectItem Value="@("Cardiovascular")">Cardiovascular</MudSelectItem>
+            </MudSelect>
+
+            <MudSelect T="string" @bind-Value="_selectedStockLevel" Label="Stock Level" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
+                <MudSelectItem Value="@("All")">All Levels</MudSelectItem>
+                <MudSelectItem Value="@("Good")">Good Stock</MudSelectItem>
+                <MudSelectItem Value="@("Low")">Low Stock</MudSelectItem>
+                <MudSelectItem Value="@("Out")">Out of Stock</MudSelectItem>
+            </MudSelect>
+        </div>
+    </div>
+
+    <!-- Stock Table -->
+    <MudTable T="StockLevelDto" Items="@FilteredItems" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" Class="mt-4">
             <HeaderContent>
                 <MudTh>Drug</MudTh>
                 <MudTh>Category</MudTh>
@@ -158,8 +150,7 @@
                 </MudTd>
             </RowTemplate>
         </MudTable>
-    </MudPaper>
-</div>
+    </div>
 
 @code {
     private List<StockLevelDto> _stockItems = new();

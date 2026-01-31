@@ -3,66 +3,107 @@
 
 <PageTitle>Drugs - DawaFlow</PageTitle>
 
-<div class="mb-4">
-    <div class="d-flex justify-space-between align-center mb-4">
-        <div>
-            <MudText Typo="Typo.h4" Class="mb-1">Drug Inventory</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">Manage your pharmaceutical products</MudText>
+<!-- Hero Section -->
+<div class="df-hero animate-fade-in-up">
+    <div class="df-hero-content">
+        <div class="df-hero-text">
+            <h1>Drug Inventory</h1>
+            <p>Manage your pharmaceutical products</p>
         </div>
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   StartIcon="@Icons.Material.Filled.Add"
-                   Href="/drugs/new">
-            Add New Drug
-        </MudButton>
+        <div class="d-flex gap-2">
+            <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.FileDownload">
+                Export
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       Href="/drugs/new">
+                Add New Drug
+            </MudButton>
+        </div>
     </div>
+</div>
 
-    <!-- Search and Filters -->
-    <MudPaper Elevation="2" Class="pa-4 mb-4">
-        <MudGrid>
-            <MudItem xs="12" md="4">
-                <MudTextField @bind-Value="_searchString"
-                              Placeholder="Search by name, code, or manufacturer..."
-                              Adornment="Adornment.Start"
-                              AdornmentIcon="@Icons.Material.Filled.Search"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              Immediate="true" />
-            </MudItem>
-            <MudItem xs="12" md="3">
-                <MudSelect T="string" @bind-Value="_selectedCategory"
-                           Label="Category"
-                           Variant="Variant.Outlined"
-                           Margin="Margin.Dense"
-                           AnchorOrigin="Origin.BottomCenter">
-                    <MudSelectItem Value="@("All")">All Categories</MudSelectItem>
-                    <MudSelectItem Value="@("Analgesics")">Analgesics</MudSelectItem>
-                    <MudSelectItem Value="@("Antibiotics")">Antibiotics</MudSelectItem>
-                    <MudSelectItem Value="@("Antihistamines")">Antihistamines</MudSelectItem>
-                </MudSelect>
-            </MudItem>
-            <MudItem xs="12" md="3">
-                <MudSelect T="string" @bind-Value="_selectedStatus"
-                           Label="Status"
-                           Variant="Variant.Outlined"
-                           Margin="Margin.Dense"
-                           AnchorOrigin="Origin.BottomCenter">
-                    <MudSelectItem Value="@("All")">All Status</MudSelectItem>
-                    <MudSelectItem Value="@("Active")">Active</MudSelectItem>
-                    <MudSelectItem Value="@("Low Stock")">Low Stock</MudSelectItem>
-                    <MudSelectItem Value="@("Out of Stock")">Out of Stock</MudSelectItem>
-                </MudSelect>
-            </MudItem>
-            <MudItem xs="12" md="2">
-                <MudButton Variant="Variant.Outlined"
-                           Color="Color.Primary"
-                           FullWidth="true"
-                           StartIcon="@Icons.Material.Filled.FilterList">
-                    More Filters
-                </MudButton>
-            </MudItem>
-        </MudGrid>
-    </MudPaper>
+<!-- KPI Cards -->
+<div class="df-kpi-grid">
+    <div class="df-kpi-card animate-fade-in-up animate-delay-1">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon primary">
+                <MudIcon Icon="@Icons.Material.Filled.Medication" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Total Drugs</div>
+            <div class="df-kpi-value">@_drugs.Count</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-2">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon success">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">In Stock</div>
+            <div class="df-kpi-value">@_drugs.Count(d => d.CurrentStock > d.ReorderLevel)</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-3">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon warning">
+                <MudIcon Icon="@Icons.Material.Filled.Warning" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Low Stock</div>
+            <div class="df-kpi-value">@_drugs.Count(d => d.CurrentStock <= d.ReorderLevel && d.CurrentStock > 0)</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-4">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon danger">
+                <MudIcon Icon="@Icons.Material.Filled.Error" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Out of Stock</div>
+            <div class="df-kpi-value">@_drugs.Count(d => d.CurrentStock == 0)</div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="df-alert-card animate-fade-in-up animate-delay-2 mt-4">
+    <div class="df-alert-header">
+        <MudTextField @bind-Value="_searchString"
+                      Placeholder="Search by name, code, or manufacturer..."
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Immediate="true"
+                      Style="max-width: 400px;" />
+        <div class="d-flex gap-2">
+            <MudSelect T="string" @bind-Value="_selectedCategory"
+                       Label="Category"
+                       Variant="Variant.Outlined"
+                       Dense="true"
+                       Style="min-width: 150px;">
+                <MudSelectItem Value="@("All")">All Categories</MudSelectItem>
+                <MudSelectItem Value="@("Analgesics")">Analgesics</MudSelectItem>
+                <MudSelectItem Value="@("Antibiotics")">Antibiotics</MudSelectItem>
+                <MudSelectItem Value="@("Antihistamines")">Antihistamines</MudSelectItem>
+            </MudSelect>
+            <MudSelect T="string" @bind-Value="_selectedStatus"
+                       Label="Status"
+                       Variant="Variant.Outlined"
+                       Dense="true"
+                       Style="min-width: 150px;">
+                <MudSelectItem Value="@("All")">All Status</MudSelectItem>
+                <MudSelectItem Value="@("Active")">Active</MudSelectItem>
+                <MudSelectItem Value="@("Low Stock")">Low Stock</MudSelectItem>
+                <MudSelectItem Value="@("Out of Stock")">Out of Stock</MudSelectItem>
+            </MudSelect>
+        </div>
+    </div>
 
     <!-- Data Table -->
     <MudTable Items="@FilteredDrugs"
@@ -70,8 +111,8 @@
               Breakpoint="Breakpoint.Sm"
               Loading="@_loading"
               LoadingProgressColor="Color.Primary"
-              Elevation="2"
-              Dense="true">
+              Dense="true"
+              Class="mt-4">
         <HeaderContent>
             <MudTh>Code</MudTh>
             <MudTh>Drug Name</MudTh>
