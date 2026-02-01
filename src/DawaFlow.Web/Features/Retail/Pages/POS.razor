@@ -39,7 +39,7 @@
                         <MudIcon Icon="@Icons.Material.Filled.Medication" Size="Size.Large" />
                     </div>
                     <div class="pos-product-name">@product.Name</div>
-                    <div class="pos-product-price">KES @product.Price.ToString("N0")</div>
+                    <div class="pos-product-price">SSP @product.Price.ToString("N0")</div>
                     @if (product.Stock <= 10)
                     {
                         <div class="pos-product-stock warning">@product.Stock left</div>
@@ -97,7 +97,7 @@
                     <div class="pos-cart-item">
                         <div class="pos-cart-item-info">
                             <div class="pos-cart-item-name">@item.Name</div>
-                            <div class="pos-cart-item-price">KES @item.UnitPrice.ToString("N0") × @item.Quantity</div>
+                            <div class="pos-cart-item-price">SSP @item.UnitPrice.ToString("N0") × @item.Quantity</div>
                         </div>
                         <div class="pos-cart-item-controls">
                             <MudIconButton Icon="@Icons.Material.Filled.Remove" Size="Size.Small" OnClick="@(() => DecreaseQuantity(item))" />
@@ -105,7 +105,7 @@
                             <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" OnClick="@(() => IncreaseQuantity(item))" />
                         </div>
                         <div class="pos-cart-item-total">
-                            KES @item.LineTotal.ToString("N0")
+                            SSP @item.LineTotal.ToString("N0")
                         </div>
                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => RemoveFromCart(item))" />
                     </div>
@@ -117,22 +117,22 @@
         <div class="pos-totals">
             <div class="pos-total-row">
                 <span>Subtotal</span>
-                <span>KES @_subtotal.ToString("N2")</span>
+                <span>SSP @_subtotal.ToString("N2")</span>
             </div>
             <div class="pos-total-row">
                 <span>Tax (16%)</span>
-                <span>KES @_taxAmount.ToString("N2")</span>
+                <span>SSP @_taxAmount.ToString("N2")</span>
             </div>
             @if (_discountAmount > 0)
             {
                 <div class="pos-total-row discount">
                     <span>Discount</span>
-                    <span>- KES @_discountAmount.ToString("N2")</span>
+                    <span>- SSP @_discountAmount.ToString("N2")</span>
                 </div>
             }
             <div class="pos-total-row grand-total">
                 <span>TOTAL</span>
-                <span>KES @_grandTotal.ToString("N2")</span>
+                <span>SSP @_grandTotal.ToString("N2")</span>
             </div>
         </div>
 
@@ -146,10 +146,10 @@
                     Clear
                 </MudButton>
             </div>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Large" 
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Large"
                        StartIcon="@Icons.Material.Filled.Payment" OnClick="ProcessPayment"
                        Disabled="@(_cartItems.Count == 0)">
-                PAY KES @_grandTotal.ToString("N0") (F12)
+                PAY SSP @_grandTotal.ToString("N0") (F12)
             </MudButton>
         </div>
     </div>
@@ -165,7 +165,7 @@
     </TitleContent>
     <DialogContent>
         <div class="payment-dialog-total">
-            <MudText Typo="Typo.h4" Color="Color.Primary">KES @_grandTotal.ToString("N2")</MudText>
+            <MudText Typo="Typo.h4" Color="Color.Primary">SSP @_grandTotal.ToString("N2")</MudText>
             <MudText Typo="Typo.caption" Color="Color.Secondary">Amount Due</MudText>
         </div>
 
@@ -189,12 +189,12 @@
 
         @if (_selectedPaymentMethod == "Cash")
         {
-            <MudNumericField @bind-Value="_amountTendered" Label="Amount Tendered (KES)" Variant="Variant.Outlined" 
+            <MudNumericField @bind-Value="_amountTendered" Label="Amount Tendered (SSP)" Variant="Variant.Outlined"
                             Class="mt-4" Min="0m" />
             @if (_amountTendered >= _grandTotal)
             {
                 <MudAlert Severity="Severity.Success" Class="mt-2">
-                    Change: <strong>KES @((_amountTendered - _grandTotal).ToString("N2"))</strong>
+                    Change: <strong>SSP @((_amountTendered - _grandTotal).ToString("N2"))</strong>
                 </MudAlert>
             }
         }
@@ -221,7 +221,7 @@
             <MudText Typo="Typo.body1" Class="mt-2">Receipt #: @_lastReceiptNumber</MudText>
             @if (_changeAmount > 0)
             {
-                <MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-2">Change: KES @_changeAmount.ToString("N2")</MudText>
+                <MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-2">Change: SSP @_changeAmount.ToString("N2")</MudText>
             }
         </div>
     </DialogContent>

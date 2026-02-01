@@ -52,6 +52,11 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
     // Settings
     public DbSet<CompanySettings> CompanySettings => Set<CompanySettings>();
 
+    // Currency & Exchange Rates
+    public DbSet<Currency> Currencies => Set<Currency>();
+    public DbSet<ExchangeRate> ExchangeRates => Set<ExchangeRate>();
+    public DbSet<ExchangeRateHistory> ExchangeRateHistories => Set<ExchangeRateHistory>();
+
     // Audit
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
@@ -206,5 +211,186 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
 
         modelBuilder.Entity<DrugRequestItem>()
             .HasIndex(dri => dri.DrugRequestId);
+
+        // Retail Sale configurations
+        modelBuilder.Entity<RetailSaleItem>()
+            .HasOne(rsi => rsi.Sale)
+            .WithMany(rs => rs.Items)
+            .HasForeignKey(rsi => rsi.SaleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<RetailSaleItem>()
+            .HasOne(rsi => rsi.Drug)
+            .WithMany()
+            .HasForeignKey(rsi => rsi.DrugId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<RetailSaleItem>()
+            .HasOne(rsi => rsi.Batch)
+            .WithMany()
+            .HasForeignKey(rsi => rsi.BatchId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Wholesale Sale configurations
+        modelBuilder.Entity<WholesaleSale>()
+            .HasOne(ws => ws.Customer)
+            .WithMany(c => c.Sales)
+            .HasForeignKey(ws => ws.CustomerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<WholesaleSaleItem>()
+            .HasOne(wsi => wsi.Sale)
+            .WithMany(ws => ws.Items)
+            .HasForeignKey(wsi => wsi.SaleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<WholesaleSaleItem>()
+            .HasOne(wsi => wsi.Drug)
+            .WithMany()
+            .HasForeignKey(wsi => wsi.DrugId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<WholesaleSaleItem>()
+            .HasOne(wsi => wsi.Batch)
+            .WithMany()
+            .HasForeignKey(wsi => wsi.BatchId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Quotation configurations
+        modelBuilder.Entity<Quotation>()
+            .HasOne(q => q.Customer)
+            .WithMany()
+            .HasForeignKey(q => q.CustomerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<QuotationItem>()
+            .HasOne(qi => qi.Quotation)
+            .WithMany(q => q.Items)
+            .HasForeignKey(qi => qi.QuotationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<QuotationItem>()
+            .HasOne(qi => qi.Drug)
+            .WithMany()
+            .HasForeignKey(qi => qi.DrugId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Goods Receipt configurations
+        modelBuilder.Entity<GoodsReceipt>()
+            .HasOne(gr => gr.Supplier)
+            .WithMany()
+            .HasForeignKey(gr => gr.SupplierId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<GoodsReceipt>()
+            .HasOne(gr => gr.DrugRequest)
+            .WithMany()
+            .HasForeignKey(gr => gr.DrugRequestId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<GoodsReceiptItem>()
+            .HasOne(gri => gri.GoodsReceipt)
+            .WithMany(gr => gr.Items)
+            .HasForeignKey(gri => gri.GoodsReceiptId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GoodsReceiptItem>()
+            .HasOne(gri => gri.Drug)
+            .WithMany()
+            .HasForeignKey(gri => gri.DrugId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<GoodsReceiptItem>()
+            .HasOne(gri => gri.Batch)
+            .WithMany()
+            .HasForeignKey(gri => gri.BatchId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Payment configurations
+        modelBuilder.Entity<Payment>()
+            .HasOne(p => p.WholesaleSale)
+            .WithMany(ws => ws.Payments)
+            .HasForeignKey(p => p.WholesaleSaleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Payment>()
+            .HasOne(p => p.RetailSale)
+            .WithMany(rs => rs.Payments)
+            .HasForeignKey(p => p.RetailSaleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Currency configurations
+        modelBuilder.Entity<Currency>()
+            .HasIndex(c => c.Code)
+            .IsUnique();
+
+        modelBuilder.Entity<Currency>()
+            .Property(c => c.Code)
+            .HasMaxLength(3)
+            .IsRequired();
+
+        modelBuilder.Entity<Currency>()
+            .Property(c => c.Name)
+            .HasMaxLength(100)
+            .IsRequired();
+
+        modelBuilder.Entity<Currency>()
+            .Property(c => c.Symbol)
+            .HasMaxLength(10)
+            .IsRequired();
+
+        modelBuilder.Entity<Currency>()
+            .Property(c => c.Format)
+            .HasMaxLength(50)
+            .IsRequired();
+
+        // ExchangeRate configurations
+        modelBuilder.Entity<ExchangeRate>()
+            .HasOne(er => er.FromCurrency)
+            .WithMany()
+            .HasForeignKey(er => er.FromCurrencyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ExchangeRate>()
+            .HasOne(er => er.ToCurrency)
+            .WithMany()
+            .HasForeignKey(er => er.ToCurrencyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ExchangeRate>()
+            .HasIndex(er => new { er.FromCurrencyId, er.ToCurrencyId, er.IsActive });
+
+        modelBuilder.Entity<ExchangeRate>()
+            .HasIndex(er => er.EffectiveDate);
+
+        modelBuilder.Entity<ExchangeRate>()
+            .Property(er => er.Rate)
+            .HasPrecision(18, 6);
+
+        // ExchangeRateHistory configurations
+        modelBuilder.Entity<ExchangeRateHistory>()
+            .HasOne(erh => erh.ExchangeRate)
+            .WithMany(er => er.History)
+            .HasForeignKey(erh => erh.ExchangeRateId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ExchangeRateHistory>()
+            .HasIndex(erh => erh.ExchangeRateId);
+
+        modelBuilder.Entity<ExchangeRateHistory>()
+            .HasIndex(erh => erh.ChangedAt);
+
+        modelBuilder.Entity<ExchangeRateHistory>()
+            .Property(erh => erh.PreviousRate)
+            .HasPrecision(18, 6);
+
+        modelBuilder.Entity<ExchangeRateHistory>()
+            .Property(erh => erh.NewRate)
+            .HasPrecision(18, 6);
+
+        modelBuilder.Entity<ExchangeRateHistory>()
+            .Property(erh => erh.ChangedBy)
+            .HasMaxLength(256)
+            .IsRequired();
     }
 }

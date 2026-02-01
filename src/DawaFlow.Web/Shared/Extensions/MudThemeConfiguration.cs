@@ -8,9 +8,9 @@ public static class MudThemeConfiguration
     {
         PaletteLight = new PaletteLight
         {
-            Primary = "#00897b",
-            PrimaryDarken = "#00695c",
-            PrimaryLighten = "#4db6ac",
+            Primary = "#1976d2",
+            PrimaryDarken = "#0d47a1",
+            PrimaryLighten = "#64b5f6",
             Secondary = "#ffb300",
             SecondaryDarken = "#ff8f00",
             SecondaryLighten = "#ffc947",
@@ -30,9 +30,9 @@ public static class MudThemeConfiguration
         },
         PaletteDark = new PaletteDark
         {
-            Primary = "#4db6ac",
-            PrimaryDarken = "#00897b",
-            PrimaryLighten = "#80cbc4",
+            Primary = "#42a5f5",
+            PrimaryDarken = "#1565c0",
+            PrimaryLighten = "#90caf9",
             Secondary = "#ffc947",
             SecondaryDarken = "#ffb300",
             SecondaryLighten = "#ffd54f",

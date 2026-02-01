@@ -1,6 +1,11 @@
 @inherits LayoutComponentBase
 @using MudBlazor
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@using DawaFlow.Web.Infrastructure.Identity
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
 
 <MudLayout Class="df-layout">
     <!-- Enhanced App Bar -->
@@ -78,7 +83,7 @@
                     Help & Support
                 </MudMenuItem>
                 <MudDivider />
-                <MudMenuItem Icon="@Icons.Material.Filled.Logout" IconColor="Color.Error">
+                <MudMenuItem Icon="@Icons.Material.Filled.Logout" IconColor="Color.Error" OnClick="HandleSignOut">
                     Sign Out
                 </MudMenuItem>
             </ChildContent>
@@ -310,16 +315,76 @@
     private bool _drawerOpen = false;
     private string _searchText = string.Empty;
     private int _notificationCount = 8;
-    
+
     // Navigation group expansion state
     private bool _inventoryExpanded = false;
     private bool _wholesaleExpanded = false;
 
-    // User info (would come from auth in real app)
-    private string _userName = "John Doe";
-    private string _userEmail = "john.doe@pharmacy.com";
-    private string _userRole = "Pharmacist";
-    private string _userInitials => string.Join("", _userName.Split(' ').Take(2).Select(n => n[0]));
+    // User info from authentication state
+    private string _userName = string.Empty;
+    private string _userEmail = string.Empty;
+    private string _userRole = string.Empty;
+    private string _userInitials => GetUserInitials();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserInfoAsync();
+    }
+
+    private async Task LoadUserInfoAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var claimsPrincipal = authState.User;
+
+        if (claimsPrincipal.Identity?.IsAuthenticated == true)
+        {
+            _userEmail = claimsPrincipal.Identity.Name ?? "User";
+
+            // Get user details from UserManager
+            var user = await UserManager.FindByEmailAsync(_userEmail);
+            if (user != null)
+            {
+                if (!string.IsNullOrEmpty(user.FirstName) || !string.IsNullOrEmpty(user.LastName))
+                {
+                    _userName = $"{user.FirstName} {user.LastName}".Trim();
+                }
+                else
+                {
+                    // Fall back to email username
+                    _userName = _userEmail.Contains('@') ? _userEmail.Split('@')[0] : _userEmail;
+                }
+
+                // Get roles from UserManager
+                var roles = await UserManager.GetRolesAsync(user);
+                _userRole = roles.FirstOrDefault() ?? "User";
+            }
+            else
+            {
+                // Fall back to email username
+                _userName = _userEmail.Contains('@') ? _userEmail.Split('@')[0] : _userEmail;
+                _userRole = "User";
+            }
+        }
+        else
+        {
+            _userName = "Guest";
+            _userEmail = "";
+            _userRole = "";
+        }
+    }
+
+    private string GetUserInitials()
+    {
+        if (string.IsNullOrWhiteSpace(_userName))
+            return "?";
+
+        var parts = _userName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length >= 2)
+            return $"{parts[0][0]}{parts[1][0]}".ToUpper();
+        else if (parts.Length == 1 && parts[0].Length > 0)
+            return parts[0][0].ToString().ToUpper();
+        return "?";
+    }
 
     private void ToggleDrawer()
     {
@@ -329,6 +394,11 @@
     private void NavigateHome()
     {
         NavigationManager.NavigateTo("/");
+    }
+
+    private void HandleSignOut()
+    {
+        NavigationManager.NavigateTo("/api/auth/logout", forceLoad: true);
     }
 
     private void ToggleNotifications()

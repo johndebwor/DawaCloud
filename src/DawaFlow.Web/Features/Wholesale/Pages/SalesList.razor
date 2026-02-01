@@ -36,7 +36,7 @@
         </div>
         <div class="df-kpi-body">
             <div class="df-kpi-label">This Month's Sales</div>
-            <div class="df-kpi-value">KES 2.4M</div>
+            <div class="df-kpi-value">SSP 2.4M</div>
             <div class="df-kpi-subtitle">32 invoices</div>
         </div>
     </div>
@@ -48,7 +48,7 @@
         </div>
         <div class="df-kpi-body">
             <div class="df-kpi-label">Paid Invoices</div>
-            <div class="df-kpi-value">KES 1.8M</div>
+            <div class="df-kpi-value">SSP 1.8M</div>
             <div class="df-kpi-subtitle">24 invoices</div>
         </div>
     </div>
@@ -60,7 +60,7 @@
         </div>
         <div class="df-kpi-body">
             <div class="df-kpi-label">Pending Payment</div>
-            <div class="df-kpi-value">KES 450K</div>
+            <div class="df-kpi-value">SSP 450K</div>
             <div class="df-kpi-subtitle">6 invoices</div>
         </div>
     </div>
@@ -72,7 +72,7 @@
         </div>
         <div class="df-kpi-body">
             <div class="df-kpi-label">Overdue</div>
-            <div class="df-kpi-value">KES 150K</div>
+            <div class="df-kpi-value">SSP 150K</div>
             <div class="df-kpi-subtitle">2 invoices</div>
         </div>
     </div>
@@ -129,11 +129,11 @@
                 </div>
             </MudTd>
             <MudTd DataLabel="Date">@context.SaleDate.ToString("dd MMM yyyy")</MudTd>
-            <MudTd DataLabel="Amount">KES @context.TotalAmount.ToString("N0")</MudTd>
-            <MudTd DataLabel="Paid">KES @context.PaidAmount.ToString("N0")</MudTd>
+            <MudTd DataLabel="Amount">SSP @context.TotalAmount.ToString("N0")</MudTd>
+            <MudTd DataLabel="Paid">SSP @context.PaidAmount.ToString("N0")</MudTd>
             <MudTd DataLabel="Balance">
                 <MudText Color="@(context.BalanceAmount > 0 ? Color.Warning : Color.Success)">
-                    KES @context.BalanceAmount.ToString("N0")
+                    SSP @context.BalanceAmount.ToString("N0")
                 </MudText>
             </MudTd>
             <MudTd DataLabel="Status">
@@ -166,11 +166,11 @@
         <MudGrid>
             <MudItem xs="12">
                 <MudAlert Severity="Severity.Info" Class="mb-4">
-                    Outstanding Balance: <strong>KES @_selectedSale?.BalanceAmount.ToString("N2")</strong>
+                    Outstanding Balance: <strong>SSP @_selectedSale?.BalanceAmount.ToString("N2")</strong>
                 </MudAlert>
             </MudItem>
             <MudItem xs="12" md="6">
-                <MudNumericField @bind-Value="_paymentAmount" Label="Payment Amount (KES)" Variant="Variant.Outlined" Min="0m" Max="@(_selectedSale?.BalanceAmount ?? 0)" />
+                <MudNumericField @bind-Value="_paymentAmount" Label="Payment Amount (SSP)" Variant="Variant.Outlined" Min="0m" Max="@(_selectedSale?.BalanceAmount ?? 0)" />
             </MudItem>
             <MudItem xs="12" md="6">
                 <MudSelect T="string" @bind-Value="_paymentMethod" Label="Payment Method" Variant="Variant.Outlined">

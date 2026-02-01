@@ -4,6 +4,7 @@ using DawaFlow.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DawaFlow.Web.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260201191351_AddMulticurrencySupport")]
+    partial class AddMulticurrencySupport
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -85,13 +88,7 @@ namespace DawaFlow.Web.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int?>("CostCurrencyId")
-                        .HasColumnType("int");
-
                     b.Property<decimal>("CostPrice")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("CostPriceOriginal")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -111,9 +108,6 @@ namespace DawaFlow.Web.Migrations
 
                     b.Property<int>("DrugId")
                         .HasColumnType("int");
-
-                    b.Property<decimal?>("ExchangeRateUsed")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("ExpiryDate")
                         .HasColumnType("datetime2");
@@ -149,8 +143,6 @@ namespace DawaFlow.Web.Migrations
 
                     b.HasIndex("BatchNumber");
 
-                    b.HasIndex("CostCurrencyId");
-
                     b.HasIndex("DrugId");
 
                     b.HasIndex("ExpiryDate");
@@ -178,9 +170,6 @@ namespace DawaFlow.Web.Migrations
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("CurrencyId")
-                        .HasColumnType("int");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
@@ -224,8 +213,6 @@ namespace DawaFlow.Web.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CurrencyId");
-
                     b.ToTable("CashierShifts");
                 });
 
@@ -240,9 +227,6 @@ namespace DawaFlow.Web.Migrations
                     b.Property<string>("Address")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("BaseCurrencyId")
-                        .HasColumnType("int");
-
                     b.Property<string>("City")
                         .HasColumnType("nvarchar(max)");
 
@@ -256,12 +240,6 @@ namespace DawaFlow.Web.Migrations
                     b.Property<string>("Currency")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("DefaultPurchaseCurrencyId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("DefaultSalesCurrencyId")
-                        .HasColumnType("int");
 
                     b.Property<decimal>("DefaultTaxRate")
                         .HasColumnType("decimal(18,2)");
@@ -297,12 +275,6 @@ namespace DawaFlow.Web.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("BaseCurrencyId");
-
-                    b.HasIndex("DefaultPurchaseCurrencyId");
-
-                    b.HasIndex("DefaultSalesCurrencyId");
 
                     b.ToTable("CompanySettings");
                 });
@@ -404,9 +376,6 @@ namespace DawaFlow.Web.Migrations
                     b.Property<decimal>("CostPrice")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal?>("CostPriceOriginal")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -454,9 +423,6 @@ namespace DawaFlow.Web.Migrations
                     b.Property<string>("PackSize")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("PurchaseCurrencyId")
-                        .HasColumnType("int");
-
                     b.Property<int>("ReorderLevel")
                         .HasColumnType("int");
 
@@ -491,8 +457,6 @@ namespace DawaFlow.Web.Migrations
                         .IsUnique();
 
                     b.HasIndex("Name");
-
-                    b.HasIndex("PurchaseCurrencyId");
 
                     b.ToTable("Drugs");
                 });
@@ -557,9 +521,6 @@ namespace DawaFlow.Web.Migrations
                     b.Property<decimal?>("ActualAmount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal?>("ActualAmountBase")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<DateTime?>("ActualDeliveryDate")
                         .HasColumnType("datetime2");
 
@@ -575,17 +536,11 @@ namespace DawaFlow.Web.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("CurrencyId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("DeletedBy")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal?>("ExchangeRateUsed")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime?>("ExpectedDeliveryDate")
                         .HasColumnType("datetime2");
@@ -621,9 +576,6 @@ namespace DawaFlow.Web.Migrations
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("TotalAmountBase")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -631,8 +583,6 @@ namespace DawaFlow.Web.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CurrencyId");
 
                     b.HasIndex("RequestDate");
 
@@ -684,9 +634,6 @@ namespace DawaFlow.Web.Migrations
                     b.Property<decimal?>("QuotedPrice")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal?>("QuotedPriceBase")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<int>("RequestedQuantity")
                         .HasColumnType("int");
 
@@ -699,13 +646,7 @@ namespace DawaFlow.Web.Migrations
                     b.Property<decimal>("TotalPrice")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("TotalPriceBase")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("UnitPriceBase")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -859,9 +800,6 @@ namespace DawaFlow.Web.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("CurrencyId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
@@ -873,9 +811,6 @@ namespace DawaFlow.Web.Migrations
 
                     b.Property<int?>("DrugRequestId")
                         .HasColumnType("int");
-
-                    b.Property<decimal?>("ExchangeRateUsed")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("GRNNumber")
                         .IsRequired()
@@ -905,9 +840,6 @@ namespace DawaFlow.Web.Migrations
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("TotalAmountBase")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -921,8 +853,6 @@ namespace DawaFlow.Web.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CurrencyId");
 
                     b.HasIndex("DrugRequestId");
 
@@ -988,9 +918,6 @@ namespace DawaFlow.Web.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("UnitCost")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("UnitCostBase")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -1225,26 +1152,17 @@ namespace DawaFlow.Web.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("AmountBase")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("CurrencyId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("DeletedBy")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal?>("ExchangeRateUsed")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -1279,8 +1197,6 @@ namespace DawaFlow.Web.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CurrencyId");
-
                     b.HasIndex("RetailSaleId");
 
                     b.HasIndex("WholesaleSaleId");
@@ -1305,9 +1221,6 @@ namespace DawaFlow.Web.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("CurrencyId")
-                        .HasColumnType("int");
-
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
 
@@ -1318,9 +1231,6 @@ namespace DawaFlow.Web.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("DiscountAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("ExchangeRateUsed")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("IsDeleted")
@@ -1358,8 +1268,6 @@ namespace DawaFlow.Web.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CurrencyId");
 
                     b.HasIndex("CustomerId");
 
@@ -1448,9 +1356,6 @@ namespace DawaFlow.Web.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("CurrencyId")
-                        .HasColumnType("int");
-
                     b.Property<string>("CustomerName")
                         .HasColumnType("nvarchar(max)");
 
@@ -1512,8 +1417,6 @@ namespace DawaFlow.Web.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CashierShiftId");
-
-                    b.HasIndex("CurrencyId");
 
                     b.ToTable("RetailSales");
                 });
@@ -1954,9 +1857,6 @@ namespace DawaFlow.Web.Migrations
                     b.Property<decimal>("CurrentBalance")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int?>("DefaultCurrencyId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
@@ -1996,8 +1896,6 @@ namespace DawaFlow.Web.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DefaultCurrencyId");
-
                     b.ToTable("WholesaleCustomers");
                 });
 
@@ -2014,9 +1912,6 @@ namespace DawaFlow.Web.Migrations
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("CurrencyId")
-                        .HasColumnType("int");
 
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
@@ -2038,9 +1933,6 @@ namespace DawaFlow.Web.Migrations
 
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<decimal?>("ExchangeRateUsed")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("InvoiceNumber")
                         .IsRequired()
@@ -2080,8 +1972,6 @@ namespace DawaFlow.Web.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CurrencyId");
 
                     b.HasIndex("CustomerId");
 
@@ -2378,49 +2268,13 @@ namespace DawaFlow.Web.Migrations
 
             modelBuilder.Entity("DawaFlow.Web.Data.Entities.Batch", b =>
                 {
-                    b.HasOne("DawaFlow.Web.Data.Entities.Currency", "CostCurrency")
-                        .WithMany()
-                        .HasForeignKey("CostCurrencyId");
-
                     b.HasOne("DawaFlow.Web.Data.Entities.Drug", "Drug")
                         .WithMany("Batches")
                         .HasForeignKey("DrugId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("CostCurrency");
-
                     b.Navigation("Drug");
-                });
-
-            modelBuilder.Entity("DawaFlow.Web.Data.Entities.CashierShift", b =>
-                {
-                    b.HasOne("DawaFlow.Web.Data.Entities.Currency", "Currency")
-                        .WithMany()
-                        .HasForeignKey("CurrencyId");
-
-                    b.Navigation("Currency");
-                });
-
-            modelBuilder.Entity("DawaFlow.Web.Data.Entities.CompanySettings", b =>
-                {
-                    b.HasOne("DawaFlow.Web.Data.Entities.Currency", "BaseCurrency")
-                        .WithMany()
-                        .HasForeignKey("BaseCurrencyId");
-
-                    b.HasOne("DawaFlow.Web.Data.Entities.Currency", "DefaultPurchaseCurrency")
-                        .WithMany()
-                        .HasForeignKey("DefaultPurchaseCurrencyId");
-
-                    b.HasOne("DawaFlow.Web.Data.Entities.Currency", "DefaultSalesCurrency")
-                        .WithMany()
-                        .HasForeignKey("DefaultSalesCurrencyId");
-
-                    b.Navigation("BaseCurrency");
-
-                    b.Navigation("DefaultPurchaseCurrency");
-
-                    b.Navigation("DefaultSalesCurrency");
                 });
 
             modelBuilder.Entity("DawaFlow.Web.Data.Entities.Drug", b =>
@@ -2431,13 +2285,7 @@ namespace DawaFlow.Web.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("DawaFlow.Web.Data.Entities.Currency", "PurchaseCurrency")
-                        .WithMany()
-                        .HasForeignKey("PurchaseCurrencyId");
-
                     b.Navigation("Category");
-
-                    b.Navigation("PurchaseCurrency");
                 });
 
             modelBuilder.Entity("DawaFlow.Web.Data.Entities.DrugCategory", b =>
@@ -2452,17 +2300,11 @@ namespace DawaFlow.Web.Migrations
 
             modelBuilder.Entity("DawaFlow.Web.Data.Entities.DrugRequest", b =>
                 {
-                    b.HasOne("DawaFlow.Web.Data.Entities.Currency", "Currency")
-                        .WithMany()
-                        .HasForeignKey("CurrencyId");
-
                     b.HasOne("DawaFlow.Web.Data.Entities.Supplier", "Supplier")
                         .WithMany()
                         .HasForeignKey("SupplierId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Currency");
 
                     b.Navigation("Supplier");
                 });
@@ -2518,10 +2360,6 @@ namespace DawaFlow.Web.Migrations
 
             modelBuilder.Entity("DawaFlow.Web.Data.Entities.GoodsReceipt", b =>
                 {
-                    b.HasOne("DawaFlow.Web.Data.Entities.Currency", "Currency")
-                        .WithMany()
-                        .HasForeignKey("CurrencyId");
-
                     b.HasOne("DawaFlow.Web.Data.Entities.DrugRequest", "DrugRequest")
                         .WithMany()
                         .HasForeignKey("DrugRequestId")
@@ -2532,8 +2370,6 @@ namespace DawaFlow.Web.Migrations
                         .HasForeignKey("SupplierId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Currency");
 
                     b.Navigation("DrugRequest");
 
@@ -2568,10 +2404,6 @@ namespace DawaFlow.Web.Migrations
 
             modelBuilder.Entity("DawaFlow.Web.Data.Entities.Payment", b =>
                 {
-                    b.HasOne("DawaFlow.Web.Data.Entities.Currency", "Currency")
-                        .WithMany()
-                        .HasForeignKey("CurrencyId");
-
                     b.HasOne("DawaFlow.Web.Data.Entities.RetailSale", "RetailSale")
                         .WithMany("Payments")
                         .HasForeignKey("RetailSaleId")
@@ -2582,8 +2414,6 @@ namespace DawaFlow.Web.Migrations
                         .HasForeignKey("WholesaleSaleId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Navigation("Currency");
-
                     b.Navigation("RetailSale");
 
                     b.Navigation("WholesaleSale");
@@ -2591,17 +2421,11 @@ namespace DawaFlow.Web.Migrations
 
             modelBuilder.Entity("DawaFlow.Web.Data.Entities.Quotation", b =>
                 {
-                    b.HasOne("DawaFlow.Web.Data.Entities.Currency", "Currency")
-                        .WithMany()
-                        .HasForeignKey("CurrencyId");
-
                     b.HasOne("DawaFlow.Web.Data.Entities.WholesaleCustomer", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Currency");
 
                     b.Navigation("Customer");
                 });
@@ -2630,12 +2454,6 @@ namespace DawaFlow.Web.Migrations
                     b.HasOne("DawaFlow.Web.Data.Entities.CashierShift", null)
                         .WithMany("Sales")
                         .HasForeignKey("CashierShiftId");
-
-                    b.HasOne("DawaFlow.Web.Data.Entities.Currency", "Currency")
-                        .WithMany()
-                        .HasForeignKey("CurrencyId");
-
-                    b.Navigation("Currency");
                 });
 
             modelBuilder.Entity("DawaFlow.Web.Data.Entities.RetailSaleItem", b =>
@@ -2722,28 +2540,13 @@ namespace DawaFlow.Web.Migrations
                     b.Navigation("Supplier");
                 });
 
-            modelBuilder.Entity("DawaFlow.Web.Data.Entities.WholesaleCustomer", b =>
-                {
-                    b.HasOne("DawaFlow.Web.Data.Entities.Currency", "DefaultCurrency")
-                        .WithMany()
-                        .HasForeignKey("DefaultCurrencyId");
-
-                    b.Navigation("DefaultCurrency");
-                });
-
             modelBuilder.Entity("DawaFlow.Web.Data.Entities.WholesaleSale", b =>
                 {
-                    b.HasOne("DawaFlow.Web.Data.Entities.Currency", "Currency")
-                        .WithMany()
-                        .HasForeignKey("CurrencyId");
-
                     b.HasOne("DawaFlow.Web.Data.Entities.WholesaleCustomer", "Customer")
                         .WithMany("Sales")
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Currency");
 
                     b.Navigation("Customer");
                 });

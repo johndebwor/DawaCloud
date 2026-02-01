@@ -1,5 +1,12 @@
 @page "/batches"
 @using MudBlazor
+@using MediatR
+@using DawaFlow.Web.Features.Batches.Queries
+@using DawaFlow.Web.Features.Batches.Commands
+@using DawaFlow.Web.Shared.Components
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
 <PageTitle>Drug Batches - DawaFlow</PageTitle>
 
@@ -29,7 +36,7 @@
         </div>
         <div class="df-kpi-body">
             <div class="df-kpi-label">Active Batches</div>
-            <div class="df-kpi-value">@_batches.Count(b => b.Status == "Active")</div>
+            <div class="df-kpi-value">@(_isLoading ? "-" : _batches.Count(b => b.Status == "Active").ToString())</div>
         </div>
     </div>
     <div class="df-kpi-card animate-fade-in-up animate-delay-2">
@@ -40,7 +47,7 @@
         </div>
         <div class="df-kpi-body">
             <div class="df-kpi-label">Expiring Soon</div>
-            <div class="df-kpi-value">@_batches.Count(b => b.DaysToExpiry <= 30 && b.DaysToExpiry > 0)</div>
+            <div class="df-kpi-value">@(_isLoading ? "-" : _batches.Count(b => b.DaysToExpiry <= 30 && b.DaysToExpiry > 0).ToString())</div>
         </div>
     </div>
     <div class="df-kpi-card animate-fade-in-up animate-delay-3">
@@ -51,7 +58,7 @@
         </div>
         <div class="df-kpi-body">
             <div class="df-kpi-label">Expired</div>
-            <div class="df-kpi-value">@_batches.Count(b => b.Status == "Expired")</div>
+            <div class="df-kpi-value">@(_isLoading ? "-" : _batches.Count(b => b.Status == "Expired").ToString())</div>
         </div>
     </div>
     <div class="df-kpi-card animate-fade-in-up animate-delay-4">
@@ -62,7 +69,7 @@
         </div>
         <div class="df-kpi-body">
             <div class="df-kpi-label">Quarantined</div>
-            <div class="df-kpi-value">@_batches.Count(b => b.Status == "Quarantined")</div>
+            <div class="df-kpi-value">@(_isLoading ? "-" : _batches.Count(b => b.Status == "Quarantined").ToString())</div>
         </div>
     </div>
 </div>
@@ -70,15 +77,17 @@
 <!-- Batches Table -->
 <div class="df-alert-card animate-fade-in-up animate-delay-2 mt-4">
     <div class="df-alert-header">
-        <MudTextField @bind-Value="_searchString"
+        <MudTextField Value="_searchString"
+                      ValueChanged="@((string value) => OnSearchChanged(value))"
                       Placeholder="Search batches..."
                       Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       Immediate="true"
+                      DebounceInterval="300"
                       Style="max-width: 400px;" />
 
         <div class="d-flex gap-2">
-            <MudSelect T="string" @bind-Value="_selectedStatus" Label="Status" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
+            <MudSelect T="string" Value="_selectedStatus" ValueChanged="@((string value) => OnStatusChanged(value))" Label="Status" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
                 <MudSelectItem Value="@("All")">All Status</MudSelectItem>
                 <MudSelectItem Value="@("Active")">Active</MudSelectItem>
                 <MudSelectItem Value="@("Expired")">Expired</MudSelectItem>
@@ -88,173 +97,127 @@
         </div>
     </div>
 
-    <MudTable T="BatchListItem" Items="@FilteredBatches" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Class="mt-4">
-            <HeaderContent>
-                <MudTh>Batch Number</MudTh>
-                <MudTh>Drug</MudTh>
-                <MudTh>Manufacture Date</MudTh>
-                <MudTh>Expiry Date</MudTh>
-                <MudTh>Quantity</MudTh>
-                <MudTh>Cost Price</MudTh>
-                <MudTh>Status</MudTh>
-                <MudTh>Actions</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd DataLabel="Batch Number">
-                    <MudText Typo="Typo.body2" Class="fw-bold">@context.BatchNumber</MudText>
-                </MudTd>
-                <MudTd DataLabel="Drug">@context.DrugName</MudTd>
-                <MudTd DataLabel="Manufacture Date">@context.ManufactureDate.ToString("dd MMM yyyy")</MudTd>
-                <MudTd DataLabel="Expiry Date">
-                    <div>
-                        <MudText Typo="Typo.body2">@context.ExpiryDate.ToString("dd MMM yyyy")</MudText>
-                        @if (context.DaysToExpiry <= 30 && context.DaysToExpiry > 0)
-                        {
-                            <MudText Typo="Typo.caption" Color="Color.Warning">@context.DaysToExpiry days left</MudText>
-                        }
-                        else if (context.DaysToExpiry <= 0)
-                        {
-                            <MudText Typo="Typo.caption" Color="Color.Error">Expired</MudText>
-                        }
-                    </div>
-                </MudTd>
-                <MudTd DataLabel="Quantity">
-                    <div>
-                        <MudText Typo="Typo.body2">@context.CurrentQuantity / @context.InitialQuantity</MudText>
-                        @if (context.ReservedQuantity > 0)
-                        {
-                            <MudText Typo="Typo.caption" Color="Color.Info">(@context.ReservedQuantity reserved)</MudText>
-                        }
-                    </div>
-                </MudTd>
-                <MudTd DataLabel="Cost Price">KES @context.CostPrice.ToString("N2")</MudTd>
-                <MudTd DataLabel="Status">
-                    <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">@context.Status</MudChip>
-                </MudTd>
-                <MudTd DataLabel="Actions">
-                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                   Size="Size.Small"
-                                   Color="Color.Info"
-                                   Href="@($"/batches/{context.Id}/edit")"
-                                   Title="Edit" />
-                    @if (context.Status == "Active" && context.DaysToExpiry <= 0)
-                    {
-                        <MudIconButton Icon="@Icons.Material.Filled.Block"
+    @if (_isLoading)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mt-4" />
+        }
+        else
+        {
+            <MudTable T="BatchListDto" Items="@FilteredBatches" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Class="mt-4">
+                <HeaderContent>
+                    <MudTh>Batch Number</MudTh>
+                    <MudTh>Drug</MudTh>
+                    <MudTh>Manufacture Date</MudTh>
+                    <MudTh>Expiry Date</MudTh>
+                    <MudTh>Quantity</MudTh>
+                    <MudTh>Cost Price</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Batch Number">
+                        <MudText Typo="Typo.body2" Class="fw-bold">@context.BatchNumber</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Drug">@context.DrugName</MudTd>
+                    <MudTd DataLabel="Manufacture Date">@context.ManufactureDate.ToString("dd MMM yyyy")</MudTd>
+                    <MudTd DataLabel="Expiry Date">
+                        <div>
+                            <MudText Typo="Typo.body2">@context.ExpiryDate.ToString("dd MMM yyyy")</MudText>
+                            @if (context.DaysToExpiry <= 30 && context.DaysToExpiry > 0)
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Warning">@context.DaysToExpiry days left</MudText>
+                            }
+                            else if (context.DaysToExpiry <= 0)
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Error">Expired</MudText>
+                            }
+                        </div>
+                    </MudTd>
+                    <MudTd DataLabel="Quantity">
+                        <div>
+                            <MudText Typo="Typo.body2">@context.CurrentQuantity / @context.InitialQuantity</MudText>
+                            @if (context.ReservedQuantity > 0)
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Info">(@context.ReservedQuantity reserved)</MudText>
+                            }
+                        </div>
+                    </MudTd>
+                    <MudTd DataLabel="Cost Price">SSP @context.CostPrice.ToString("N2")</MudTd>
+                    <MudTd DataLabel="Status">
+                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">@context.Status</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Actions">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                        Size="Size.Small"
-                                       Color="Color.Warning"
-                                       OnClick="@(() => QuarantineBatch(context.Id))"
-                                       Title="Quarantine" />
-                    }
-                </MudTd>
-            </RowTemplate>
-        </MudTable>
+                                       Color="Color.Info"
+                                       Href="@($"/batches/{context.Id}/edit")"
+                                       Title="Edit" />
+                        @if (context.Status == "Active" && context.DaysToExpiry <= 0)
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.Block"
+                                           Size="Size.Small"
+                                           Color="Color.Warning"
+                                           OnClick="@(() => QuarantineBatch(context.Id))"
+                                           Title="Quarantine" />
+                        }
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText>No batches found</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        }
     </div>
 
 @code {
-    private List<BatchListItem> _batches = new();
+    private List<BatchListDto> _batches = new();
     private string _searchString = string.Empty;
     private string _selectedStatus = "All";
+    private bool _isLoading = true;
+    private int _totalCount;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        LoadBatches();
+        await LoadBatches();
     }
 
-    private void LoadBatches()
+    private async Task LoadBatches()
     {
-        // Sample data
-        _batches = new List<BatchListItem>
+        _isLoading = true;
+        StateHasChanged();
+
+        var result = await Mediator.Send(new GetBatchesQuery(
+            SearchTerm: string.IsNullOrWhiteSpace(_searchString) ? null : _searchString,
+            Status: _selectedStatus == "All" ? null : _selectedStatus
+        ));
+
+        if (result.Success)
         {
-            new()
-            {
-                Id = 1,
-                BatchNumber = "BTH-2024-001",
-                DrugName = "Paracetamol 500mg",
-                ManufactureDate = new DateTime(2024, 1, 15),
-                ExpiryDate = new DateTime(2026, 1, 15),
-                InitialQuantity = 5000,
-                CurrentQuantity = 3200,
-                ReservedQuantity = 150,
-                CostPrice = 3.50m,
-                Status = "Active"
-            },
-            new()
-            {
-                Id = 2,
-                BatchNumber = "BTH-2024-002",
-                DrugName = "Amoxicillin 250mg",
-                ManufactureDate = new DateTime(2024, 2, 10),
-                ExpiryDate = new DateTime(2026, 3, 20),
-                InitialQuantity = 3000,
-                CurrentQuantity = 1800,
-                ReservedQuantity = 0,
-                CostPrice = 5.75m,
-                Status = "Active"
-            },
-            new()
-            {
-                Id = 3,
-                BatchNumber = "BTH-2023-045",
-                DrugName = "Ibuprofen 400mg",
-                ManufactureDate = new DateTime(2023, 5, 20),
-                ExpiryDate = new DateTime(2025, 5, 20),
-                InitialQuantity = 4000,
-                CurrentQuantity = 2500,
-                ReservedQuantity = 200,
-                CostPrice = 4.20m,
-                Status = "Active"
-            },
-            new()
-            {
-                Id = 4,
-                BatchNumber = "BTH-2023-012",
-                DrugName = "Aspirin 100mg",
-                ManufactureDate = new DateTime(2023, 1, 10),
-                ExpiryDate = new DateTime(2024, 1, 10),
-                InitialQuantity = 2000,
-                CurrentQuantity = 500,
-                ReservedQuantity = 0,
-                CostPrice = 2.80m,
-                Status = "Expired"
-            },
-            new()
-            {
-                Id = 5,
-                BatchNumber = "BTH-2024-003",
-                DrugName = "Ciprofloxacin 500mg",
-                ManufactureDate = new DateTime(2024, 3, 15),
-                ExpiryDate = DateTime.Now.AddDays(25),
-                InitialQuantity = 1500,
-                CurrentQuantity = 800,
-                ReservedQuantity = 0,
-                CostPrice = 12.50m,
-                Status = "Active"
-            },
-            new()
-            {
-                Id = 6,
-                BatchNumber = "BTH-2023-098",
-                DrugName = "Metformin 500mg",
-                ManufactureDate = new DateTime(2023, 8, 5),
-                ExpiryDate = new DateTime(2024, 2, 5),
-                InitialQuantity = 3000,
-                CurrentQuantity = 1200,
-                ReservedQuantity = 0,
-                CostPrice = 3.20m,
-                Status = "Quarantined"
-            }
-        };
+            _batches = result.Batches;
+            _totalCount = result.TotalCount;
+        }
+        else
+        {
+            Snackbar.Add(result.ErrorMessage ?? "Error loading batches", Severity.Error);
+        }
+
+        _isLoading = false;
+        StateHasChanged();
     }
 
-    private IEnumerable<BatchListItem> FilteredBatches =>
-        _batches.Where(b =>
-            (string.IsNullOrWhiteSpace(_searchString) ||
-             b.BatchNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
-             b.DrugName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) &&
-            (_selectedStatus == "All" ||
-             (_selectedStatus == "Expiring Soon" && b.DaysToExpiry <= 30 && b.DaysToExpiry > 0) ||
-             b.Status == _selectedStatus)
-        );
+    private async Task OnSearchChanged(string value)
+    {
+        _searchString = value;
+        await LoadBatches();
+    }
+
+    private async Task OnStatusChanged(string value)
+    {
+        _selectedStatus = value;
+        await LoadBatches();
+    }
+
+    private IEnumerable<BatchListDto> FilteredBatches => _batches;
 
     private Color GetStatusColor(string status) => status switch
     {
@@ -267,23 +230,32 @@
 
     private async Task QuarantineBatch(int id)
     {
-        // TODO: Implement quarantine logic
-        await Task.CompletedTask;
-    }
+        var batch = _batches.FirstOrDefault(b => b.Id == id);
+        if (batch == null) return;
 
-    private class BatchListItem
-    {
-        public int Id { get; set; }
-        public string BatchNumber { get; set; } = string.Empty;
-        public string DrugName { get; set; } = string.Empty;
-        public DateTime ManufactureDate { get; set; }
-        public DateTime ExpiryDate { get; set; }
-        public int InitialQuantity { get; set; }
-        public int CurrentQuantity { get; set; }
-        public int ReservedQuantity { get; set; }
-        public decimal CostPrice { get; set; }
-        public string Status { get; set; } = "Active";
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Are you sure you want to quarantine batch {batch.BatchNumber}? This will prevent it from being used in sales." },
+            { x => x.ButtonText, "Quarantine" },
+            { x => x.Color, Color.Warning }
+        };
 
-        public int DaysToExpiry => (ExpiryDate - DateTime.Now).Days;
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Quarantine Batch", parameters);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            var commandResult = await Mediator.Send(new QuarantineBatchCommand(id, "Manually quarantined"));
+
+            if (commandResult.Success)
+            {
+                Snackbar.Add(commandResult.Message, Severity.Success);
+                await LoadBatches();
+            }
+            else
+            {
+                Snackbar.Add(commandResult.Message, Severity.Error);
+            }
+        }
     }
 }

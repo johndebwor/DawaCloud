@@ -1,5 +1,10 @@
 @page "/drugs"
 @using MudBlazor
+@using MediatR
+@using DawaFlow.Web.Features.Drugs.Queries
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
 <PageTitle>Drugs - DawaFlow</PageTitle>
 
@@ -34,7 +39,7 @@
         </div>
         <div class="df-kpi-body">
             <div class="df-kpi-label">Total Drugs</div>
-            <div class="df-kpi-value">@_drugs.Count</div>
+            <div class="df-kpi-value">@_totalCount</div>
         </div>
     </div>
     <div class="df-kpi-card animate-fade-in-up animate-delay-2">
@@ -80,6 +85,8 @@
                       Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       Immediate="true"
+                      DebounceInterval="300"
+                      OnDebounceIntervalElapsed="OnSearchChanged"
                       Style="max-width: 400px;" />
         <div class="d-flex gap-2">
             <MudSelect T="string" @bind-Value="_selectedCategory"
@@ -92,13 +99,14 @@
                 <MudSelectItem Value="@("Antibiotics")">Antibiotics</MudSelectItem>
                 <MudSelectItem Value="@("Antihistamines")">Antihistamines</MudSelectItem>
             </MudSelect>
-            <MudSelect T="string" @bind-Value="_selectedStatus"
+            <MudSelect T="string" Value="_selectedStatus"
                        Label="Status"
                        Variant="Variant.Outlined"
                        Dense="true"
+                       ValueChanged="@((string value) => OnStatusChanged(value))"
                        Style="min-width: 150px;">
                 <MudSelectItem Value="@("All")">All Status</MudSelectItem>
-                <MudSelectItem Value="@("Active")">Active</MudSelectItem>
+                <MudSelectItem Value="@("In Stock")">In Stock</MudSelectItem>
                 <MudSelectItem Value="@("Low Stock")">Low Stock</MudSelectItem>
                 <MudSelectItem Value="@("Out of Stock")">Out of Stock</MudSelectItem>
             </MudSelect>
@@ -133,7 +141,7 @@
                 </div>
             </MudTd>
             <MudTd DataLabel="Category">
-                <MudChip T="string" Size="Size.Small" Color="Color.Info">@context.Category</MudChip>
+                <MudChip T="string" Size="Size.Small" Color="Color.Info">@(context.Category ?? "Uncategorized")</MudChip>
             </MudTd>
             <MudTd DataLabel="Stock">
                 <div>
@@ -145,7 +153,7 @@
                 </div>
             </MudTd>
             <MudTd DataLabel="Retail Price">
-                <MudText Typo="Typo.body2">KES @context.RetailPrice.ToString("N2")</MudText>
+                <MudText Typo="Typo.body2">SSP @context.RetailPrice.ToString("N2")</MudText>
             </MudTd>
             <MudTd DataLabel="Status">
                 @if (context.CurrentStock == 0)
@@ -173,9 +181,12 @@
                 <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                Color="Color.Error"
                                Size="Size.Small"
-                               OnClick="@(() => DeleteDrug(context.Id))" />
+                               OnClick="@(() => DeleteDrug(context))" />
             </MudTd>
         </RowTemplate>
+        <NoRecordsContent>
+            <MudText>No drugs found. Click "Add New Drug" to create one.</MudText>
+        </NoRecordsContent>
         <PagerContent>
             <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
         </PagerContent>
@@ -187,64 +198,101 @@
     private string _searchString = string.Empty;
     private string _selectedCategory = "All";
     private string _selectedStatus = "All";
+    private int _totalCount = 0;
 
-    private List<DrugListItem> _drugs = new();
+    private List<DrugListDto> _drugs = new();
 
-    private IEnumerable<DrugListItem> FilteredDrugs =>
+    private IEnumerable<DrugListDto> FilteredDrugs =>
         _drugs.Where(d =>
-            (string.IsNullOrWhiteSpace(_searchString) ||
-             d.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
-             d.Code.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
-             d.Manufacturer.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) &&
             (_selectedCategory == "All" || d.Category == _selectedCategory) &&
             (_selectedStatus == "All" || GetStatus(d) == _selectedStatus)
         );
 
     protected override async Task OnInitializedAsync()
     {
-        _loading = true;
-        await Task.Delay(500); // Simulate API call
-        LoadSampleData();
-        _loading = false;
+        await LoadDrugs();
     }
 
-    private void LoadSampleData()
+    private async Task LoadDrugs()
     {
-        _drugs = new List<DrugListItem>
+        _loading = true;
+        StateHasChanged();
+
+        try
         {
-            new() { Id = 1, Code = "PARA500", Name = "Paracetamol 500mg", Category = "Analgesics", Manufacturer = "GSK", CurrentStock = 450, ReorderLevel = 100, RetailPrice = 5.00m },
-            new() { Id = 2, Code = "AMOX250", Name = "Amoxicillin 250mg", Category = "Antibiotics", Manufacturer = "Pfizer", CurrentStock = 30, ReorderLevel = 120, RetailPrice = 15.00m },
-            new() { Id = 3, Code = "IBU400", Name = "Ibuprofen 400mg", Category = "Analgesics", Manufacturer = "Novartis", CurrentStock = 200, ReorderLevel = 100, RetailPrice = 8.00m },
-            new() { Id = 4, Code = "CETR10", Name = "Cetirizine 10mg", Category = "Antihistamines", Manufacturer = "Cipla", CurrentStock = 0, ReorderLevel = 80, RetailPrice = 3.50m },
-            new() { Id = 5, Code = "METRO400", Name = "Metronidazole 400mg", Category = "Antibiotics", Manufacturer = "Unichem", CurrentStock = 150, ReorderLevel = 100, RetailPrice = 6.00m },
-            new() { Id = 6, Code = "OMEP20", Name = "Omeprazole 20mg", Category = "Antacids", Manufacturer = "AstraZeneca", CurrentStock = 180, ReorderLevel = 100, RetailPrice = 12.00m },
-            new() { Id = 7, Code = "CIPR500", Name = "Ciprofloxacin 500mg", Category = "Antibiotics", Manufacturer = "Ranbaxy", CurrentStock = 85, ReorderLevel = 100, RetailPrice = 18.00m },
-            new() { Id = 8, Code = "METF500", Name = "Metformin 500mg", Category = "Antidiabetics", Manufacturer = "Bristol-Myers", CurrentStock = 300, ReorderLevel = 150, RetailPrice = 7.50m },
-        };
+            var result = await Mediator.Send(new GetDrugsQuery(
+                SearchTerm: string.IsNullOrWhiteSpace(_searchString) ? null : _searchString,
+                Status: _selectedStatus == "All" ? null : _selectedStatus
+            ));
+
+            if (result.Success)
+            {
+                _drugs = result.Drugs;
+                _totalCount = result.TotalCount;
+            }
+            else
+            {
+                Snackbar.Add(result.ErrorMessage ?? "Failed to load drugs", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading drugs: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
     }
 
-    private string GetStatus(DrugListItem drug)
+    private async Task OnSearchChanged(string value)
+    {
+        _searchString = value;
+        await LoadDrugs();
+    }
+
+    private async Task OnStatusChanged(string value)
+    {
+        _selectedStatus = value;
+        await LoadDrugs();
+    }
+
+    private string GetStatus(DrugListDto drug)
     {
         if (drug.CurrentStock == 0) return "Out of Stock";
         if (drug.CurrentStock <= drug.ReorderLevel) return "Low Stock";
-        return "Active";
+        return "In Stock";
     }
 
-    private async Task DeleteDrug(int id)
+    private async Task DeleteDrug(DrugListDto drug)
     {
-        // TODO: Implement delete confirmation dialog and actual deletion
-        await Task.CompletedTask;
-    }
+        var result = await DialogService.ShowMessageBox(
+            "Delete Drug",
+            $"Are you sure you want to delete '{drug.Name}'? This action will deactivate the drug.",
+            yesText: "Delete",
+            cancelText: "Cancel");
 
-    private class DrugListItem
-    {
-        public int Id { get; set; }
-        public string Code { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public string Category { get; set; } = string.Empty;
-        public string Manufacturer { get; set; } = string.Empty;
-        public int CurrentStock { get; set; }
-        public int ReorderLevel { get; set; }
-        public decimal RetailPrice { get; set; }
+        if (result == true)
+        {
+            try
+            {
+                var deleteResult = await Mediator.Send(new DeleteDrugCommand(drug.Id));
+
+                if (deleteResult.Success)
+                {
+                    Snackbar.Add(deleteResult.Message, Severity.Success);
+                    await LoadDrugs();
+                }
+                else
+                {
+                    Snackbar.Add(deleteResult.Message, Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting drug: {ex.Message}", Severity.Error);
+            }
+        }
     }
 }

@@ -74,7 +74,7 @@
         </div>
         <div class="df-kpi-body">
             <div class="df-kpi-label">Stock Value</div>
-            <div class="df-kpi-value">KES @_stockItems.Sum(s => s.TotalValue).ToString("N0")</div>
+            <div class="df-kpi-value">SSP @_stockItems.Sum(s => s.TotalValue).ToString("N0")</div>
         </div>
     </div>
 </div>
@@ -132,7 +132,7 @@
                 </MudTd>
                 <MudTd DataLabel="Reserved">@context.ReservedQuantity @context.Unit</MudTd>
                 <MudTd DataLabel="Reorder Level">@context.ReorderLevel</MudTd>
-                <MudTd DataLabel="Total Value">KES @context.TotalValue.ToString("N2")</MudTd>
+                <MudTd DataLabel="Total Value">SSP @context.TotalValue.ToString("N2")</MudTd>
                 <MudTd DataLabel="Status">
                     <MudChip T="string" Size="Size.Small" Color="@GetStockLevelColor(context.StockLevel)">@context.StockLevel</MudChip>
                 </MudTd>

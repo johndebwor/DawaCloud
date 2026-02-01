@@ -7,19 +7,27 @@ public class RetailSale : BaseAuditableEntity
     public DateTime SaleDate { get; set; } = DateTime.UtcNow;
     public string? CustomerName { get; set; }
     public string? CustomerPhone { get; set; }
+
+    // Currency (retail sales are always in SSP base currency)
+    public int? CurrencyId { get; set; }
+
+    // All amounts in base currency (SSP)
     public decimal SubTotal { get; set; }
     public decimal TaxAmount { get; set; }
     public decimal DiscountAmount { get; set; }
     public decimal TotalAmount { get; set; }
     public decimal PaidAmount { get; set; }
     public decimal ChangeAmount { get; set; }
+
     public RetailSaleStatus Status { get; set; } = RetailSaleStatus.Completed;
     public string? CashierId { get; set; }
     public string? ShiftId { get; set; }
     public bool HasPrescriptionItems { get; set; }
     public string? PrescriptionNumber { get; set; }
     public string? Notes { get; set; }
-    
+
+    // Navigation
+    public Currency? Currency { get; set; }
     public ICollection<RetailSaleItem> Items { get; set; } = new List<RetailSaleItem>();
     public ICollection<Payment> Payments { get; set; } = new List<Payment>();
 }
@@ -62,13 +70,21 @@ public class CashierShift : BaseAuditableEntity
     public string CashierId { get; set; } = string.Empty;
     public DateTime StartTime { get; set; }
     public DateTime? EndTime { get; set; }
+
+    // Currency (shifts are always in SSP base currency)
+    public int? CurrencyId { get; set; }
+
+    // All balances in base currency (SSP)
     public decimal OpeningBalance { get; set; }
     public decimal ClosingBalance { get; set; }
     public decimal ExpectedBalance { get; set; }
     public decimal Variance { get; set; }
+
     public ShiftStatus Status { get; set; } = ShiftStatus.Open;
     public string? Notes { get; set; }
-    
+
+    // Navigation
+    public Currency? Currency { get; set; }
     public ICollection<RetailSale> Sales { get; set; } = new List<RetailSale>();
 }
 

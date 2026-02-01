@@ -1,6 +1,16 @@
 @page "/batches/new"
 @page "/batches/{id:int}/edit"
 @using MudBlazor
+@using MediatR
+@using DawaFlow.Web.Data
+@using DawaFlow.Web.Data.Entities
+@using DawaFlow.Web.Features.Batches.Queries
+@using DawaFlow.Web.Features.Batches.Commands
+@using Microsoft.EntityFrameworkCore
+@inject IMediator Mediator
+@inject AppDbContext DbContext
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
 
 <PageTitle>@(_isEditMode ? "Edit Batch" : "New Batch") - DawaFlow</PageTitle>
 
@@ -16,6 +26,12 @@
         </div>
     </div>
 
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+    }
+    else
+    {
     <MudGrid>
         <MudItem xs="12" md="8">
             <MudPaper Elevation="2" Class="pa-6">
@@ -32,16 +48,16 @@
                                           HelperText="Unique batch identifier" />
                         </MudItem>
                         <MudItem xs="12" md="6">
-                            <MudSelect T="string" @bind-Value="_model.DrugId"
+                            <MudSelect T="int" @bind-Value="_model.DrugId"
                                        Label="Drug"
                                        Variant="Variant.Outlined"
                                        Required="true"
+                                       RequiredError="Drug is required"
                                        AnchorOrigin="Origin.BottomCenter">
-                                <MudSelectItem Value="@("1")">Paracetamol 500mg</MudSelectItem>
-                                <MudSelectItem Value="@("2")">Amoxicillin 250mg</MudSelectItem>
-                                <MudSelectItem Value="@("3")">Ibuprofen 400mg</MudSelectItem>
-                                <MudSelectItem Value="@("4")">Ciprofloxacin 500mg</MudSelectItem>
-                                <MudSelectItem Value="@("5")">Metformin 500mg</MudSelectItem>
+                                @foreach (var drug in _drugs)
+                                {
+                                    <MudSelectItem T="int" Value="@drug.Id">@drug.Name</MudSelectItem>
+                                }
                             </MudSelect>
                         </MudItem>
                         <MudItem xs="12" md="6">
@@ -70,7 +86,7 @@
                         </MudItem>
                         <MudItem xs="12" md="6">
                             <MudNumericField @bind-Value="_model.CostPrice"
-                                             Label="Cost Price per Unit (KES)"
+                                             Label="Cost Price per Unit (SSP)"
                                              Variant="Variant.Outlined"
                                              Min="0m"
                                              Step="0.01m"
@@ -84,12 +100,13 @@
                                           HelperText="Supplier's batch reference number" />
                         </MudItem>
                         <MudItem xs="12" md="6">
-                            <MudSelect T="string" @bind-Value="_model.Status"
+                            <MudSelect T="BatchStatus" @bind-Value="_model.Status"
                                        Label="Status"
                                        Variant="Variant.Outlined">
-                                <MudSelectItem Value="@("Active")">Active</MudSelectItem>
-                                <MudSelectItem Value="@("Quarantined")">Quarantined</MudSelectItem>
-                                <MudSelectItem Value="@("Expired")">Expired</MudSelectItem>
+                                <MudSelectItem Value="@BatchStatus.Active">Active</MudSelectItem>
+                                <MudSelectItem Value="@BatchStatus.Quarantined">Quarantined</MudSelectItem>
+                                <MudSelectItem Value="@BatchStatus.Expired">Expired</MudSelectItem>
+                                <MudSelectItem Value="@BatchStatus.Recalled">Recalled</MudSelectItem>
                             </MudSelect>
                         </MudItem>
                     </MudGrid>
@@ -166,7 +183,7 @@
                 <div class="mb-3">
                     <MudText Typo="Typo.caption" Color="Color.Secondary">Total Value</MudText>
                     <MudText Typo="Typo.h6" Color="Color.Success">
-                        KES @((_model.InitialQuantity * _model.CostPrice).ToString("N2"))
+                        SSP @((_model.InitialQuantity * _model.CostPrice).ToString("N2"))
                     </MudText>
                 </div>
             </MudPaper>
@@ -190,6 +207,7 @@
             </MudPaper>
         </MudItem>
     </MudGrid>
+    }
 </div>
 
 @code {
@@ -198,11 +216,13 @@
     private MudForm? _form;
     private bool _isValid;
     private bool _isSaving;
+    private bool _isLoading = true;
     private bool _isEditMode => Id.HasValue;
 
     private BatchFormModel _model = new();
     private DateTime? _manufactureDate;
     private DateTime? _expiryDate;
+    private List<Drug> _drugs = new();
 
     private List<BreadcrumbItem> _breadcrumbItems = new();
 
@@ -215,50 +235,141 @@
             new BreadcrumbItem(_isEditMode ? "Edit" : "New", href: null, disabled: true)
         };
 
+        await LoadDrugsAsync();
+
         if (_isEditMode)
         {
-            await LoadBatch(Id!.Value);
+            await LoadBatchAsync(Id!.Value);
         }
         else
         {
             _manufactureDate = DateTime.Today;
             _expiryDate = DateTime.Today.AddYears(2);
+
+            // Set default drug if available
+            if (_drugs.Any() && _model.DrugId == 0)
+            {
+                _model.DrugId = _drugs.First().Id;
+            }
         }
+
+        _isLoading = false;
     }
 
-    private async Task LoadBatch(int id)
+    private async Task LoadDrugsAsync()
     {
-        // Simulate API call
-        await Task.Delay(300);
-        // TODO: Load actual batch data
+        _drugs = await DbContext.Drugs
+            .Where(d => d.IsActive)
+            .OrderBy(d => d.Name)
+            .ToListAsync();
+    }
+
+    private async Task LoadBatchAsync(int id)
+    {
+        var result = await Mediator.Send(new GetBatchByIdQuery(id));
+
+        if (!result.Success || result.Batch == null)
+        {
+            Snackbar.Add(result.ErrorMessage ?? "Batch not found", Severity.Error);
+            NavigationManager.NavigateTo("/batches");
+            return;
+        }
+
+        var batch = result.Batch;
         _model = new BatchFormModel
         {
-            BatchNumber = "BTH-2024-001",
-            DrugId = "1",
-            InitialQuantity = 5000,
-            CurrentQuantity = 3200,
-            ReservedQuantity = 150,
-            CostPrice = 3.50m,
-            SupplierBatchRef = "SUP-BTH-2024-001",
-            Status = "Active"
+            BatchNumber = batch.BatchNumber,
+            DrugId = batch.DrugId,
+            InitialQuantity = batch.InitialQuantity,
+            CurrentQuantity = batch.CurrentQuantity,
+            ReservedQuantity = batch.ReservedQuantity,
+            CostPrice = batch.CostPrice,
+            SupplierBatchRef = batch.SupplierBatchRef,
+            Status = batch.Status
         };
-        _manufactureDate = new DateTime(2024, 1, 15);
-        _expiryDate = new DateTime(2026, 1, 15);
+        _manufactureDate = batch.ManufactureDate;
+        _expiryDate = batch.ExpiryDate;
     }
 
     private async Task HandleSubmit()
     {
+        if (_form == null) return;
+
+        await _form.Validate();
+        if (!_isValid) return;
+
+        if (!_manufactureDate.HasValue || !_expiryDate.HasValue)
+        {
+            Snackbar.Add("Please select manufacture and expiry dates", Severity.Error);
+            return;
+        }
+
         _isSaving = true;
         StateHasChanged();
 
-        // Simulate API call
-        await Task.Delay(1000);
+        try
+        {
+            if (_isEditMode)
+            {
+                var command = new UpdateBatchCommand(
+                    Id!.Value,
+                    _model.BatchNumber,
+                    _model.DrugId,
+                    _manufactureDate.Value,
+                    _expiryDate.Value,
+                    _model.InitialQuantity,
+                    _model.CurrentQuantity,
+                    _model.CostPrice,
+                    _model.SupplierBatchRef,
+                    _model.Status
+                );
 
-        // TODO: Implement actual save logic
-        // NavigationManager.NavigateTo("/batches");
+                var result = await Mediator.Send(command);
 
-        _isSaving = false;
-        StateHasChanged();
+                if (result.Success)
+                {
+                    Snackbar.Add(result.Message, Severity.Success);
+                    NavigationManager.NavigateTo("/batches");
+                }
+                else
+                {
+                    Snackbar.Add(result.Message, Severity.Error);
+                }
+            }
+            else
+            {
+                var command = new CreateBatchCommand(
+                    _model.BatchNumber,
+                    _model.DrugId,
+                    _manufactureDate.Value,
+                    _expiryDate.Value,
+                    _model.InitialQuantity,
+                    _model.CostPrice,
+                    _model.SupplierBatchRef
+                );
+
+                var result = await Mediator.Send(command);
+
+                if (result.Success)
+                {
+                    Snackbar.Add(result.Message, Severity.Success);
+                    NavigationManager.NavigateTo("/batches");
+                }
+                else
+                {
+                    Snackbar.Add(result.Message, Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving batch: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+            StateHasChanged();
+        }
     }
 
     private int GetShelfLifeDays()
@@ -291,12 +402,12 @@
     private class BatchFormModel
     {
         public string BatchNumber { get; set; } = string.Empty;
-        public string DrugId { get; set; } = string.Empty;
+        public int DrugId { get; set; }
         public int InitialQuantity { get; set; } = 1;
         public int CurrentQuantity { get; set; }
         public int ReservedQuantity { get; set; }
         public decimal CostPrice { get; set; }
         public string? SupplierBatchRef { get; set; }
-        public string Status { get; set; } = "Active";
+        public BatchStatus Status { get; set; } = BatchStatus.Active;
     }
 }

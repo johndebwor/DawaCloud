@@ -68,7 +68,7 @@
         </div>
         <div class="df-kpi-body">
             <div class="df-kpi-label">Total Value</div>
-            <div class="df-kpi-value">KES @_requests.Sum(r => r.TotalAmount).ToString("N0")</div>
+            <div class="df-kpi-value">SSP @_requests.Sum(r => r.TotalAmount).ToString("N0")</div>
         </div>
     </div>
 </div>
@@ -107,7 +107,7 @@
                 <MudTd DataLabel="Date">@context.RequestDate.ToString("dd MMM yyyy")</MudTd>
                 <MudTd DataLabel="Supplier">@context.SupplierName</MudTd>
                 <MudTd DataLabel="Items">@context.ItemCount items</MudTd>
-                <MudTd DataLabel="Total Amount">KES @context.TotalAmount.ToString("N2")</MudTd>
+                <MudTd DataLabel="Total Amount">SSP @context.TotalAmount.ToString("N2")</MudTd>
                 <MudTd DataLabel="Status">
                     <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">
                         @FormatStatus(context.Status)

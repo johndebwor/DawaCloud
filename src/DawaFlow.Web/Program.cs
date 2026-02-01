@@ -1,5 +1,7 @@
 using DawaFlow.Web.Components;
 using DawaFlow.Web.Data;
+using DawaFlow.Web.Features.Auth;
+using DawaFlow.Web.Features.Currency.Services;
 using DawaFlow.Web.Infrastructure.BackgroundServices;
 using DawaFlow.Web.Infrastructure.Data;
 using DawaFlow.Web.Infrastructure.Identity;
@@ -90,6 +92,15 @@ builder.Services.AddMapster();
 // MudBlazor
 builder.Services.AddMudServices();
 
+// Memory Cache for currency service
+builder.Services.AddMemoryCache();
+
+// Currency Service
+builder.Services.AddScoped<ICurrencyService, CurrencyService>();
+
+// Auth Service
+builder.Services.AddScoped<DawaFlow.Web.Features.Auth.Services.IAuthService, DawaFlow.Web.Features.Auth.Services.AuthService>();
+
 // Background Services
 builder.Services.AddHostedService<ExpiryAlertService>();
 builder.Services.AddHostedService<LowStockAlertService>();
@@ -113,6 +124,13 @@ using (var scope = app.Services.CreateScope())
         logger.LogInformation("Applying database migrations...");
         context.Database.Migrate();
         logger.LogInformation("Database migrations applied successfully");
+
+        // Seed Identity (roles and users)
+        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+        var roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
+        logger.LogInformation("Seeding Identity (roles and users)...");
+        await IdentitySeeder.SeedAsync(userManager, roleManager);
+        logger.LogInformation("Identity seeding completed successfully");
 
         logger.LogInformation("Seeding database with sample data...");
         await DbSeeder.SeedAsync(context);
@@ -154,5 +172,8 @@ app.UseAuthorization();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+// Auth API Endpoints
+app.MapAuthEndpoints();
 
 app.Run();

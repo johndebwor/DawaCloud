@@ -13,9 +13,17 @@ public class Drug : BaseAuditableEntity
     public string? DosageForm { get; set; }
     public string? Strength { get; set; }
     public string? PackSize { get; set; }
+    // Prices in base currency (SSP)
     public decimal RetailPrice { get; set; }
     public decimal WholesalePrice { get; set; }
     public decimal CostPrice { get; set; }
+
+    // Original purchase currency prices (for reference)
+    public int? PurchaseCurrencyId { get; set; }
+    public decimal? CostPriceOriginal { get; set; }
+
+    // Navigation
+    public Currency? PurchaseCurrency { get; set; }
     public int ReorderLevel { get; set; }
     public int MaxStockLevel { get; set; }
     public decimal TaxRate { get; set; } = 16; // Default VAT in Kenya

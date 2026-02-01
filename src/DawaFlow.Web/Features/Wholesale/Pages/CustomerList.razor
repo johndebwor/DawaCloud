@@ -55,7 +55,7 @@
         </div>
         <div class="df-kpi-body">
             <div class="df-kpi-label">Total Outstanding</div>
-            <div class="df-kpi-value">KES @_customers.Sum(c => c.CurrentBalance).ToString("N0")</div>
+            <div class="df-kpi-value">SSP @_customers.Sum(c => c.CurrentBalance).ToString("N0")</div>
         </div>
     </div>
     <div class="df-kpi-card animate-fade-in-up animate-delay-4">
@@ -122,10 +122,10 @@
             <MudTd DataLabel="Tier">
                 <MudChip T="string" Size="Size.Small" Color="@GetTierColor(context.PricingTier)">@context.PricingTier</MudChip>
             </MudTd>
-            <MudTd DataLabel="Credit Limit">KES @context.CreditLimit.ToString("N0")</MudTd>
+            <MudTd DataLabel="Credit Limit">SSP @context.CreditLimit.ToString("N0")</MudTd>
             <MudTd DataLabel="Balance">
                 <MudText Color="@(context.CurrentBalance > context.CreditLimit ? Color.Error : Color.Default)">
-                    KES @context.CurrentBalance.ToString("N0")
+                    SSP @context.CurrentBalance.ToString("N0")
                 </MudText>
             </MudTd>
             <MudTd DataLabel="Status">
@@ -172,7 +172,7 @@
                     <MudTextField @bind-Value="_model.TaxId" Label="Tax ID / KRA PIN" Variant="Variant.Outlined" />
                 </MudItem>
                 <MudItem xs="12" md="6">
-                    <MudNumericField @bind-Value="_model.CreditLimit" Label="Credit Limit (KES)" Variant="Variant.Outlined" Min="0m" />
+                    <MudNumericField @bind-Value="_model.CreditLimit" Label="Credit Limit (SSP)" Variant="Variant.Outlined" Min="0m" />
                 </MudItem>
                 <MudItem xs="12" md="6">
                     <MudSelect T="string" @bind-Value="_model.PricingTier" Label="Pricing Tier" Variant="Variant.Outlined">

@@ -5,17 +5,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-    /* Primary - Medical Teal */
-    --df-primary-50: #e0f7f6;
-    --df-primary-100: #b3ebe8;
-    --df-primary-200: #80deea;
-    --df-primary-300: #4db6ac;
-    --df-primary-400: #26a69a;
-    --df-primary-500: #00897b;
-    --df-primary-600: #00796b;
-    --df-primary-700: #00695c;
-    --df-primary-800: #00574b;
-    --df-primary-900: #004d40;
+    /* Primary - Professional Blue */
+    --df-primary-50: #e3f2fd;
+    --df-primary-100: #bbdefb;
+    --df-primary-200: #90caf9;
+    --df-primary-300: #64b5f6;
+    --df-primary-400: #42a5f5;
+    --df-primary-500: #2196f3;
+    --df-primary-600: #1e88e5;
+    --df-primary-700: #1976d2;
+    --df-primary-800: #1565c0;
+    --df-primary-900: #0d47a1;
 
     /* Secondary - Warm Amber (Alerts/Actions) */
     --df-secondary-300: #ffd54f;
@@ -45,9 +45,9 @@
     --df-border-light: rgba(0, 0, 0, 0.03);
 
     /* Enhanced Gradients */
-    --df-gradient-primary: linear-gradient(135deg, #00897b 0%, #00695c 100%);
-    --df-gradient-primary-soft: linear-gradient(135deg, rgba(0, 137, 123, 0.1) 0%, rgba(0, 105, 92, 0.05) 100%);
-    --df-gradient-primary-vivid: linear-gradient(135deg, #26a69a 0%, #00897b 50%, #00695c 100%);
+    --df-gradient-primary: linear-gradient(135deg, #1976d2 0%, #0d47a1 100%);
+    --df-gradient-primary-soft: linear-gradient(135deg, rgba(25, 118, 210, 0.1) 0%, rgba(13, 71, 161, 0.05) 100%);
+    --df-gradient-primary-vivid: linear-gradient(135deg, #42a5f5 0%, #1976d2 50%, #0d47a1 100%);
     --df-gradient-accent: linear-gradient(135deg, #ffb300 0%, #ff8f00 100%);
     --df-gradient-success: linear-gradient(135deg, #66bb6a 0%, #43a047 100%);
     --df-gradient-warning: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
@@ -55,7 +55,7 @@
     --df-gradient-info: linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%);
     --df-gradient-dark: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
     --df-gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
-    --df-gradient-hero: linear-gradient(135deg, #f0fdfa 0%, #e0f7f6 50%, #f0fdf4 100%);
+    --df-gradient-hero: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 50%, #e8f5e9 100%);
 
     /* Shadows */
     --df-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -218,7 +218,7 @@ h6, .mud-typography-h6 {
 }
 
 .nav-rail-item.active {
-    background: linear-gradient(135deg, #00897b 0%, #00695c 100%);
+    background: linear-gradient(135deg, #1976d2 0%, #0d47a1 100%);
     color: white;
     box-shadow: 0 4px 16px rgba(0, 137, 123, 0.3);
     transform: scale(1.05);
@@ -513,7 +513,7 @@ h6, .mud-typography-h6 {
 }
 
 .kpi-icon.primary {
-    background: linear-gradient(135deg, #00897b 0%, #00695c 100%);
+    background: linear-gradient(135deg, #1976d2 0%, #0d47a1 100%);
     color: white;
 }
 
@@ -594,7 +594,7 @@ h6, .mud-typography-h6 {
 }
 
 .mud-button-filled-primary {
-    background: linear-gradient(135deg, #00897b 0%, #00695c 100%) !important;
+    background: linear-gradient(135deg, #1976d2 0%, #0d47a1 100%) !important;
     box-shadow: 0 4px 12px rgba(0, 137, 123, 0.25) !important;
 }
 
