@@ -1,10 +1,16 @@
 @page "/suppliers/new"
 @page "/suppliers/{Id:int}"
 @using MudBlazor
+@using MediatR
+@using DawaFlow.Web.Features.Suppliers.Commands
+@using DawaFlow.Web.Data
+@using Microsoft.EntityFrameworkCore
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject IMediator Mediator
+@inject IServiceScopeFactory ScopeFactory
 
-<PageTitle>@(_isViewMode ? "Supplier Details" : _isEditMode ? "Edit Supplier" : "New Supplier") - DawaFlow</PageTitle>
+<PageTitle>@(_isViewMode ? "Supplier Details" : _isEditMode ? "Edit Supplier" : "New Supplier") - DawaBes</PageTitle>
 
 <div class="mb-4">
     <MudBreadcrumbs Items="_breadcrumbItems" Class="mb-4" />
@@ -172,7 +178,7 @@
                         </div>
                         <div>
                             <MudText Typo="Typo.caption" Color="Color.Secondary">Total Value</MudText>
-                            <MudText Typo="Typo.h5" Color="Color.Primary">KES 2.4M</MudText>
+                            <MudText Typo="Typo.h5" Color="Color.Primary">SSP 2.4M</MudText>
                         </div>
                         <div>
                             <MudText Typo="Typo.caption" Color="Color.Secondary">Last Order</MudText>
@@ -221,11 +227,11 @@
     private SupplierModel _model = new();
     private List<BreadcrumbItem> _breadcrumbItems = new();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         if (Id.HasValue)
         {
-            LoadSupplier();
+            await LoadSupplierAsync();
             _isViewMode = true;
         }
         else
@@ -242,27 +248,36 @@
         };
     }
 
-    private void LoadSupplier()
+    private async Task LoadSupplierAsync()
     {
-        // Sample data
-        _model = new SupplierModel
+        try
         {
-            Id = Id ?? 0,
-            Code = "SUP-001",
-            Name = "ABC Pharmaceuticals Ltd",
-            Email = "orders@abcpharma.co.ke",
-            Phone = "+254 722 123456",
-            Address = "123 Industrial Area, Off Mombasa Road",
-            City = "Nairobi",
-            Country = "Kenya",
-            TaxId = "A123456789Z",
-            ContactPersonName = "John Kimani",
-            ContactPersonPhone = "+254 733 234567",
-            ContactPersonEmail = "john.kimani@abcpharma.co.ke",
-            EmailNotificationsEnabled = true,
-            WhatsAppNotificationsEnabled = true,
-            IsActive = true
-        };
+            using var scope = ScopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var supplier = await db.Suppliers.FirstOrDefaultAsync(s => s.Id == Id);
+            if (supplier != null)
+            {
+                _model = new SupplierModel
+                {
+                    Id = supplier.Id,
+                    Code = supplier.Code,
+                    Name = supplier.Name,
+                    Email = supplier.Email,
+                    Phone = supplier.Phone,
+                    Address = supplier.Address,
+                    City = supplier.City,
+                    Country = supplier.Country,
+                    TaxId = supplier.TaxId,
+                    EmailNotificationsEnabled = supplier.EmailNotificationsEnabled,
+                    WhatsAppNotificationsEnabled = supplier.WhatsAppNotificationsEnabled,
+                    IsActive = supplier.IsActive
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading supplier: {ex.Message}", Severity.Error);
+        }
     }
 
     private string GetPageTitle()
@@ -286,9 +301,63 @@
 
     private async Task SaveSupplier()
     {
-        await Task.Delay(500);
-        Snackbar.Add(_isEditMode ? "Supplier updated successfully" : "Supplier created successfully", Severity.Success);
-        Navigation.NavigateTo("/suppliers");
+        try
+        {
+            if (_isEditMode)
+            {
+                using var scope = ScopeFactory.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var supplier = await db.Suppliers.FindAsync(_model.Id);
+                if (supplier != null)
+                {
+                    supplier.Name = _model.Name;
+                    supplier.Email = _model.Email;
+                    supplier.Phone = _model.Phone;
+                    supplier.Address = _model.Address;
+                    supplier.City = _model.City;
+                    supplier.Country = _model.Country;
+                    supplier.TaxId = _model.TaxId;
+                    supplier.EmailNotificationsEnabled = _model.EmailNotificationsEnabled;
+                    supplier.WhatsAppNotificationsEnabled = _model.WhatsAppNotificationsEnabled;
+                    supplier.IsActive = _model.IsActive;
+                    await db.SaveChangesAsync();
+                    Snackbar.Add("Supplier updated successfully", Severity.Success);
+                }
+            }
+            else
+            {
+                var contacts = new List<CreateSupplierContactDto>();
+                if (!string.IsNullOrEmpty(_model.ContactPersonName))
+                {
+                    contacts.Add(new CreateSupplierContactDto(
+                        _model.ContactPersonName,
+                        _model.ContactPersonEmail,
+                        _model.ContactPersonPhone,
+                        "Primary Contact",
+                        true
+                    ));
+                }
+                var command = new CreateSupplierCommand(
+                    _model.Name, _model.Email, _model.Phone, _model.Address,
+                    _model.City, _model.Country, _model.TaxId,
+                    _model.EmailNotificationsEnabled, _model.WhatsAppNotificationsEnabled,
+                    null, contacts
+                );
+                var result = await Mediator.Send(command);
+                if (result.Success)
+                    Snackbar.Add("Supplier created successfully", Severity.Success);
+                else
+                {
+                    Snackbar.Add(result.Message, Severity.Error);
+                    return;
+                }
+            }
+            Navigation.NavigateTo("/suppliers");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving supplier: {ex.Message}", Severity.Error);
+        }
     }
 
     private class SupplierModel

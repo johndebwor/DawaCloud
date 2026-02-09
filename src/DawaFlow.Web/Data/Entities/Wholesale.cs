@@ -176,7 +176,7 @@ public enum PaymentMethod
 {
     Cash,
     Card,
-    Mpesa,
+    MoMo,
     BankTransfer,
     Cheque,
     Credit

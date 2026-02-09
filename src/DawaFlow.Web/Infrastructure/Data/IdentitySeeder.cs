@@ -70,7 +70,7 @@ public static class IdentitySeeder
                 UserName = pharmacistEmail,
                 Email = pharmacistEmail,
                 FirstName = "John",
-                LastName = "Kamau",
+                LastName = "Deng",
                 EmailConfirmed = true,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
@@ -95,7 +95,7 @@ public static class IdentitySeeder
                 UserName = cashierEmail,
                 Email = cashierEmail,
                 FirstName = "Jane",
-                LastName = "Wanjiku",
+                LastName = "Ayaa",
                 EmailConfirmed = true,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow

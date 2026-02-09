@@ -2,6 +2,7 @@ using DawaFlow.Web.Components;
 using DawaFlow.Web.Data;
 using DawaFlow.Web.Features.Auth;
 using DawaFlow.Web.Features.Currency.Services;
+using DawaFlow.Web.Features.Wholesale.Services;
 using DawaFlow.Web.Infrastructure.BackgroundServices;
 using DawaFlow.Web.Infrastructure.Data;
 using DawaFlow.Web.Infrastructure.Identity;
@@ -11,10 +12,14 @@ using Mapster;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
+using QuestPDF.Infrastructure;
 using Serilog;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure QuestPDF License (Community Edition)
+try { QuestPDF.Settings.License = LicenseType.Community; } catch { /* unsupported runtime (e.g. win-arm64) */ }
 
 // Configure Serilog
 builder.Host.UseSerilog((context, services, configuration) => configuration
@@ -30,12 +35,14 @@ builder.Services.AddHttpContextAccessor();
 // Audit Interceptor
 builder.Services.AddScoped<AuditSaveChangesInterceptor>();
 
-// Database
+// Database - Transient lifetime prevents Blazor Server concurrent DbContext access errors
+// Each component/handler gets its own DbContext instance
 builder.Services.AddDbContext<AppDbContext>((sp, options) =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
         b => b.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName))
-    .AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>()));
+    .AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>()),
+    ServiceLifetime.Transient);
 
 // Identity
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
@@ -58,7 +65,8 @@ builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
     options.SignIn.RequireConfirmedEmail = true;
 })
 .AddEntityFrameworkStores<AppDbContext>()
-.AddDefaultTokenProviders();
+.AddDefaultTokenProviders()
+.AddClaimsPrincipalFactory<AppUserClaimsPrincipalFactory>();
 
 // Cookie Configuration
 builder.Services.ConfigureApplicationCookie(options =>
@@ -97,9 +105,13 @@ builder.Services.AddMemoryCache();
 
 // Currency Service
 builder.Services.AddScoped<ICurrencyService, CurrencyService>();
+builder.Services.AddScoped<IRoundingService, RoundingService>();
 
 // Auth Service
 builder.Services.AddScoped<DawaFlow.Web.Features.Auth.Services.IAuthService, DawaFlow.Web.Features.Auth.Services.AuthService>();
+
+// Invoice Service
+builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 
 // Background Services
 builder.Services.AddHostedService<ExpiryAlertService>();

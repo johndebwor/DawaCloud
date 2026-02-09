@@ -1,7 +1,12 @@
 @page "/users"
 @using MudBlazor
+@using Microsoft.AspNetCore.Identity
+@using DawaFlow.Web.Infrastructure.Identity
+@inject UserManager<ApplicationUser> UserManager
+@inject RoleManager<ApplicationRole> RoleManager
+@inject ISnackbar Snackbar
 
-<PageTitle>User Management - DawaFlow</PageTitle>
+<PageTitle>User Management - DawaBes</PageTitle>
 
 <!-- Hero Section -->
 <div class="df-hero animate-fade-in-up">
@@ -138,15 +143,15 @@
                 <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context)">@GetStatusText(context)</MudChip>
             </MudTd>
             <MudTd DataLabel="Actions">
-                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Info" OnClick="@(() => EditUser(context))" />
-                <MudIconButton Icon="@Icons.Material.Filled.Key" Size="Size.Small" Color="Color.Default" OnClick="@(() => ResetPassword(context))" />
+                <MudTooltip Text="Edit User"><MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Info" OnClick="@(() => EditUser(context))" /></MudTooltip>
+                <MudTooltip Text="Reset Password"><MudIconButton Icon="@Icons.Material.Filled.Key" Size="Size.Small" Color="Color.Default" OnClick="@(() => ResetPassword(context))" /></MudTooltip>
                 @if (context.IsLocked)
                 {
-                    <MudIconButton Icon="@Icons.Material.Filled.LockOpen" Size="Size.Small" Color="Color.Success" OnClick="@(() => UnlockUser(context))" />
+                    <MudTooltip Text="Unlock User"><MudIconButton Icon="@Icons.Material.Filled.LockOpen" Size="Size.Small" Color="Color.Success" OnClick="@(() => UnlockUser(context))" /></MudTooltip>
                 }
                 else if (context.IsActive)
                 {
-                    <MudIconButton Icon="@Icons.Material.Filled.Block" Size="Size.Small" Color="Color.Warning" OnClick="@(() => DeactivateUser(context))" />
+                    <MudTooltip Text="Deactivate User"><MudIconButton Icon="@Icons.Material.Filled.Block" Size="Size.Small" Color="Color.Warning" OnClick="@(() => DeactivateUser(context))" /></MudTooltip>
                 }
             </MudTd>
         </RowTemplate>
@@ -276,23 +281,40 @@
              (_selectedStatus == "Locked" && u.IsLocked))
         );
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        LoadUsers();
+        await LoadUsersAsync();
     }
 
-    private void LoadUsers()
+    private async Task LoadUsersAsync()
     {
-        _users = new List<UserDto>
+        try
         {
-            new() { Id = "1", Name = "Admin User", Username = "admin", Email = "admin@dawaflow.co.ke", Role = "Admin", IsActive = true, IsOnline = true, LastLogin = DateTime.Now.AddMinutes(-5) },
-            new() { Id = "2", Name = "John Kamau", Username = "jkamau", Email = "jkamau@dawaflow.co.ke", Phone = "+254 722 123456", Role = "Pharmacist", IsActive = true, IsOnline = true, LastLogin = DateTime.Now.AddHours(-1) },
-            new() { Id = "3", Name = "Sarah Wanjiku", Username = "swanjiku", Email = "swanjiku@dawaflow.co.ke", Phone = "+254 733 234567", Role = "Cashier", IsActive = true, IsOnline = false, LastLogin = DateTime.Now.AddDays(-1) },
-            new() { Id = "4", Name = "Peter Otieno", Username = "potieno", Email = "potieno@dawaflow.co.ke", Phone = "+254 711 345678", Role = "Manager", IsActive = true, IsOnline = false, LastLogin = DateTime.Now.AddDays(-2) },
-            new() { Id = "5", Name = "Grace Muthoni", Username = "gmuthoni", Email = "gmuthoni@dawaflow.co.ke", Role = "Accountant", IsActive = true, IsOnline = true, LastLogin = DateTime.Now.AddHours(-3) },
-            new() { Id = "6", Name = "David Kiprop", Username = "dkiprop", Email = "dkiprop@dawaflow.co.ke", Role = "Cashier", IsActive = false, IsOnline = false, LastLogin = DateTime.Now.AddMonths(-1) },
-            new() { Id = "7", Name = "Mary Achieng", Username = "machieng", Email = "machieng@dawaflow.co.ke", Role = "Pharmacist", IsActive = true, IsLocked = true, IsOnline = false, LastLogin = DateTime.Now.AddDays(-5) },
-        };
+            var appUsers = UserManager.Users.OrderBy(u => u.UserName).ToList();
+            var userDtos = new List<UserDto>();
+            foreach (var u in appUsers)
+            {
+                var roles = await UserManager.GetRolesAsync(u);
+                var isLocked = await UserManager.IsLockedOutAsync(u);
+                userDtos.Add(new UserDto
+                {
+                    Id = u.Id,
+                    Name = $"{u.FirstName} {u.LastName}".Trim(),
+                    Username = u.UserName ?? string.Empty,
+                    Email = u.Email ?? string.Empty,
+                    Phone = u.PhoneNumber,
+                    Role = roles.FirstOrDefault() ?? "User",
+                    IsActive = u.IsActive,
+                    IsLocked = isLocked,
+                    LastLogin = u.LastLoginAt
+                });
+            }
+            _users = userDtos;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading users: {ex.Message}", Severity.Error);
+        }
     }
 
     private Color GetRoleColor(string role) => role switch
@@ -360,22 +382,38 @@
 
     private async Task ConfirmPasswordReset()
     {
-        // TODO: Implement password reset
-        await Task.Delay(500);
+        if (_selectedUser == null || string.IsNullOrWhiteSpace(_newPassword) || _newPassword != _confirmPassword)
+        {
+            Snackbar.Add("Passwords do not match", Severity.Warning);
+            return;
+        }
+        var appUser = await UserManager.FindByIdAsync(_selectedUser.Id);
+        if (appUser == null) return;
+        var token = await UserManager.GeneratePasswordResetTokenAsync(appUser);
+        var result = await UserManager.ResetPasswordAsync(appUser, token, _newPassword);
+        if (result.Succeeded)
+            Snackbar.Add("Password reset successfully", Severity.Success);
+        else
+            Snackbar.Add(string.Join(", ", result.Errors.Select(e => e.Description)), Severity.Error);
         _showPasswordDialog = false;
     }
 
     private async Task UnlockUser(UserDto user)
     {
-        // TODO: Implement unlock
-        await Task.Delay(500);
+        var appUser = await UserManager.FindByIdAsync(user.Id);
+        if (appUser == null) return;
+        await UserManager.SetLockoutEndDateAsync(appUser, null);
+        Snackbar.Add($"{user.Name} unlocked", Severity.Success);
         user.IsLocked = false;
     }
 
     private async Task DeactivateUser(UserDto user)
     {
-        // TODO: Implement deactivate
-        await Task.Delay(500);
+        var appUser = await UserManager.FindByIdAsync(user.Id);
+        if (appUser == null) return;
+        appUser.IsActive = false;
+        await UserManager.UpdateAsync(appUser);
+        Snackbar.Add($"{user.Name} deactivated", Severity.Success);
         user.IsActive = false;
     }
 
@@ -388,10 +426,58 @@
 
     private async Task SaveUser()
     {
-        // TODO: Implement save logic
-        await Task.Delay(500);
-        CloseDialog();
-        LoadUsers();
+        try
+        {
+            if (_editingUser != null)
+            {
+                // Edit existing user
+                var appUser = await UserManager.FindByIdAsync(_editingUser.Id);
+                if (appUser == null) return;
+                var parts = _model.Name.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+                appUser.FirstName = parts.Length > 0 ? parts[0] : _model.Name;
+                appUser.LastName = parts.Length > 1 ? parts[1] : string.Empty;
+                appUser.PhoneNumber = _model.Phone;
+                appUser.IsActive = _model.IsActive;
+                await UserManager.UpdateAsync(appUser);
+                // Update role
+                var currentRoles = await UserManager.GetRolesAsync(appUser);
+                await UserManager.RemoveFromRolesAsync(appUser, currentRoles);
+                if (!string.IsNullOrEmpty(_model.Role))
+                    await UserManager.AddToRoleAsync(appUser, _model.Role);
+                Snackbar.Add("User updated successfully", Severity.Success);
+            }
+            else
+            {
+                // Create new user
+                var newUser = new ApplicationUser
+                {
+                    UserName = _model.Username,
+                    Email = _model.Email,
+                    FirstName = _model.Name.Split(' ', 2)[0],
+                    LastName = _model.Name.Contains(' ') ? _model.Name.Split(' ', 2)[1] : string.Empty,
+                    PhoneNumber = _model.Phone,
+                    IsActive = _model.IsActive
+                };
+                var result = await UserManager.CreateAsync(newUser, _model.Password ?? "TempPass@123!");
+                if (result.Succeeded)
+                {
+                    if (!string.IsNullOrEmpty(_model.Role))
+                        await UserManager.AddToRoleAsync(newUser, _model.Role);
+                    Snackbar.Add("User created successfully", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add(string.Join(", ", result.Errors.Select(e => e.Description)), Severity.Error);
+                    return;
+                }
+            }
+            CloseDialog();
+            await LoadUsersAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving user: {ex.Message}", Severity.Error);
+        }
     }
 
     private class UserDto

@@ -66,37 +66,3 @@ public enum GoodsReceiptStatus
     Posted,
     Cancelled
 }
-
-public class CompanySettings
-{
-    public int Id { get; set; }
-    public string CompanyName { get; set; } = string.Empty;
-    public string? LogoUrl { get; set; }
-    public string? Address { get; set; }
-    public string? City { get; set; }
-    public string? Country { get; set; } = "South Sudan";
-    public string? Phone { get; set; }
-    public string? Email { get; set; }
-    public string? Website { get; set; }
-    public string? TaxId { get; set; }
-    public string? PharmacyLicenseNumber { get; set; }
-
-    // Currency configuration
-    public int? BaseCurrencyId { get; set; }
-    public int? DefaultPurchaseCurrencyId { get; set; }
-    public int? DefaultSalesCurrencyId { get; set; }
-
-    [Obsolete("Use BaseCurrencyId instead")]
-    public string Currency { get; set; } = "SSP";
-
-    public decimal DefaultTaxRate { get; set; } = 16; // VAT
-    public int LowStockThresholdDays { get; set; } = 14;
-    public int ExpiryAlertDays30 { get; set; } = 30;
-    public int ExpiryAlertDays60 { get; set; } = 60;
-    public int ExpiryAlertDays90 { get; set; } = 90;
-
-    // Navigation
-    public Currency? BaseCurrency { get; set; }
-    public Currency? DefaultPurchaseCurrency { get; set; }
-    public Currency? DefaultSalesCurrency { get; set; }
-}

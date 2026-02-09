@@ -8,7 +8,7 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<PageTitle>Categories - DawaFlow</PageTitle>
+<PageTitle>Categories - DawaBes</PageTitle>
 
 <!-- Hero Section -->
 <div class="df-hero animate-fade-in-up">
@@ -180,16 +180,30 @@
 
     private async Task OpenDialog(int? parentId)
     {
-        // TODO: Implement add category dialog
-        Snackbar.Add("Add category feature coming soon", Severity.Info);
-        await Task.CompletedTask;
+        var parameters = new DialogParameters
+        {
+            { nameof(CategoryDialog.CategoryId), (int?)null },
+            { nameof(CategoryDialog.AvailableCategories), _allCategories }
+        };
+        var dialog = await DialogService.ShowAsync<CategoryDialog>("New Category", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        var result = await dialog.Result;
+        if (!result.Canceled)
+            await LoadCategories();
     }
 
     private async Task EditCategory(int categoryId)
     {
-        // TODO: Implement edit category dialog
-        Snackbar.Add("Edit category feature coming soon", Severity.Info);
-        await Task.CompletedTask;
+        var parameters = new DialogParameters
+        {
+            { nameof(CategoryDialog.CategoryId), categoryId },
+            { nameof(CategoryDialog.AvailableCategories), _allCategories }
+        };
+        var dialog = await DialogService.ShowAsync<CategoryDialog>("Edit Category", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        var result = await dialog.Result;
+        if (!result.Canceled)
+            await LoadCategories();
     }
 
     private async Task DeleteCategory(int id)

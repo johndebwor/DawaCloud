@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="@Assets["app.css"]" />
-    <link rel="stylesheet" href="css/dawaflow.css" />
+    <link rel="stylesheet" href="css/DawaBes.css" />
     <link rel="stylesheet" href="css/modern-layout.css" />
     <link rel="stylesheet" href="@Assets["DawaFlow.Web.styles.css"]" />
     <ImportMap />
@@ -23,6 +23,15 @@
     <ReconnectModal />
     <script src="@Assets["_framework/blazor.web.js"]"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Initialize keyboard shortcuts when Blazor is ready
+        Blazor.start().then(() => {
+            if (window.keyboardShortcuts) {
+                window.keyboardShortcuts.initialize();
+            }
+        });
+    </script>
 </body>
 
 </html>

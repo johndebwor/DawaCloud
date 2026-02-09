@@ -5,7 +5,6 @@
 @using DawaFlow.Web.Infrastructure.Identity
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@inject UserManager<ApplicationUser> UserManager
 
 <MudLayout Class="df-layout">
     <!-- Enhanced App Bar -->
@@ -15,19 +14,15 @@
             <div class="df-logo-icon">
                 <MudIcon Icon="@Icons.Material.Filled.Medication" Size="Size.Small" />
             </div>
-            <span class="df-logo-text">DawaFlow</span>
+            <span class="df-logo-text">DawaBes</span>
         </div>
 
         <MudSpacer />
 
         <!-- Enhanced Search Field -->
-        <div class="df-search-container d-none d-md-flex">
+        <div class="df-search-container d-none d-md-flex" @onclick="@(() => { _commandSearch = string.Empty; _showCommandPalette = true; })" style="cursor: pointer;">
             <MudIcon Icon="@Icons.Material.Filled.Search" Class="df-search-icon" Size="Size.Small" />
-            <input type="text"
-                   class="df-search-field"
-                   placeholder="Search drugs, actions, reports..."
-                   @bind="_searchText"
-                   @bind:event="oninput" />
+            <span class="df-search-field" style="line-height: 1.5; color: var(--df-text-tertiary);">Search drugs, actions, reports...</span>
             <div class="df-search-shortcut">
                 <span>Ctrl</span>
                 <span>K</span>
@@ -73,13 +68,13 @@
                     <div style="font-size: 0.8rem; opacity: 0.85;">@_userEmail</div>
                 </div>
                 <MudDivider />
-                <MudMenuItem Icon="@Icons.Material.Filled.Person" IconColor="Color.Default">
+                <MudMenuItem Icon="@Icons.Material.Filled.Person" IconColor="Color.Default" OnClick="NavigateToProfile">
                     My Profile
                 </MudMenuItem>
-                <MudMenuItem Icon="@Icons.Material.Filled.Settings" IconColor="Color.Default">
+                <MudMenuItem Icon="@Icons.Material.Filled.Settings" IconColor="Color.Default" OnClick="NavigateToSettings">
                     Settings
                 </MudMenuItem>
-                <MudMenuItem Icon="@Icons.Material.Filled.Help" IconColor="Color.Default">
+                <MudMenuItem Icon="@Icons.Material.Filled.Help" IconColor="Color.Default" OnClick="NavigateToHelp">
                     Help & Support
                 </MudMenuItem>
                 <MudDivider />
@@ -97,18 +92,15 @@
                ClipMode="DrawerClipMode.Always"
                Width="260px"
                MiniWidth="80px"
-               Class="df-drawer">
+               Class="df-drawer"
+               @onmouseenter="OnDrawerMouseEnter"
+               @onmouseleave="OnDrawerMouseLeave">
         <div class="d-flex flex-column" style="height: 100%;">
             <!-- Drawer Header -->
             <div class="df-drawer-header">
                 @if (_drawerOpen)
                 {
-                    <div class="df-drawer-brand">
-                        <div class="df-logo-icon" style="width: 32px; height: 32px; border-radius: 8px;">
-                            <MudIcon Icon="@Icons.Material.Filled.Medication" Size="Size.Small" />
-                        </div>
-                        <span style="font-weight: 600; color: var(--df-text-primary);">Navigation</span>
-                    </div>
+                    <span style="font-weight: 600; color: var(--df-text-primary);">Navigation</span>
                 }
                 <MudIconButton Icon="@(_drawerOpen ? Icons.Material.Filled.ChevronLeft : Icons.Material.Filled.Menu)"
                                Color="Color.Default"
@@ -119,25 +111,25 @@
 
             <!-- Navigation Menu -->
             <div class="df-nav-section" style="flex: 1; overflow-y: auto;">
-                @if (_drawerOpen)
+                @if (NavExpanded)
                 {
                     <div class="df-nav-section-title">Main Menu</div>
                 }
 
                 <MudNavMenu>
                     <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">
-                        @if (_drawerOpen) { <span>Dashboard</span> }
+                        @if (NavExpanded) { <span>Dashboard</span> }
                     </MudNavLink>
                     <MudNavLink Href="/drugs" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Medication">
-                        @if (_drawerOpen) { <span>Drugs</span> }
+                        @if (NavExpanded) { <span>Drugs</span> }
                     </MudNavLink>
                     <MudNavLink Href="/categories" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Category">
-                        @if (_drawerOpen) { <span>Categories</span> }
+                        @if (NavExpanded) { <span>Categories</span> }
                     </MudNavLink>
                     <MudNavLink Href="/batches" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.LocalOffer">
-                        @if (_drawerOpen) { <span>Batches</span> }
+                        @if (NavExpanded) { <span>Batches</span> }
                     </MudNavLink>
-                    @if (_drawerOpen)
+                    @if (NavExpanded)
                     {
                         <MudNavGroup Title="Inventory" Icon="@Icons.Material.Filled.Inventory" Expanded="@_inventoryExpanded" ExpandedChanged="@((bool expanded) => _inventoryExpanded = expanded)">
                             <MudNavLink Href="/inventory/stock-levels" Match="NavLinkMatch.All">Stock Levels</MudNavLink>
@@ -152,23 +144,23 @@
                         </MudNavLink>
                     }
                     <MudNavLink Href="/suppliers" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Store">
-                        @if (_drawerOpen) { <span>Suppliers</span> }
+                        @if (NavExpanded) { <span>Suppliers</span> }
                     </MudNavLink>
                     <MudNavLink Href="/procurement/requests" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.ShoppingCart">
-                        @if (_drawerOpen) { <span>Procurement</span> }
+                        @if (NavExpanded) { <span>Procurement</span> }
                     </MudNavLink>
                 </MudNavMenu>
 
-                @if (_drawerOpen)
+                @if (NavExpanded)
                 {
                     <div class="df-nav-section-title" style="margin-top: 16px;">Sales</div>
                 }
 
                 <MudNavMenu>
                     <MudNavLink Href="/pos" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PointOfSale">
-                        @if (_drawerOpen) { <span>Point of Sale</span> }
+                        @if (NavExpanded) { <span>Point of Sale</span> }
                     </MudNavLink>
-                    @if (_drawerOpen)
+                    @if (NavExpanded)
                     {
                         <MudNavGroup Title="Wholesale" Icon="@Icons.Material.Filled.Business" Expanded="@_wholesaleExpanded" ExpandedChanged="@((bool expanded) => _wholesaleExpanded = expanded)">
                             <MudNavLink Href="/wholesale/customers" Match="NavLinkMatch.All">Customers</MudNavLink>
@@ -182,47 +174,48 @@
                     }
                 </MudNavMenu>
 
-                @if (_drawerOpen)
+                @if (NavExpanded)
                 {
                     <div class="df-nav-section-title" style="margin-top: 16px;">Analytics</div>
                 }
 
                 <MudNavMenu>
                     <MudNavLink Href="/reports" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assessment">
-                        @if (_drawerOpen) { <span>Reports</span> }
+                        @if (NavExpanded) { <span>Reports</span> }
                     </MudNavLink>
                     <MudNavLink Href="/audit" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.History">
-                        @if (_drawerOpen) { <span>Audit Logs</span> }
+                        @if (NavExpanded) { <span>Audit Logs</span> }
                     </MudNavLink>
                 </MudNavMenu>
 
-                @if (_drawerOpen)
+                @if (NavExpanded)
                 {
                     <div class="df-nav-section-title" style="margin-top: 16px;">System</div>
                 }
 
                 <MudNavMenu>
                     <MudNavLink Href="/users" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.People">
-                        @if (_drawerOpen) { <span>Users</span> }
+                        @if (NavExpanded) { <span>Users</span> }
                     </MudNavLink>
                     <MudNavLink Href="/settings" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Settings">
-                        @if (_drawerOpen) { <span>Settings</span> }
+                        @if (NavExpanded) { <span>Settings</span> }
                     </MudNavLink>
                 </MudNavMenu>
             </div>
 
             <!-- Drawer Footer -->
-            @if (_drawerOpen)
+            @if (NavExpanded)
             {
                 <div class="df-drawer-footer">
-                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--df-surface-variant); border-radius: var(--df-border-radius); margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--df-surface-variant); border-radius: var(--df-border-radius); margin-bottom: 12px; cursor: pointer;"
+                         @onclick="NavigateToHelp">
                         <MudIcon Icon="@Icons.Material.Filled.Help" Size="Size.Small" Style="color: var(--df-primary-500);" />
                         <div>
                             <div style="font-size: 0.8125rem; font-weight: 600; color: var(--df-text-primary);">Need Help?</div>
                             <div style="font-size: 0.75rem; color: var(--df-text-tertiary);">Check our documentation</div>
                         </div>
                     </div>
-                    <div class="df-version">DawaFlow v1.0.0</div>
+                    <div class="df-version">DawaBes v1.0.0</div>
                 </div>
             }
         </div>
@@ -234,7 +227,79 @@
             @Body
         </div>
     </MudMainContent>
+
+    <!-- Notification Drawer (right slide-out) -->
+    <MudDrawer @bind-Open="_showNotifications"
+               Anchor="Anchor.Right"
+               Elevation="4"
+               Width="360px"
+               Class="df-notification-drawer">
+        <div style="padding: 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--df-border);">
+            <MudText Typo="Typo.h6">Notifications</MudText>
+            <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="@(() => _showNotifications = false)" />
+        </div>
+        <div style="padding: 8px; overflow-y: auto; flex: 1;">
+            @foreach (var notif in _notifications)
+            {
+                <div style="padding: 12px; border-radius: 8px; margin: 4px 0; background: @(notif.IsRead ? "transparent" : "var(--df-primary-50)"); border-left: 3px solid @notif.Color;">
+                    <div style="font-size: 0.875rem; font-weight: 600;">@notif.Title</div>
+                    <div style="font-size: 0.8rem; color: var(--df-text-secondary);">@notif.Message</div>
+                    <div style="font-size: 0.75rem; color: var(--df-text-tertiary); margin-top: 4px;">@notif.Time</div>
+                </div>
+            }
+            @if (!_notifications.Any())
+            {
+                <div class="text-center pa-8">
+                    <MudIcon Icon="@Icons.Material.Filled.NotificationsNone" Size="Size.Large" Color="Color.Secondary" />
+                    <MudText Color="Color.Secondary" Class="mt-2">No notifications</MudText>
+                </div>
+            }
+        </div>
+    </MudDrawer>
 </MudLayout>
+
+<!-- Command Palette Dialog -->
+<MudDialog @bind-Visible="_showCommandPalette" Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, NoHeader = true })">
+    <DialogContent>
+        <div class="pa-2">
+            <MudTextField @bind-Value="_commandSearch"
+                          Placeholder="Search commands, drugs, reports..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Variant="Variant.Outlined"
+                          FullWidth="true"
+                          Immediate="true"
+                          AutoFocus="true" />
+        </div>
+        <MudDivider />
+        <div style="max-height: 400px; overflow-y: auto;">
+            @if (string.IsNullOrWhiteSpace(_commandSearch))
+            {
+                <MudList T="string" Dense="true">
+                    <MudListSubheader>Quick Actions</MudListSubheader>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.PointOfSale" OnClick="@(() => NavigateCommand("/pos"))">New Sale (POS)</MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Add" OnClick="@(() => NavigateCommand("/drugs/new"))">New Drug</MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.LocalShipping" OnClick="@(() => NavigateCommand("/procurement/goods-receipts/new"))">Receive Stock</MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Description" OnClick="@(() => NavigateCommand("/reports"))">Generate Report</MudListItem>
+                    <MudListSubheader>Navigation</MudListSubheader>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Dashboard" OnClick="@(() => NavigateCommand("/"))">Dashboard</MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Inventory" OnClick="@(() => NavigateCommand("/inventory/stock-levels"))">Stock Levels</MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Store" OnClick="@(() => NavigateCommand("/suppliers"))">Suppliers</MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Settings" OnClick="@(() => NavigateCommand("/settings"))">Settings</MudListItem>
+                </MudList>
+            }
+            else
+            {
+                <MudList T="string" Dense="true">
+                    @foreach (var item in GetFilteredCommands())
+                    {
+                        <MudListItem T="string" Icon="@item.Icon" OnClick="@(() => NavigateCommand(item.Url))">@item.Label</MudListItem>
+                    }
+                </MudList>
+            }
+        </div>
+    </DialogContent>
+</MudDialog>
 
 <style>
     .df-layout {
@@ -313,12 +378,47 @@
 
 @code {
     private bool _drawerOpen = false;
+    private bool _drawerHovered = false;
+    private bool NavExpanded => _drawerOpen || _drawerHovered;
     private string _searchText = string.Empty;
-    private int _notificationCount = 8;
+    private int _notificationCount = 0;
 
     // Navigation group expansion state
     private bool _inventoryExpanded = false;
     private bool _wholesaleExpanded = false;
+
+    // Notification drawer
+    private bool _showNotifications = false;
+    private List<NotificationItem> _notifications = new();
+
+    // Command palette
+    private bool _showCommandPalette = false;
+    private string _commandSearch = string.Empty;
+
+    private static readonly List<CommandItem> _allCommands = new()
+    {
+        new("New Sale (POS)", "/pos", Icons.Material.Filled.PointOfSale),
+        new("New Drug", "/drugs/new", Icons.Material.Filled.Add),
+        new("Receive Stock", "/procurement/goods-receipts/new", Icons.Material.Filled.LocalShipping),
+        new("Generate Report", "/reports", Icons.Material.Filled.Description),
+        new("Dashboard", "/", Icons.Material.Filled.Dashboard),
+        new("Stock Levels", "/inventory/stock-levels", Icons.Material.Filled.Inventory),
+        new("Stock Movements", "/inventory/movements", Icons.Material.Filled.History),
+        new("Stock Counts", "/inventory/stock-counts", Icons.Material.Filled.Rule),
+        new("Drugs", "/drugs", Icons.Material.Filled.Medication),
+        new("Categories", "/categories", Icons.Material.Filled.Category),
+        new("Batches", "/batches", Icons.Material.Filled.LocalOffer),
+        new("Suppliers", "/suppliers", Icons.Material.Filled.Store),
+        new("Procurement", "/procurement/requests", Icons.Material.Filled.ShoppingCart),
+        new("Wholesale Customers", "/wholesale/customers", Icons.Material.Filled.People),
+        new("Wholesale Sales", "/wholesale/sales", Icons.Material.Filled.Business),
+        new("Reports", "/reports", Icons.Material.Filled.Assessment),
+        new("Audit Logs", "/audit", Icons.Material.Filled.History),
+        new("Users", "/users", Icons.Material.Filled.People),
+        new("Settings", "/settings", Icons.Material.Filled.Settings),
+        new("My Profile", "/profile", Icons.Material.Filled.Person),
+        new("Help & Support", "/help", Icons.Material.Filled.Help),
+    };
 
     // User info from authentication state
     private string _userName = string.Empty;
@@ -340,30 +440,15 @@
         {
             _userEmail = claimsPrincipal.Identity.Name ?? "User";
 
-            // Get user details from UserManager
-            var user = await UserManager.FindByEmailAsync(_userEmail);
-            if (user != null)
-            {
-                if (!string.IsNullOrEmpty(user.FirstName) || !string.IsNullOrEmpty(user.LastName))
-                {
-                    _userName = $"{user.FirstName} {user.LastName}".Trim();
-                }
-                else
-                {
-                    // Fall back to email username
-                    _userName = _userEmail.Contains('@') ? _userEmail.Split('@')[0] : _userEmail;
-                }
+            var firstName = claimsPrincipal.FindFirst("FirstName")?.Value ?? string.Empty;
+            var lastName = claimsPrincipal.FindFirst("LastName")?.Value ?? string.Empty;
 
-                // Get roles from UserManager
-                var roles = await UserManager.GetRolesAsync(user);
-                _userRole = roles.FirstOrDefault() ?? "User";
-            }
+            if (!string.IsNullOrEmpty(firstName) || !string.IsNullOrEmpty(lastName))
+                _userName = $"{firstName} {lastName}".Trim();
             else
-            {
-                // Fall back to email username
                 _userName = _userEmail.Contains('@') ? _userEmail.Split('@')[0] : _userEmail;
-                _userRole = "User";
-            }
+
+            _userRole = claimsPrincipal.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "User";
         }
         else
         {
@@ -403,6 +488,47 @@
 
     private void ToggleNotifications()
     {
-        // TODO: Open notification drawer
+        _showNotifications = !_showNotifications;
     }
+
+    private void OnDrawerMouseEnter()
+    {
+        if (!_drawerOpen)
+            _drawerHovered = true;
+    }
+
+    private void OnDrawerMouseLeave()
+    {
+        _drawerHovered = false;
+    }
+
+    private IEnumerable<CommandItem> GetFilteredCommands()
+    {
+        if (string.IsNullOrWhiteSpace(_commandSearch)) return _allCommands;
+        return _allCommands.Where(c => c.Label.Contains(_commandSearch, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void NavigateCommand(string url)
+    {
+        _showCommandPalette = false;
+        NavigationManager.NavigateTo(url);
+    }
+
+    private void NavigateToProfile()
+    {
+        NavigationManager.NavigateTo("/profile");
+    }
+
+    private void NavigateToSettings()
+    {
+        NavigationManager.NavigateTo("/settings");
+    }
+
+    private void NavigateToHelp()
+    {
+        NavigationManager.NavigateTo("/help");
+    }
+
+    private record NotificationItem(string Title, string Message, string Time, string Color, bool IsRead);
+    private record CommandItem(string Label, string Url, string Icon);
 }

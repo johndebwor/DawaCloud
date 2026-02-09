@@ -1,10 +1,19 @@
 @page "/procurement/requests/new"
 @page "/procurement/requests/{Id:int}"
 @using MudBlazor
+@using MediatR
+@using DawaFlow.Web.Data
+@using DawaFlow.Web.Features.Procurement.Commands
+@using DawaFlow.Web.Features.Procurement.Components
+@using DawaFlow.Web.Features.Drugs.Queries
+@using Microsoft.EntityFrameworkCore
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject IMediator Mediator
+@inject IServiceScopeFactory ScopeFactory
+@inject IDialogService DialogService
 
-<PageTitle>@(_isViewMode ? "Request Details" : "New Drug Request") - DawaFlow</PageTitle>
+<PageTitle>@(_isViewMode ? "Request Details" : "New Drug Request") - DawaBes</PageTitle>
 
 <div class="mb-4">
     <MudBreadcrumbs Items="_breadcrumbItems" Class="mb-4" />
@@ -181,22 +190,24 @@
     private RequestDto _request = new();
     private List<RequestItemDto> _items = new();
     private List<SupplierDto> _suppliers = new();
-    
+    private List<DrugListDto> _availableDrugs = new();
+
     private int? _selectedSupplierId;
     private DateTime? _expectedDeliveryDate;
     private string _notes = string.Empty;
-    
+
     private List<BreadcrumbItem> _breadcrumbItems = new();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        LoadSuppliers();
-        
+        await LoadSuppliersAsync();
+        await LoadDrugsAsync();
+
         if (_isViewMode)
         {
             LoadRequest();
         }
-        
+
         _breadcrumbItems = new List<BreadcrumbItem>
         {
             new("Home", href: "/"),
@@ -205,14 +216,35 @@
         };
     }
 
-    private void LoadSuppliers()
+    private async Task LoadSuppliersAsync()
     {
-        _suppliers = new List<SupplierDto>
+        try
         {
-            new() { Id = 1, Name = "ABC Pharmaceuticals Ltd" },
-            new() { Id = 2, Name = "XYZ Medical Supplies" },
-            new() { Id = 3, Name = "Kenya Pharma Distributors" }
-        };
+            using var scope = ScopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            _suppliers = await db.Suppliers
+                .Where(s => s.IsActive)
+                .Select(s => new SupplierDto { Id = s.Id, Name = s.Name })
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading suppliers: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task LoadDrugsAsync()
+    {
+        try
+        {
+            var query = new GetDrugsQuery(null, null, "Active"); // Load all active drugs
+            var result = await Mediator.Send(query);
+            _availableDrugs = result.Drugs;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading drugs: {ex.Message}", Severity.Error);
+        }
     }
 
     private void LoadRequest()
@@ -236,10 +268,35 @@
         };
     }
 
-    private void AddItem()
+    private async Task AddItem()
     {
-        // Would show a dialog to add item
-        Snackbar.Add("Add item dialog coming soon", Severity.Info);
+        var parameters = new DialogParameters
+        {
+            { "AvailableDrugs", _availableDrugs }
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            CloseButton = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddRequestItemDialog>("Add Item to Request", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is AddRequestItemDialog.RequestItemDto requestItem)
+        {
+            _items.Add(new RequestItemDto
+            {
+                DrugId = requestItem.DrugId,
+                DrugName = requestItem.DrugName,
+                RequestedQuantity = requestItem.RequestedQuantity,
+                UnitPrice = requestItem.UnitPrice
+            });
+
+            Snackbar.Add($"Added {requestItem.DrugName} to request", Severity.Success);
+        }
     }
 
     private void RemoveItem(RequestItemDto item)
@@ -249,10 +306,33 @@
 
     private async Task SaveRequest()
     {
-        // Save request logic
-        await Task.Delay(500);
-        Snackbar.Add("Request submitted successfully", Severity.Success);
-        Navigation.NavigateTo("/procurement/requests");
+        try
+        {
+            if (!_selectedSupplierId.HasValue || _selectedSupplierId == 0)
+            {
+                Snackbar.Add("Please select a supplier", Severity.Warning);
+                return;
+            }
+            if (!_items.Any())
+            {
+                Snackbar.Add("Please add at least one item", Severity.Warning);
+                return;
+            }
+            var itemDtos = _items.Select(i => new DrugRequestItemDto(i.DrugId, i.RequestedQuantity, i.UnitPrice)).ToList();
+            var command = new CreateDrugRequestCommand(_selectedSupplierId.Value, _notes, itemDtos);
+            var result = await Mediator.Send(command);
+            if (result.Success)
+            {
+                Snackbar.Add("Request submitted successfully", Severity.Success);
+                Navigation.NavigateTo("/procurement/requests");
+            }
+            else
+                Snackbar.Add(result.Message, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
     }
 
     private async Task ApproveRequest()
@@ -296,6 +376,7 @@
 
     private class RequestItemDto
     {
+        public int DrugId { get; set; }
         public string DrugName { get; set; } = string.Empty;
         public int RequestedQuantity { get; set; }
         public decimal UnitPrice { get; set; }

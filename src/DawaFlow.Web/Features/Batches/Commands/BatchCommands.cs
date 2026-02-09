@@ -12,7 +12,10 @@ public record CreateBatchCommand(
     DateTime ExpiryDate,
     int InitialQuantity,
     decimal CostPrice,
-    string? SupplierBatchRef
+    string? SupplierBatchRef,
+    decimal? CostPriceOriginal = null,
+    int? CostCurrencyId = null,
+    decimal? ExchangeRateUsed = null
 ) : IRequest<BatchCommandResult>;
 
 public record UpdateBatchCommand(
@@ -25,7 +28,10 @@ public record UpdateBatchCommand(
     int CurrentQuantity,
     decimal CostPrice,
     string? SupplierBatchRef,
-    BatchStatus Status
+    BatchStatus Status,
+    decimal? CostPriceOriginal = null,
+    int? CostCurrencyId = null,
+    decimal? ExchangeRateUsed = null
 ) : IRequest<BatchCommandResult>;
 
 public record QuarantineBatchCommand(int Id, string? Reason = null) : IRequest<BatchCommandResult>;
@@ -75,6 +81,9 @@ public class CreateBatchCommandHandler : IRequestHandler<CreateBatchCommand, Bat
                 CurrentQuantity = request.InitialQuantity,
                 ReservedQuantity = 0,
                 CostPrice = request.CostPrice,
+                CostPriceOriginal = request.CostPriceOriginal,
+                CostCurrencyId = request.CostCurrencyId,
+                ExchangeRateUsed = request.ExchangeRateUsed,
                 SupplierBatchRef = request.SupplierBatchRef,
                 Status = BatchStatus.Active,
                 CreatedAt = DateTime.UtcNow
@@ -142,6 +151,9 @@ public class UpdateBatchCommandHandler : IRequestHandler<UpdateBatchCommand, Bat
             batch.InitialQuantity = request.InitialQuantity;
             batch.CurrentQuantity = request.CurrentQuantity;
             batch.CostPrice = request.CostPrice;
+            batch.CostPriceOriginal = request.CostPriceOriginal;
+            batch.CostCurrencyId = request.CostCurrencyId;
+            batch.ExchangeRateUsed = request.ExchangeRateUsed;
             batch.SupplierBatchRef = request.SupplierBatchRef;
             batch.Status = request.Status;
             batch.UpdatedAt = DateTime.UtcNow;

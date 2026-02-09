@@ -57,7 +57,7 @@ public class CreateSupplierCommandHandler : IRequestHandler<CreateSupplierComman
                 Phone = request.Phone,
                 Address = request.Address,
                 City = request.City,
-                Country = request.Country ?? "Kenya",
+                Country = request.Country ?? "South Sudan",
                 TaxId = request.TaxId,
                 EmailNotificationsEnabled = request.EmailNotificationsEnabled,
                 WhatsAppNotificationsEnabled = request.WhatsAppNotificationsEnabled,

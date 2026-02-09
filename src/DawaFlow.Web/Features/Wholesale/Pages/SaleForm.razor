@@ -1,10 +1,19 @@
 @page "/wholesale/sales/new"
 @page "/wholesale/sales/{Id:int}"
 @using MudBlazor
+@using MediatR
+@using DawaFlow.Web.Features.Wholesale.Commands
+@using DawaFlow.Web.Features.Wholesale.Queries
+@using DawaFlow.Web.Features.Wholesale.Components
+@using DawaFlow.Web.Features.Wholesale.DTOs
+@using DawaFlow.Web.Features.Drugs.Queries
+@using DawaFlow.Web.Data.Entities
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject IMediator Mediator
+@inject IDialogService DialogService
 
-<PageTitle>@(_isViewMode ? "Invoice Details" : "New Wholesale Sale") - DawaFlow</PageTitle>
+<PageTitle>@(_isViewMode ? "Invoice Details" : "New Wholesale Sale") - DawaBes</PageTitle>
 
 <div class="mb-4">
     <MudBreadcrumbs Items="_breadcrumbItems" Class="mb-4" />
@@ -112,9 +121,10 @@
                     }
                 </div>
 
-                <MudTable T="SaleItemDto" Items="_items" Dense="true" Hover="true">
+                <MudTable T="DTOs.SaleItemDto" Items="_items" Dense="true" Hover="true">
                     <HeaderContent>
                         <MudTh>Drug</MudTh>
+                        <MudTh>Batch</MudTh>
                         <MudTh>Quantity</MudTh>
                         <MudTh>Unit Price</MudTh>
                         <MudTh>Discount</MudTh>
@@ -130,6 +140,9 @@
                                 <MudText Typo="Typo.body2">@context.DrugName</MudText>
                                 <MudText Typo="Typo.caption" Color="Color.Secondary">@context.DrugCode</MudText>
                             </div>
+                        </MudTd>
+                        <MudTd DataLabel="Batch">
+                            <MudText Typo="Typo.body2">@context.BatchNumber</MudText>
                         </MudTd>
                         <MudTd DataLabel="Quantity">@context.Quantity</MudTd>
                         <MudTd DataLabel="Unit Price">SSP @context.UnitPrice.ToString("N2")</MudTd>
@@ -220,150 +233,204 @@
 
     private bool _isViewMode => Id.HasValue;
     private MudForm? _form;
-    private SaleDto _sale = new();
-    private List<SaleItemDto> _items = new();
-    private List<CustomerDto> _customers = new();
-    
+    private Queries.SaleDto _sale = new(0, "", DateTime.Now, 0, "", 0, 0, 0, 0, 0, 0, PaymentStatus.Pending, SaleStatus.Draft, 0);
+    private List<DTOs.SaleItemDto> _items = new();
+    private List<Wholesale.Queries.CustomerDto> _customers = new();
+    private List<Drugs.Queries.DrugListDto> _drugs = new();
+    private bool _isLoading = true;
+    private bool _isSaving = false;
+
     private int? _selectedCustomerId;
     private DateTime? _deliveryDate;
     private string _deliveryAddress = string.Empty;
-    
+    private string _notes = string.Empty;
+
     private decimal _subtotal => _items.Sum(i => i.Quantity * i.UnitPrice);
     private decimal _totalDiscount => _items.Sum(i => i.Quantity * i.UnitPrice * i.DiscountPercent / 100);
     private decimal _taxAmount => (_subtotal - _totalDiscount) * 0.16m;
     private decimal _grandTotal => _subtotal - _totalDiscount + _taxAmount;
-    
+
     private List<BreadcrumbItem> _breadcrumbItems = new();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        LoadCustomers();
-        
-        if (_isViewMode)
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
         {
-            LoadSale();
+            _isLoading = true;
+
+            // Load customers
+            var customersQuery = new GetCustomersQuery(null, null);
+            _customers = await Mediator.Send(customersQuery);
+
+            // Load drugs for item selection
+            var drugsQuery = new GetDrugsQuery(null, null, "Active");
+            var drugsResult = await Mediator.Send(drugsQuery);
+            _drugs = drugsResult.Drugs;
+
+            if (_isViewMode)
+            {
+                await LoadSaleAsync();
+            }
+
+            _breadcrumbItems = new List<BreadcrumbItem>
+            {
+                new("Home", href: "/"),
+                new("Wholesale", href: "/wholesale/sales"),
+                new(_isViewMode ? _sale.InvoiceNumber : "New Sale", href: null, disabled: true)
+            };
         }
-        
-        _breadcrumbItems = new List<BreadcrumbItem>
+        catch (Exception ex)
         {
-            new("Home", href: "/"),
-            new("Wholesale", href: "/wholesale/sales"),
-            new(_isViewMode ? _sale.InvoiceNumber : "New Sale", href: null, disabled: true)
-        };
+            Snackbar.Add($"Error loading data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
     }
 
-    private void LoadCustomers()
+    private async Task LoadSaleAsync()
     {
-        _customers = new List<CustomerDto>
+        if (!Id.HasValue) return;
+
+        try
         {
-            new() { Id = 1, Name = "Nairobi Pharmacy Ltd" },
-            new() { Id = 2, Name = "Mombasa Medicals" },
-            new() { Id = 3, Name = "Kisumu Healthcare" },
-            new() { Id = 4, Name = "Eldoret Pharmacy Group" }
-        };
+            var query = new GetSaleByIdQuery(Id.Value);
+            var result = await Mediator.Send(query);
+
+            if (result != null)
+            {
+                _sale = result;
+                // Convert sale items to editable format if needed
+                // This would require extending GetSaleByIdQuery to return line items
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading sale: {ex.Message}", Severity.Error);
+            Navigation.NavigateTo("/wholesale/sales");
+        }
     }
 
-    private void LoadSale()
+    private async Task AddItem()
     {
-        // Sample data
-        _sale = new SaleDto
+        var parameters = new DialogParameters
         {
-            Id = Id ?? 0,
-            InvoiceNumber = "INV-2024-0032",
-            SaleDate = DateTime.Now.AddDays(-2),
-            CustomerName = "Nairobi Pharmacy Ltd",
-            Status = "Delivered",
-            PaymentStatus = "Partial",
-            TotalAmount = 125000,
-            PaidAmount = 75000
+            { "AvailableDrugs", _drugs }
         };
-        
-        _items = new List<SaleItemDto>
+
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<AddSaleItemDialog>("Add Item", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is DTOs.SaleItemDto newItem)
         {
-            new() { DrugCode = "PARA500", DrugName = "Paracetamol 500mg", Quantity = 1000, UnitPrice = 35.00m, DiscountPercent = 10 },
-            new() { DrugCode = "AMOX250", DrugName = "Amoxicillin 250mg", Quantity = 500, UnitPrice = 120.00m, DiscountPercent = 15 },
-            new() { DrugCode = "IBU400", DrugName = "Ibuprofen 400mg", Quantity = 800, UnitPrice = 42.00m, DiscountPercent = 10 }
-        };
+            _items.Add(newItem);
+            StateHasChanged();
+        }
     }
 
-    private void AddItem()
-    {
-        Snackbar.Add("Add item dialog coming soon", Severity.Info);
-    }
-
-    private void RemoveItem(SaleItemDto item)
+    private void RemoveItem(DTOs.SaleItemDto item)
     {
         _items.Remove(item);
+        StateHasChanged();
     }
 
     private async Task SaveAsDraft()
     {
-        await Task.Delay(500);
-        Snackbar.Add("Sale saved as draft", Severity.Info);
-        Navigation.NavigateTo("/wholesale/sales");
+        await SaveSaleAsync(SaleStatus.Draft);
     }
 
     private async Task ConfirmSale()
     {
-        await Task.Delay(500);
-        Snackbar.Add("Sale confirmed", Severity.Success);
-        Navigation.NavigateTo("/wholesale/sales");
+        await SaveSaleAsync(SaleStatus.Confirmed);
+    }
+
+    private async Task SaveSaleAsync(SaleStatus status)
+    {
+        if (!_selectedCustomerId.HasValue)
+        {
+            Snackbar.Add("Please select a customer", Severity.Warning);
+            return;
+        }
+
+        if (_items.Count == 0)
+        {
+            Snackbar.Add("Please add at least one item", Severity.Warning);
+            return;
+        }
+
+        _isSaving = true;
+
+        try
+        {
+            var saleItems = _items.Select(i => new Commands.SaleItemDto(
+                i.DrugId,
+                i.BatchId,
+                i.Quantity,
+                i.UnitPrice
+            )).ToList();
+
+            var command = new CreateSaleCommand(
+                _selectedCustomerId.Value,
+                DateTime.Now,
+                saleItems,
+                _notes,
+                _deliveryAddress
+            );
+
+            var result = await Mediator.Send(command);
+
+            if (result.IsSuccess)
+            {
+                var message = status == SaleStatus.Confirmed ? "Sale confirmed successfully" : "Sale saved as draft";
+                Snackbar.Add(message, Severity.Success);
+                Navigation.NavigateTo("/wholesale/sales");
+            }
+            else
+            {
+                Snackbar.Add(result.Error ?? "Failed to save sale", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving sale: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
     }
 
     private void PrintInvoice()
     {
-        Snackbar.Add("Print invoice coming soon", Severity.Info);
+        Snackbar.Add("Print invoice - PDF generation coming in next task", Severity.Info);
     }
 
     private void RecordPayment()
     {
-        Snackbar.Add("Record payment dialog coming soon", Severity.Info);
+        Snackbar.Add("Record payment - will integrate PaymentDialog", Severity.Info);
     }
 
-    private Color GetStatusColor(string status) => status switch
+    private Color GetStatusColor(SaleStatus status) => status switch
     {
-        "Draft" => Color.Default,
-        "Confirmed" => Color.Info,
-        "Delivered" => Color.Success,
-        "Cancelled" => Color.Error,
+        SaleStatus.Draft => Color.Info,
+        SaleStatus.Confirmed => Color.Primary,
+        SaleStatus.Completed => Color.Success,
+        SaleStatus.Cancelled => Color.Error,
         _ => Color.Default
     };
 
-    private Color GetPaymentColor(string status) => status switch
+    private Color GetPaymentColor(PaymentStatus status) => status switch
     {
-        "Paid" => Color.Success,
-        "Partial" => Color.Warning,
-        "Pending" => Color.Info,
-        "Overdue" => Color.Error,
+        PaymentStatus.Paid => Color.Success,
+        PaymentStatus.PartiallyPaid => Color.Warning,
+        PaymentStatus.Pending => Color.Info,
         _ => Color.Default
     };
-
-    private class SaleDto
-    {
-        public int Id { get; set; }
-        public string InvoiceNumber { get; set; } = string.Empty;
-        public DateTime SaleDate { get; set; }
-        public string CustomerName { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
-        public string PaymentStatus { get; set; } = string.Empty;
-        public decimal TotalAmount { get; set; }
-        public decimal PaidAmount { get; set; }
-        public decimal BalanceAmount => TotalAmount - PaidAmount;
-    }
-
-    private class SaleItemDto
-    {
-        public string DrugCode { get; set; } = string.Empty;
-        public string DrugName { get; set; } = string.Empty;
-        public int Quantity { get; set; }
-        public decimal UnitPrice { get; set; }
-        public decimal DiscountPercent { get; set; }
-        public decimal LineTotal => Quantity * UnitPrice * (1 - DiscountPercent / 100);
-    }
-
-    private class CustomerDto
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-    }
 }

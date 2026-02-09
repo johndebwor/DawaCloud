@@ -3,11 +3,14 @@
 @using DawaFlow.Web.Features.Inventory.Queries
 @using DawaFlow.Web.Data.Entities
 @using MediatR
+@using Microsoft.JSInterop
+@using ClosedXML.Excel
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
 
-<PageTitle>Stock Movements - DawaFlow</PageTitle>
+<PageTitle>Stock Movements - DawaBes</PageTitle>
 
 <!-- Hero Section -->
 <div class="df-hero animate-fade-in-up">
@@ -19,7 +22,8 @@
         <div class="d-flex gap-2">
             <MudButton Variant="Variant.Outlined"
                        Color="Color.Default"
-                       StartIcon="@Icons.Material.Filled.FileDownload">
+                       StartIcon="@Icons.Material.Filled.FileDownload"
+                       OnClick="ExportToExcel">
                 Export
             </MudButton>
             <MudButton Variant="Variant.Filled"
@@ -271,4 +275,72 @@
         "Sale" or "WriteOff" or "Transfer" => "-",
         _ => ""
     };
+
+    private async Task ExportToExcel()
+    {
+        try
+        {
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("Stock Movements");
+
+            // Add headers
+            worksheet.Cell(1, 1).Value = "Date";
+            worksheet.Cell(1, 2).Value = "Time";
+            worksheet.Cell(1, 3).Value = "Drug Code";
+            worksheet.Cell(1, 4).Value = "Drug Name";
+            worksheet.Cell(1, 5).Value = "Batch Number";
+            worksheet.Cell(1, 6).Value = "Type";
+            worksheet.Cell(1, 7).Value = "Quantity";
+            worksheet.Cell(1, 8).Value = "Balance Before";
+            worksheet.Cell(1, 9).Value = "Balance After";
+            worksheet.Cell(1, 10).Value = "Reference";
+            worksheet.Cell(1, 11).Value = "Reason";
+            worksheet.Cell(1, 12).Value = "Notes";
+            worksheet.Cell(1, 13).Value = "Created By";
+
+            // Style headers
+            var headerRange = worksheet.Range(1, 1, 1, 13);
+            headerRange.Style.Font.Bold = true;
+            headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#00897b");
+            headerRange.Style.Font.FontColor = XLColor.White;
+
+            // Add data rows
+            int row = 2;
+            foreach (var movement in _movements)
+            {
+                worksheet.Cell(row, 1).Value = movement.CreatedAt.ToString("dd MMM yyyy");
+                worksheet.Cell(row, 2).Value = movement.CreatedAt.ToString("HH:mm:ss");
+                worksheet.Cell(row, 3).Value = movement.DrugCode;
+                worksheet.Cell(row, 4).Value = movement.DrugName;
+                worksheet.Cell(row, 5).Value = movement.BatchNumber;
+                worksheet.Cell(row, 6).Value = movement.Type;
+                worksheet.Cell(row, 7).Value = movement.Quantity;
+                worksheet.Cell(row, 8).Value = movement.BalanceBefore;
+                worksheet.Cell(row, 9).Value = movement.BalanceAfter;
+                worksheet.Cell(row, 10).Value = movement.Reference ?? "";
+                worksheet.Cell(row, 11).Value = movement.Reason ?? "";
+                worksheet.Cell(row, 12).Value = movement.Notes ?? "";
+                worksheet.Cell(row, 13).Value = movement.CreatedBy;
+                row++;
+            }
+
+            // Auto-fit columns
+            worksheet.Columns().AdjustToContents();
+
+            // Convert to base64
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            var base64 = Convert.ToBase64String(stream.ToArray());
+
+            // Download via JavaScript
+            var fileName = $"stock-movements-{DateTime.Now:yyyyMMdd-HHmmss}.xlsx";
+            await JSRuntime.InvokeVoidAsync("downloadFile", fileName, base64, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+            Snackbar.Add($"Exported {_movements.Count} stock movements to Excel", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error exporting to Excel: {ex.Message}", Severity.Error);
+        }
+    }
 }

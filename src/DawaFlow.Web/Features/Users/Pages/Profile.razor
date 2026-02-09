@@ -1,0 +1,196 @@
+@page "/profile"
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Authorization
+@using DawaFlow.Web.Infrastructure.Identity
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject ISnackbar Snackbar
+@attribute [Authorize]
+
+<PageTitle>My Profile - DawaBes</PageTitle>
+
+<div class="df-hero animate-fade-in-up">
+    <div class="df-hero-content">
+        <div class="df-hero-text">
+            <h1>My Profile</h1>
+            <p>Manage your personal information and password</p>
+        </div>
+    </div>
+</div>
+
+<MudGrid Class="mt-4">
+    <MudItem xs="12" md="4">
+        <MudPaper Elevation="1" Class="pa-6 text-center">
+            <MudAvatar Color="Color.Primary" Size="Size.Large" Style="width: 80px; height: 80px; font-size: 2rem; margin: 0 auto 16px;">
+                @(_firstName.Length > 0 ? _firstName[0].ToString().ToUpper() : "?")
+            </MudAvatar>
+            <MudText Typo="Typo.h6">@_firstName @_lastName</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">@_email</MudText>
+            @if (!string.IsNullOrEmpty(_role))
+            {
+                <MudChip T="string" Color="Color.Primary" Size="Size.Small" Class="mt-2">@_role</MudChip>
+            }
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-3 d-block">
+                Member since @_createdAt.ToString("MMM yyyy")
+            </MudText>
+            @if (_lastLogin.HasValue)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    Last login: @_lastLogin.Value.ToString("dd MMM yyyy HH:mm")
+                </MudText>
+            }
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="8">
+        <MudPaper Elevation="1" Class="pa-6">
+            <MudText Typo="Typo.h6" Class="mb-4">Personal Information</MudText>
+            <MudForm @ref="_profileForm">
+                <MudGrid>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_firstName" Label="First Name" Variant="Variant.Outlined" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_lastName" Label="Last Name" Variant="Variant.Outlined" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="_email" Label="Email" Variant="Variant.Outlined" InputType="InputType.Email" Disabled="true" HelperText="Email cannot be changed here" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_phone" Label="Phone Number" Variant="Variant.Outlined" />
+                    </MudItem>
+                </MudGrid>
+                <div class="mt-4">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveProfile" Disabled="@_isSaving">
+                        @if (_isSaving) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" /> }
+                        Save Changes
+                    </MudButton>
+                </div>
+            </MudForm>
+        </MudPaper>
+
+        <MudPaper Elevation="1" Class="pa-6 mt-4">
+            <MudText Typo="Typo.h6" Class="mb-4">Change Password</MudText>
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_currentPassword" Label="Current Password" InputType="InputType.Password" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_newPassword" Label="New Password" InputType="InputType.Password" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_confirmPassword" Label="Confirm New Password" InputType="InputType.Password" Variant="Variant.Outlined" />
+                </MudItem>
+            </MudGrid>
+            <div class="mt-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="ChangePassword" Disabled="@_isChangingPassword">
+                    @if (_isChangingPassword) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" /> }
+                    Change Password
+                </MudButton>
+            </div>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private MudForm? _profileForm;
+    private string _userId = string.Empty;
+    private string _firstName = string.Empty;
+    private string _lastName = string.Empty;
+    private string _email = string.Empty;
+    private string _phone = string.Empty;
+    private string _role = string.Empty;
+    private DateTime _createdAt = DateTime.UtcNow;
+    private DateTime? _lastLogin;
+    private bool _isSaving = false;
+
+    private string _currentPassword = string.Empty;
+    private string _newPassword = string.Empty;
+    private string _confirmPassword = string.Empty;
+    private bool _isChangingPassword = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated != true) return;
+
+        var appUser = await UserManager.FindByNameAsync(user.Identity.Name ?? "");
+        if (appUser == null) return;
+
+        _userId = appUser.Id;
+        _firstName = appUser.FirstName;
+        _lastName = appUser.LastName;
+        _email = appUser.Email ?? string.Empty;
+        _phone = appUser.PhoneNumber ?? string.Empty;
+        _createdAt = appUser.CreatedAt;
+        _lastLogin = appUser.LastLoginAt;
+
+        var roles = await UserManager.GetRolesAsync(appUser);
+        _role = roles.FirstOrDefault() ?? string.Empty;
+    }
+
+    private async Task SaveProfile()
+    {
+        _isSaving = true;
+        try
+        {
+            var user = await UserManager.FindByIdAsync(_userId);
+            if (user == null) return;
+            user.FirstName = _firstName;
+            user.LastName = _lastName;
+            user.PhoneNumber = _phone;
+            var result = await UserManager.UpdateAsync(user);
+            if (result.Succeeded)
+                Snackbar.Add("Profile updated successfully", Severity.Success);
+            else
+                Snackbar.Add(string.Join(", ", result.Errors.Select(e => e.Description)), Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task ChangePassword()
+    {
+        if (string.IsNullOrWhiteSpace(_currentPassword) || string.IsNullOrWhiteSpace(_newPassword))
+        {
+            Snackbar.Add("Please fill in all password fields", Severity.Warning);
+            return;
+        }
+        if (_newPassword != _confirmPassword)
+        {
+            Snackbar.Add("New passwords do not match", Severity.Error);
+            return;
+        }
+        _isChangingPassword = true;
+        try
+        {
+            var user = await UserManager.FindByIdAsync(_userId);
+            if (user == null) return;
+            var result = await UserManager.ChangePasswordAsync(user, _currentPassword, _newPassword);
+            if (result.Succeeded)
+            {
+                Snackbar.Add("Password changed successfully", Severity.Success);
+                _currentPassword = _newPassword = _confirmPassword = string.Empty;
+            }
+            else
+                Snackbar.Add(string.Join(", ", result.Errors.Select(e => e.Description)), Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isChangingPassword = false;
+        }
+    }
+}

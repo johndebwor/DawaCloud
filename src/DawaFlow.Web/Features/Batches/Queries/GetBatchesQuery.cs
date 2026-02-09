@@ -127,6 +127,9 @@ public record BatchDetailDto(
     int CurrentQuantity,
     int ReservedQuantity,
     decimal CostPrice,
+    decimal? CostPriceOriginal,
+    int? CostCurrencyId,
+    decimal? ExchangeRateUsed,
     string? SupplierBatchRef,
     int? GoodsReceiptId,
     BatchStatus Status
@@ -168,6 +171,9 @@ public class GetBatchByIdQueryHandler : IRequestHandler<GetBatchByIdQuery, GetBa
                 batch.CurrentQuantity,
                 batch.ReservedQuantity,
                 batch.CostPrice,
+                batch.CostPriceOriginal,
+                batch.CostCurrencyId,
+                batch.ExchangeRateUsed,
                 batch.SupplierBatchRef,
                 batch.GoodsReceiptId,
                 batch.Status

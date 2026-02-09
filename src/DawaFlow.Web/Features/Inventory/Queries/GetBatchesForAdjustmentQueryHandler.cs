@@ -18,6 +18,7 @@ public class GetBatchesForAdjustmentQueryHandler : IRequestHandler<GetBatchesFor
     {
         var query = _context.Batches
             .Include(b => b.Drug)
+            .Where(b => !b.IsDeleted)
             .Where(b => b.Status == BatchStatus.Active || b.Status == BatchStatus.Depleted)
             .AsQueryable();
 

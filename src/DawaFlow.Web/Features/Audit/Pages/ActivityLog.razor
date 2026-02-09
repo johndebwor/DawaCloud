@@ -1,0 +1,171 @@
+@page "/activity"
+@using MudBlazor
+@using DawaFlow.Web.Data
+@using DawaFlow.Web.Data.Entities
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext DbContext
+@inject ISnackbar Snackbar
+
+<PageTitle>Activity Log - DawaBes</PageTitle>
+
+<div class="df-hero animate-fade-in-up">
+    <div class="df-hero-content">
+        <div class="df-hero-text">
+            <h1>Activity Log</h1>
+            <p>Recent system activities and user actions</p>
+        </div>
+    </div>
+</div>
+
+<div class="df-alert-card animate-fade-in-up animate-delay-1 mt-4">
+    <div class="df-alert-header">
+        <MudTextField @bind-Value="_searchTerm"
+                      Placeholder="Search activities..."
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Immediate="true"
+                      OnDebounceIntervalElapsed="SearchActivities"
+                      DebounceInterval="300"
+                      Style="max-width: 300px;" />
+
+        <div class="d-flex gap-2">
+            <MudSelect @bind-Value="_selectedType" Label="Activity Type" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;" OnChanged="LoadActivitiesAsync">
+                <MudSelectItem Value="@("All")">All Types</MudSelectItem>
+                <MudSelectItem Value="@("Create")">Create</MudSelectItem>
+                <MudSelectItem Value="@("Update")">Update</MudSelectItem>
+                <MudSelectItem Value="@("Delete")">Delete</MudSelectItem>
+                <MudSelectItem Value="@("Login")">Login</MudSelectItem>
+            </MudSelect>
+        </div>
+    </div>
+
+    @if (_isLoading)
+    {
+        <div class="text-center pa-8">
+            <MudProgressCircular Indeterminate="true" />
+        </div>
+    }
+    else if (!_activities.Any())
+    {
+        <div class="text-center pa-8">
+            <MudText Typo="Typo.h6" Color="Color.Secondary">No activities found</MudText>
+        </div>
+    }
+    else
+    {
+        <MudTimeline TimelinePosition="TimelinePosition.Start" Class="mt-4">
+            @foreach (var activity in _activities)
+            {
+                <MudTimelineItem Color="@GetActivityColor(activity.Action)" Icon="@GetActivityIcon(activity.Action)" Size="Size.Small">
+                    <MudCard Elevation="2" Class="mb-2">
+                        <MudCardContent>
+                            <MudText Typo="Typo.body1">
+                                <strong>@activity.UserName</strong> @activity.Action @activity.EntityType
+                            </MudText>
+                            @if (!string.IsNullOrEmpty(activity.EntityId))
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                    ID: @activity.EntityId
+                                </MudText>
+                            }
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                @activity.Timestamp.ToString("dd MMM yyyy HH:mm:ss")
+                            </MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudTimelineItem>
+            }
+        </MudTimeline>
+
+        <div class="d-flex justify-center mt-4">
+            <MudPagination Count="@_totalPages" Selected="@_currentPage" SelectedChanged="OnPageChanged" />
+        </div>
+    }
+</div>
+
+@code {
+    private List<AuditLog> _activities = new();
+    private string _searchTerm = string.Empty;
+    private string _selectedType = "All";
+    private int _currentPage = 1;
+    private int _totalPages = 1;
+    private int _pageSize = 20;
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadActivitiesAsync();
+    }
+
+    private async Task LoadActivitiesAsync()
+    {
+        try
+        {
+            _isLoading = true;
+            StateHasChanged();
+
+            var query = DbContext.AuditLogs.AsNoTracking();
+
+            // Apply filters
+            if (!string.IsNullOrWhiteSpace(_searchTerm))
+            {
+                query = query.Where(a => a.UserName.Contains(_searchTerm) || a.EntityType.Contains(_searchTerm));
+            }
+
+            if (_selectedType != "All")
+            {
+                query = query.Where(a => a.Action == _selectedType);
+            }
+
+            // Get total count
+            var totalCount = await query.CountAsync();
+            _totalPages = (int)Math.Ceiling(totalCount / (double)_pageSize);
+
+            // Get paged results
+            _activities = await query
+                .OrderByDescending(a => a.Timestamp)
+                .Skip((_currentPage - 1) * _pageSize)
+                .Take(_pageSize)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading activities: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SearchActivities()
+    {
+        _currentPage = 1; // Reset to first page when searching
+        await LoadActivitiesAsync();
+    }
+
+    private async Task OnPageChanged(int page)
+    {
+        _currentPage = page;
+        await LoadActivitiesAsync();
+    }
+
+    private Color GetActivityColor(string action) => action switch
+    {
+        "Create" => Color.Success,
+        "Update" => Color.Info,
+        "Delete" => Color.Error,
+        "Login" => Color.Primary,
+        _ => Color.Default
+    };
+
+    private string GetActivityIcon(string action) => action switch
+    {
+        "Create" => Icons.Material.Filled.Add,
+        "Update" => Icons.Material.Filled.Edit,
+        "Delete" => Icons.Material.Filled.Delete,
+        "Login" => Icons.Material.Filled.Login,
+        _ => Icons.Material.Filled.Circle
+    };
+}

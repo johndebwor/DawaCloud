@@ -1,9 +1,13 @@
-# DawaFlow - Pharmaceutical Management System
+# DawaBes - Pharmaceutical Management System
 
 <div align="center">
-  <img src="docs/logo.png" alt="DawaFlow Logo" width="200" />
-  
+  <img src="src/DawaBes.Web/wwwroot/images/logo.svg" alt="DawaBes Logo" width="200" />
+
+  **DawaBes**
+
   **Modern Drugs Wholesale & Retail Management System**
+
+  *Currently deployed for Revo Pharma & Medical Ltd*
   
   [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)](https://dotnet.microsoft.com/)
   [![Blazor](https://img.shields.io/badge/Blazor-Server-purple)](https://blazor.net/)
@@ -15,7 +19,7 @@
 
 ## 📋 Overview
 
-**DawaFlow** (Dawa = Medicine in Swahili) is a comprehensive pharmaceutical management system designed to streamline drug inventory, procurement, wholesale and retail operations for pharmacies and drug distribution businesses in Kenya and East Africa.
+**DawaBes** (Dawa = Medicine in Swahili) is a comprehensive pharmaceutical management system designed to streamline drug inventory, procurement, wholesale and retail operations for pharmacies and drug distribution businesses in South Sudan and East Africa.
 
 ### Key Features
 
@@ -42,24 +46,24 @@
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-org/dawaflow.git
-   cd dawaflow
+   git clone https://github.com/your-org/DawaBes.git
+   cd DawaBes
    ```
 
 2. **Configure the database connection**
    
-   Update `src/DawaFlow.Web/appsettings.json`:
+   Update `src/DawaBes.Web/appsettings.json`:
    ```json
    {
      "ConnectionStrings": {
-       "DefaultConnection": "Server=localhost;Database=DawaFlow;Trusted_Connection=True;TrustServerCertificate=True"
+       "DefaultConnection": "Server=localhost;Database=DawaBes;Trusted_Connection=True;TrustServerCertificate=True"
      }
    }
    ```
 
 3. **Run database migrations**
    ```bash
-   cd src/DawaFlow.Web
+   cd src/DawaBes.Web
    dotnet ef database update
    ```
 
@@ -76,20 +80,20 @@
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | admin@dawaflow.co.ke | Admin@123 |
-| Pharmacist | pharmacist@dawaflow.co.ke | Demo@123 |
-| Cashier | cashier@dawaflow.co.ke | Demo@123 |
+| Admin | admin@DawaBes.com | Admin@123 |
+| Pharmacist | pharmacist@DawaBes.com | Demo@123 |
+| Cashier | cashier@DawaBes.com | Demo@123 |
 
 ---
 
 ## 🏗️ Architecture
 
-DawaFlow uses a **Feature-Based (Vertical Slice) Architecture** with CQRS pattern:
+DawaBes uses a **Feature-Based (Vertical Slice) Architecture** with CQRS pattern:
 
 ```
-DawaFlow/
+DawaBes/
 ├── src/
-│   └── DawaFlow.Web/           # Main Blazor Server Application
+│   └── DawaBes.Web/           # Main Blazor Server Application
 │       ├── Features/           # Feature modules (vertical slices)
 │       │   ├── Auth/          # Authentication & Authorization
 │       │   ├── Dashboard/     # Dashboard & KPIs
@@ -149,8 +153,8 @@ DawaFlow/
   "Email": {
     "SmtpHost": "smtp.example.com",
     "SmtpPort": 587,
-    "FromEmail": "noreply@dawaflow.com",
-    "FromName": "DawaFlow"
+    "FromEmail": "noreply@DawaBes.com",
+    "FromName": "DawaBes"
   }
 }
 ```
@@ -162,7 +166,7 @@ DawaFlow/
     "Provider": "Twilio",
     "AccountSid": "your-account-sid",
     "AuthToken": "your-auth-token",
-    "FromNumber": "+254XXXXXXXXX"
+    "FromNumber": "+211XXXXXXXXX"
   }
 }
 ```
@@ -183,7 +187,7 @@ DawaFlow/
 
 ```bash
 # Build the image
-docker build -t dawaflow:latest .
+docker build -t DawaBes:latest .
 
 # Run with Docker Compose
 docker-compose up -d
@@ -209,12 +213,28 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Email**: support@dawaflow.com
-- **Documentation**: [docs.dawaflow.com](https://docs.dawaflow.com)
-- **Issues**: [GitHub Issues](https://github.com/your-org/dawaflow/issues)
+- **Company**: Revo Pharma & Medical Ltd
+- **Email**: info@revopharma.com
+- **Website**: www.revopharma.com
+- **Phone**: +211 920 123456
+- **Location**: Mobil, Hai Cinema, Juba, South Sudan
+- **Issues**: [GitHub Issues](https://github.com/your-org/DawaBes/issues)
+
+---
+
+## 🏢 About This Installation
+
+This DawaBes system is currently deployed for **Revo Pharma & Medical Ltd**, a leading pharmaceutical distribution company serving South Sudan.
+
+**About DawaBes:**
+DawaBes is a flexible pharmaceutical management platform that can be configured for any pharmacy or pharmaceutical distribution business. The system provides comprehensive tools to streamline drug inventory, procurement, and distribution operations.
+
+**About Revo Pharma & Medical Ltd (Current Client):**
+Revo Pharma & Medical Ltd uses DawaBes to manage their pharmaceutical operations in South Sudan. The system is configured with features tailored to South Sudanese regulatory requirements and business practices.
 
 ---
 
 <div align="center">
-  Made with ❤️ for East African Pharmacies
+  DawaBes - Pharmaceutical Management System<br/>
+  Serving pharmacies and pharmaceutical businesses across South Sudan and East Africa
 </div>

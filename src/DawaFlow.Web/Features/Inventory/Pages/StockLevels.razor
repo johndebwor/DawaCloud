@@ -1,12 +1,15 @@
 @page "/inventory"
 @page "/inventory/stock-levels"
 @using MudBlazor
+@using Microsoft.JSInterop
+@using ClosedXML.Excel
 @using DawaFlow.Web.Features.Inventory.Queries
 @using MediatR
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
 
-<PageTitle>Stock Levels - DawaFlow</PageTitle>
+<PageTitle>Stock Levels - DawaBes</PageTitle>
 
 <!-- Hero Section -->
 <div class="df-hero animate-fade-in-up">
@@ -18,7 +21,8 @@
         <div class="d-flex gap-2">
             <MudButton Variant="Variant.Outlined"
                        Color="Color.Default"
-                       StartIcon="@Icons.Material.Filled.FileDownload">
+                       StartIcon="@Icons.Material.Filled.FileDownload"
+                       OnClick="ExportToExcel">
                 Export
             </MudButton>
             <MudButton Variant="Variant.Filled"
@@ -137,16 +141,8 @@
                     <MudChip T="string" Size="Size.Small" Color="@GetStockLevelColor(context.StockLevel)">@context.StockLevel</MudChip>
                 </MudTd>
                 <MudTd DataLabel="Actions">
-                    <MudIconButton Icon="@Icons.Material.Filled.History"
-                                   Size="Size.Small"
-                                   Color="Color.Info"
-                                   Href="@($"/inventory/movements?drugId={context.DrugId}")"
-                                   Title="View Movements" />
-                    <MudIconButton Icon="@Icons.Material.Filled.Tune"
-                                   Size="Size.Small"
-                                   Color="Color.Default"
-                                   Href="@($"/inventory/adjustments/new?drugId={context.DrugId}")"
-                                   Title="Adjust Stock" />
+                    <MudTooltip Text="View Movements"><MudIconButton Icon="@Icons.Material.Filled.History" Size="Size.Small" Color="Color.Info" Href="@($"/inventory/movements?drugId={context.DrugId}")" /></MudTooltip>
+                    <MudTooltip Text="Adjust Stock"><MudIconButton Icon="@Icons.Material.Filled.Tune" Size="Size.Small" Color="Color.Default" Href="@($"/inventory/adjustments/new?drugId={context.DrugId}")" /></MudTooltip>
                 </MudTd>
             </RowTemplate>
         </MudTable>
@@ -200,4 +196,72 @@
         "Out" => Color.Error,
         _ => Color.Default
     };
+
+    private async Task ExportToExcel()
+    {
+        try
+        {
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("Stock Levels");
+
+            // Add headers
+            worksheet.Cell(1, 1).Value = "Drug Code";
+            worksheet.Cell(1, 2).Value = "Drug Name";
+            worksheet.Cell(1, 3).Value = "Category";
+            worksheet.Cell(1, 4).Value = "Available Quantity";
+            worksheet.Cell(1, 5).Value = "Reserved Quantity";
+            worksheet.Cell(1, 6).Value = "Reorder Level";
+            worksheet.Cell(1, 7).Value = "Total Value (SSP)";
+            worksheet.Cell(1, 8).Value = "Stock Level";
+
+            // Style headers
+            var headerRange = worksheet.Range(1, 1, 1, 8);
+            headerRange.Style.Font.Bold = true;
+            headerRange.Style.Fill.BackgroundColor = XLColor.LightBlue;
+            headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+            // Add data rows
+            int row = 2;
+            foreach (var item in FilteredItems)
+            {
+                worksheet.Cell(row, 1).Value = item.DrugCode;
+                worksheet.Cell(row, 2).Value = item.DrugName;
+                worksheet.Cell(row, 3).Value = item.Category;
+                worksheet.Cell(row, 4).Value = item.AvailableQuantity;
+                worksheet.Cell(row, 5).Value = item.ReservedQuantity;
+                worksheet.Cell(row, 6).Value = item.ReorderLevel;
+                worksheet.Cell(row, 7).Value = item.TotalValue;
+                worksheet.Cell(row, 8).Value = item.StockLevel;
+
+                // Color code rows based on stock level
+                var rowRange = worksheet.Range(row, 1, row, 8);
+                if (item.StockLevel == "Out")
+                    rowRange.Style.Font.FontColor = XLColor.Red;
+                else if (item.StockLevel == "Low")
+                    rowRange.Style.Font.FontColor = XLColor.Orange;
+
+                row++;
+            }
+
+            // Auto-fit columns
+            worksheet.Columns().AdjustToContents();
+
+            // Convert to base64
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            var base64 = Convert.ToBase64String(stream.ToArray());
+
+            // Download via JavaScript
+            await JSRuntime.InvokeVoidAsync("downloadFile",
+                $"stock-levels-{DateTime.Now:yyyyMMdd-HHmmss}.xlsx",
+                base64,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+            Snackbar.Add($"Exported {FilteredItems.Count()} stock items successfully", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error exporting: {ex.Message}", Severity.Error);
+        }
+    }
 }

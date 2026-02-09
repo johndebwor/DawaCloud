@@ -10,9 +10,10 @@ namespace DawaFlow.Web.Features.Currency.Services;
 /// </summary>
 public class CurrencyService : ICurrencyService
 {
-    private readonly AppDbContext _context;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly IMemoryCache _cache;
     private readonly ILogger<CurrencyService> _logger;
+    private readonly IRoundingService _roundingService;
 
     private const string CurrenciesCacheKey = "Currencies_All";
     private const string BaseCurrencyCacheKey = "Currency_Base";
@@ -23,11 +24,12 @@ public class CurrencyService : ICurrencyService
     private static Dictionary<int, CurrencyDto>? _currencyCache;
     private static Dictionary<string, int>? _currencyCodeToIdCache;
 
-    public CurrencyService(AppDbContext context, IMemoryCache cache, ILogger<CurrencyService> logger)
+    public CurrencyService(IServiceScopeFactory scopeFactory, IMemoryCache cache, ILogger<CurrencyService> logger, IRoundingService roundingService)
     {
-        _context = context;
+        _scopeFactory = scopeFactory;
         _cache = cache;
         _logger = logger;
+        _roundingService = roundingService;
     }
 
     #region Currency Queries
@@ -39,7 +41,10 @@ public class CurrencyService : ICurrencyService
         if (_cache.TryGetValue(cacheKey, out List<CurrencyDto>? cached) && cached != null)
             return cached;
 
-        var query = _context.Currencies.AsNoTracking();
+        using var scope = _scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var query = context.Currencies.AsNoTracking();
 
         if (activeOnly)
             query = query.Where(c => c.IsActive);
@@ -154,7 +159,10 @@ public class CurrencyService : ICurrencyService
         if (_cache.TryGetValue(cacheKey, out List<ExchangeRateDto>? cached) && cached != null)
             return cached;
 
-        var query = _context.ExchangeRates
+        using var scope = _scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var query = context.ExchangeRates
             .Include(er => er.FromCurrency)
             .Include(er => er.ToCurrency)
             .AsNoTracking();
@@ -195,7 +203,16 @@ public class CurrencyService : ICurrencyService
             return amount;
 
         var rate = await GetCurrentRateAsync(fromCurrency, toCurrency, ct);
-        return Math.Round(amount * rate, 2);
+        var converted = amount * rate;
+
+        // Apply rounding if converting TO base currency (SSP)
+        var baseCurrency = await GetBaseCurrencyAsync(ct);
+        if (toCurrency.Equals(baseCurrency.Code, StringComparison.OrdinalIgnoreCase))
+        {
+            return await _roundingService.ApplyRoundingAsync(converted, "Conversion", ct);
+        }
+
+        return Math.Round(converted, 2);
     }
 
     public async Task<decimal> ConvertAsync(decimal amount, int fromCurrencyId, int toCurrencyId, CancellationToken ct = default)
@@ -204,7 +221,16 @@ public class CurrencyService : ICurrencyService
             return amount;
 
         var rate = await GetCurrentRateAsync(fromCurrencyId, toCurrencyId, ct);
-        return Math.Round(amount * rate, 2);
+        var converted = amount * rate;
+
+        // Apply rounding if converting TO base currency (SSP)
+        var baseCurrency = await GetBaseCurrencyAsync(ct);
+        if (toCurrencyId == baseCurrency.Id)
+        {
+            return await _roundingService.ApplyRoundingAsync(converted, "Conversion", ct);
+        }
+
+        return Math.Round(converted, 2);
     }
 
     public async Task<decimal> ConvertToBaseAsync(decimal amount, string fromCurrency, CancellationToken ct = default)
@@ -293,15 +319,18 @@ public class CurrencyService : ICurrencyService
 
         try
         {
+            using var scope = _scopeFactory.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
             // Check if currencies exist
-            var fromCurrency = await _context.Currencies.FindAsync(new object[] { fromCurrencyId }, ct);
-            var toCurrency = await _context.Currencies.FindAsync(new object[] { toCurrencyId }, ct);
+            var fromCurrency = await context.Currencies.FindAsync(new object[] { fromCurrencyId }, ct);
+            var toCurrency = await context.Currencies.FindAsync(new object[] { toCurrencyId }, ct);
 
             if (fromCurrency == null || toCurrency == null)
                 return new SetExchangeRateResult(false, "One or both currencies not found");
 
             // Find existing active rate
-            var existingRate = await _context.ExchangeRates
+            var existingRate = await context.ExchangeRates
                 .FirstOrDefaultAsync(er =>
                     er.FromCurrencyId == fromCurrencyId &&
                     er.ToCurrencyId == toCurrencyId &&
@@ -320,7 +349,7 @@ public class CurrencyService : ICurrencyService
                     ChangeReason = notes,
                     CreatedAt = DateTime.UtcNow
                 };
-                _context.ExchangeRateHistories.Add(history);
+                context.ExchangeRateHistories.Add(history);
 
                 // Update existing rate
                 existingRate.Rate = rate;
@@ -343,10 +372,10 @@ public class CurrencyService : ICurrencyService
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = changedBy
                 };
-                _context.ExchangeRates.Add(existingRate);
+                context.ExchangeRates.Add(existingRate);
             }
 
-            await _context.SaveChangesAsync(ct);
+            await context.SaveChangesAsync(ct);
 
             // Clear cache (use bool.ToString() to match the cache key format)
             _cache.Remove($"{ExchangeRatesCacheKey}_{true}");
@@ -366,7 +395,10 @@ public class CurrencyService : ICurrencyService
 
     public async Task<List<ExchangeRateHistoryDto>> GetExchangeRateHistoryAsync(int exchangeRateId, int? limit = null, CancellationToken ct = default)
     {
-        var query = _context.ExchangeRateHistories
+        using var scope = _scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var query = context.ExchangeRateHistories
             .AsNoTracking()
             .Where(h => h.ExchangeRateId == exchangeRateId)
             .OrderByDescending(h => h.ChangedAt);

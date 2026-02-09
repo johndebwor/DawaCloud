@@ -1,8 +1,15 @@
 @page "/wholesale"
 @page "/wholesale/customers"
 @using MudBlazor
+@using MediatR
+@using DawaFlow.Web.Features.Wholesale.Commands
+@using DawaFlow.Web.Features.Wholesale.Queries
+@using DawaFlow.Web.Features.Wholesale.Components
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
-<PageTitle>Wholesale Customers - DawaFlow</PageTitle>
+<PageTitle>Wholesale Customers - DawaBes</PageTitle>
 
 <!-- Hero Section -->
 <div class="df-hero animate-fade-in-up">
@@ -16,7 +23,7 @@
                 Export
             </MudButton>
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
-                       OnClick="@(() => _showCreateDialog = true)">
+                       OnClick="CreateCustomer">
                 Add Customer
             </MudButton>
         </div>
@@ -80,14 +87,16 @@
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       IconSize="Size.Medium"
                       Immediate="true"
+                      OnDebounceIntervalElapsed="LoadCustomersAsync"
+                      DebounceInterval="300"
                       Style="max-width: 400px;" />
         <div class="d-flex gap-2">
-            <MudSelect T="string" @bind-Value="_selectedTier" Label="Pricing Tier" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
+            <MudSelect T="string" Value="_selectedTier" ValueChanged="OnFilterChanged" Label="Pricing Tier" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
                 <MudSelectItem Value="@("All")">All Tiers</MudSelectItem>
-                <MudSelectItem Value="@("Standard")">Standard</MudSelectItem>
-                <MudSelectItem Value="@("Silver")">Silver</MudSelectItem>
-                <MudSelectItem Value="@("Gold")">Gold</MudSelectItem>
-                <MudSelectItem Value="@("Platinum")">Platinum</MudSelectItem>
+                <MudSelectItem Value="@("Retail")">Retail</MudSelectItem>
+                <MudSelectItem Value="@("Wholesale")">Wholesale</MudSelectItem>
+                <MudSelectItem Value="@("Bulk")">Bulk</MudSelectItem>
+                <MudSelectItem Value="@("VIP")">VIP</MudSelectItem>
             </MudSelect>
         </div>
     </div>
@@ -115,8 +124,14 @@
             </MudTd>
             <MudTd DataLabel="Contact">
                 <div>
-                    <MudText Typo="Typo.body2">@context.ContactPerson</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Phone</MudText>
+                    @if (!string.IsNullOrEmpty(context.Email))
+                    {
+                        <MudText Typo="Typo.body2">@context.Email</MudText>
+                    }
+                    @if (!string.IsNullOrEmpty(context.Phone))
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Phone</MudText>
+                    }
                 </div>
             </MudTd>
             <MudTd DataLabel="Tier">
@@ -134,177 +149,101 @@
                 </MudChip>
             </MudTd>
             <MudTd DataLabel="Actions">
-                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Color="Color.Info" OnClick="@(() => ViewCustomer(context))" />
-                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Default" OnClick="@(() => EditCustomer(context))" />
-                <MudIconButton Icon="@Icons.Material.Filled.Receipt" Size="Size.Small" Color="Color.Primary" Href="@($"/wholesale/sales?customerId={context.Id}")" />
+                <MudTooltip Text="Edit"><MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Default" OnClick="@(() => EditCustomer(context.Id))" /></MudTooltip>
+                <MudTooltip Text="View Sales"><MudIconButton Icon="@Icons.Material.Filled.Receipt" Size="Size.Small" Color="Color.Primary" Href="@($"/wholesale/sales?customerId={context.Id}")" /></MudTooltip>
+                <MudTooltip Text="Delete"><MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteCustomer(context.Id))" /></MudTooltip>
             </MudTd>
         </RowTemplate>
     </MudTable>
 </div>
 
-<!-- Create/Edit Dialog -->
-<MudDialog @bind-Visible="_showCreateDialog" Options="_dialogOptions">
-    <TitleContent>
-        <MudText Typo="Typo.h6">@(_editingCustomer == null ? "Add New Customer" : "Edit Customer")</MudText>
-    </TitleContent>
-    <DialogContent>
-        <MudForm @ref="_form">
-            <MudGrid>
-                <MudItem xs="12" md="6">
-                    <MudTextField @bind-Value="_model.Name" Label="Company Name" Required="true" Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12" md="6">
-                    <MudTextField @bind-Value="_model.ContactPerson" Label="Contact Person" Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12" md="6">
-                    <MudTextField @bind-Value="_model.Email" Label="Email" InputType="InputType.Email" Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12" md="6">
-                    <MudTextField @bind-Value="_model.Phone" Label="Phone" Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12">
-                    <MudTextField @bind-Value="_model.Address" Label="Address" Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12" md="6">
-                    <MudTextField @bind-Value="_model.City" Label="City" Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12" md="6">
-                    <MudTextField @bind-Value="_model.TaxId" Label="Tax ID / KRA PIN" Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12" md="6">
-                    <MudNumericField @bind-Value="_model.CreditLimit" Label="Credit Limit (SSP)" Variant="Variant.Outlined" Min="0m" />
-                </MudItem>
-                <MudItem xs="12" md="6">
-                    <MudSelect T="string" @bind-Value="_model.PricingTier" Label="Pricing Tier" Variant="Variant.Outlined">
-                        <MudSelectItem Value="@("Standard")">Standard</MudSelectItem>
-                        <MudSelectItem Value="@("Silver")">Silver</MudSelectItem>
-                        <MudSelectItem Value="@("Gold")">Gold</MudSelectItem>
-                        <MudSelectItem Value="@("Platinum")">Platinum</MudSelectItem>
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="12" md="6">
-                    <MudNumericField @bind-Value="_model.PaymentTerms" Label="Payment Terms (Days)" Variant="Variant.Outlined" Min="0" />
-                </MudItem>
-                <MudItem xs="12" md="6">
-                    <MudSwitch @bind-Value="_model.IsActive" Label="Active" Color="Color.Primary" />
-                </MudItem>
-            </MudGrid>
-        </MudForm>
-    </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="@(() => _showCreateDialog = false)">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveCustomer">Save</MudButton>
-    </DialogActions>
-</MudDialog>
 
 @code {
     private List<CustomerDto> _customers = new();
     private string _searchString = string.Empty;
     private string _selectedTier = "All";
-    private bool _showCreateDialog = false;
-    private MudForm? _form;
-    private CustomerDto? _editingCustomer = null;
-    private CustomerFormModel _model = new();
-    
-    private DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
 
-    private IEnumerable<CustomerDto> FilteredCustomers =>
-        _customers.Where(c =>
-            (string.IsNullOrWhiteSpace(_searchString) ||
-             c.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
-             c.Code.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) &&
-            (_selectedTier == "All" || c.PricingTier == _selectedTier)
-        );
+    private IEnumerable<CustomerDto> FilteredCustomers => _customers;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        LoadCustomers();
+        await LoadCustomersAsync();
     }
 
-    private void LoadCustomers()
+    private async Task LoadCustomersAsync()
     {
-        _customers = new List<CustomerDto>
-        {
-            new() { Id = 1, Code = "WC-001", Name = "Nairobi Pharmacy Ltd", ContactPerson = "John Kamau", Phone = "+254 722 123456", Email = "info@nairobipharmacy.co.ke", City = "Nairobi", CreditLimit = 500000, CurrentBalance = 125000, PricingTier = "Gold", PaymentTerms = 30, IsActive = true },
-            new() { Id = 2, Code = "WC-002", Name = "Mombasa Medicals", ContactPerson = "Sarah Omondi", Phone = "+254 733 234567", Email = "orders@mombasamedicals.co.ke", City = "Mombasa", CreditLimit = 300000, CurrentBalance = 280000, PricingTier = "Silver", PaymentTerms = 14, IsActive = true },
-            new() { Id = 3, Code = "WC-003", Name = "Kisumu Healthcare", ContactPerson = "Peter Otieno", Phone = "+254 711 345678", Email = "purchase@kisumuhealthcare.co.ke", City = "Kisumu", CreditLimit = 200000, CurrentBalance = 45000, PricingTier = "Standard", PaymentTerms = 7, IsActive = true },
-            new() { Id = 4, Code = "WC-004", Name = "Eldoret Pharmacy Group", ContactPerson = "Grace Chebet", Phone = "+254 720 456789", Email = "procurement@eldoretpg.co.ke", City = "Eldoret", CreditLimit = 750000, CurrentBalance = 320000, PricingTier = "Platinum", PaymentTerms = 45, IsActive = true },
-            new() { Id = 5, Code = "WC-005", Name = "Coast General Supplies", ContactPerson = "Ahmed Hassan", Phone = "+254 734 567890", Email = "admin@coastgeneral.co.ke", City = "Malindi", CreditLimit = 150000, CurrentBalance = 180000, PricingTier = "Standard", PaymentTerms = 7, IsActive = false },
-        };
+        var query = new GetCustomersQuery(_searchString, _selectedTier, true);
+        _customers = await Mediator.Send(query);
+    }
+
+    private async Task OnFilterChanged(string value)
+    {
+        _selectedTier = value;
+        await LoadCustomersAsync();
     }
 
     private Color GetTierColor(string tier) => tier switch
     {
-        "Platinum" => Color.Primary,
-        "Gold" => Color.Warning,
-        "Silver" => Color.Info,
+        "VIP" => Color.Primary,
+        "Bulk" => Color.Warning,
+        "Wholesale" => Color.Info,
         _ => Color.Default
     };
 
-    private void ViewCustomer(CustomerDto customer)
+    private async Task CreateCustomer()
     {
-        // TODO: Navigate to customer details
-    }
+        var parameters = new DialogParameters();
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
 
-    private void EditCustomer(CustomerDto customer)
-    {
-        _editingCustomer = customer;
-        _model = new CustomerFormModel
+        var dialog = await DialogService.ShowAsync<CustomerDialog>("Add New Customer", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
         {
-            Name = customer.Name,
-            ContactPerson = customer.ContactPerson,
-            Email = customer.Email,
-            Phone = customer.Phone,
-            Address = customer.Address,
-            City = customer.City,
-            TaxId = customer.TaxId,
-            CreditLimit = customer.CreditLimit,
-            PaymentTerms = customer.PaymentTerms,
-            PricingTier = customer.PricingTier,
-            IsActive = customer.IsActive
+            await LoadCustomersAsync();
+        }
+    }
+
+    private async Task EditCustomer(int customerId)
+    {
+        var parameters = new DialogParameters
+        {
+            { nameof(CustomerDialog.CustomerId), customerId }
         };
-        _showCreateDialog = true;
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+        var dialog = await DialogService.ShowAsync<CustomerDialog>("Edit Customer", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadCustomersAsync();
+        }
     }
 
-    private async Task SaveCustomer()
+    private async Task DeleteCustomer(int customerId)
     {
-        // TODO: Implement save logic
-        await Task.Delay(500);
-        _showCreateDialog = false;
-        _editingCustomer = null;
-        _model = new();
-    }
+        bool? confirm = await DialogService.ShowMessageBox(
+            "Confirm Delete",
+            "Are you sure you want to delete this customer?",
+            yesText: "Delete",
+            cancelText: "Cancel"
+        );
 
-    private class CustomerDto
-    {
-        public int Id { get; set; }
-        public string Code { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public string? ContactPerson { get; set; }
-        public string? Email { get; set; }
-        public string? Phone { get; set; }
-        public string? Address { get; set; }
-        public string? City { get; set; }
-        public string? TaxId { get; set; }
-        public decimal CreditLimit { get; set; }
-        public decimal CurrentBalance { get; set; }
-        public int PaymentTerms { get; set; }
-        public string PricingTier { get; set; } = "Standard";
-        public bool IsActive { get; set; }
-    }
+        if (confirm == true)
+        {
+            var command = new DeleteCustomerCommand(customerId);
+            var result = await Mediator.Send(command);
 
-    private class CustomerFormModel
-    {
-        public string Name { get; set; } = string.Empty;
-        public string? ContactPerson { get; set; }
-        public string? Email { get; set; }
-        public string? Phone { get; set; }
-        public string? Address { get; set; }
-        public string? City { get; set; }
-        public string? TaxId { get; set; }
-        public decimal CreditLimit { get; set; }
-        public int PaymentTerms { get; set; } = 30;
-        public string PricingTier { get; set; } = "Standard";
-        public bool IsActive { get; set; } = true;
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Customer deleted successfully", Severity.Success);
+                await LoadCustomersAsync();
+            }
+            else
+            {
+                Snackbar.Add(result.Error ?? "Failed to delete customer", Severity.Error);
+            }
+        }
     }
 }

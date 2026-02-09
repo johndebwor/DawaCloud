@@ -1,0 +1,349 @@
+@page "/procurement/goods-receipts/new"
+@page "/procurement/goods-receipts/{Id:int}/edit"
+@using MudBlazor
+@using DawaFlow.Web.Data.Entities
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>@(_isEditMode ? "Edit Goods Receipt" : "New Goods Receipt") - DawaBes</PageTitle>
+
+<div class="mb-4">
+    <MudBreadcrumbs Items="_breadcrumbItems" Class="mb-4" />
+
+    <div class="d-flex justify-space-between align-center mb-4">
+        <div>
+            <MudText Typo="Typo.h4" Class="mb-1">@(_isEditMode ? "Edit Goods Receipt" : "New Goods Receipt")</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                Record supplier delivery and verify received items
+            </MudText>
+        </div>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Default"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Href="/procurement/goods-receipts">
+            Back to List
+        </MudButton>
+    </div>
+
+    <MudGrid>
+        <MudItem xs="12" md="8">
+            <MudPaper Elevation="2" Class="pa-6">
+                <MudForm @ref="_form">
+                    <MudText Typo="Typo.h6" Class="mb-4">Receipt Information</MudText>
+
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.GRNNumber"
+                                          Label="GRN Number"
+                                          Variant="Variant.Outlined"
+                                          ReadOnly="true"
+                                          HelperText="Auto-generated" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudDatePicker @bind-Date="_receiptDate"
+                                           Label="Receipt Date"
+                                           Variant="Variant.Outlined"
+                                           Required="true" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="int?" @bind-Value="_model.SupplierId"
+                                       Label="Supplier"
+                                       Variant="Variant.Outlined"
+                                       Required="true"
+                                       OnSelectedValuesChanged="OnSupplierChanged">
+                                @foreach (var supplier in _suppliers)
+                                {
+                                    <MudSelectItem T="int?" Value="@supplier.Id">@supplier.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="int?" @bind-Value="_model.RequestId"
+                                       Label="Related Request (Optional)"
+                                       Variant="Variant.Outlined">
+                                <MudSelectItem T="int?" Value="null">None</MudSelectItem>
+                                @foreach (var request in _requests)
+                                {
+                                    <MudSelectItem T="int?" Value="@request.Id">@request.RequestNumber</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="_model.SupplierInvoiceNumber"
+                                          Label="Supplier Invoice Number"
+                                          Variant="Variant.Outlined"
+                                          HelperText="Reference from supplier's invoice" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="_model.Notes"
+                                          Label="Notes"
+                                          Variant="Variant.Outlined"
+                                          Lines="2" />
+                        </MudItem>
+                    </MudGrid>
+
+                    <MudDivider Class="my-4" />
+
+                    <div class="d-flex justify-space-between align-center mb-4">
+                        <MudText Typo="Typo.h6">Receipt Items</MudText>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   OnClick="AddItem">
+                            Add Item
+                        </MudButton>
+                    </div>
+
+                    <MudTable T="ReceiptItemDto" Items="_items" Dense="true" Hover="true">
+                        <HeaderContent>
+                            <MudTh>Drug</MudTh>
+                            <MudTh>Batch Number</MudTh>
+                            <MudTh>Expiry Date</MudTh>
+                            <MudTh>Quantity</MudTh>
+                            <MudTh>Unit Cost (USD)</MudTh>
+                            <MudTh>Total</MudTh>
+                            <MudTh>Actions</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Drug">
+                                <MudSelect T="int" @bind-Value="context.DrugId" Variant="Variant.Outlined" Dense="true">
+                                    @foreach (var drug in _drugs)
+                                    {
+                                        <MudSelectItem T="int" Value="@drug.Id">@drug.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudTd>
+                            <MudTd DataLabel="Batch Number">
+                                <MudTextField @bind-Value="context.BatchNumber" Variant="Variant.Outlined" Dense="true" />
+                            </MudTd>
+                            <MudTd DataLabel="Expiry Date">
+                                <MudDatePicker @bind-Date="context.ExpiryDate" Variant="Variant.Outlined" Dense="true" />
+                            </MudTd>
+                            <MudTd DataLabel="Quantity">
+                                <MudNumericField @bind-Value="context.Quantity" Variant="Variant.Outlined" Dense="true" Min="1" />
+                            </MudTd>
+                            <MudTd DataLabel="Unit Cost">
+                                <MudNumericField @bind-Value="context.UnitCostUSD"
+                                                 Variant="Variant.Outlined"
+                                                 Dense="true"
+                                                 Adornment="Adornment.Start"
+                                                 AdornmentText="$"
+                                                 Format="N2"
+                                                 Min="0m" />
+                            </MudTd>
+                            <MudTd DataLabel="Total">
+                                $ @((context.Quantity * context.UnitCostUSD).ToString("N2"))
+                            </MudTd>
+                            <MudTd>
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               OnClick="@(() => RemoveItem(context))" />
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+
+                    @if (_items.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Info" Class="mt-4">
+                            No items added yet. Click "Add Item" to begin.
+                        </MudAlert>
+                    }
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="2" Class="pa-4 mb-4">
+                <MudText Typo="Typo.h6" Class="mb-3">Summary</MudText>
+                <div class="d-flex flex-column gap-2">
+                    <div class="d-flex justify-space-between">
+                        <MudText Typo="Typo.body2">Total Items</MudText>
+                        <MudText Typo="Typo.body2" Class="fw-bold">@_items.Count</MudText>
+                    </div>
+                    <div class="d-flex justify-space-between">
+                        <MudText Typo="Typo.body2">Total Units</MudText>
+                        <MudText Typo="Typo.body2" Class="fw-bold">@_items.Sum(i => i.Quantity)</MudText>
+                    </div>
+                    <MudDivider Class="my-2" />
+                    <div class="d-flex justify-space-between">
+                        <MudText Typo="Typo.subtitle1">Total Value (USD)</MudText>
+                        <MudText Typo="Typo.h6" Color="Color.Primary">$ @_items.Sum(i => i.Quantity * i.UnitCostUSD).ToString("N2")</MudText>
+                    </div>
+                </div>
+            </MudPaper>
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       FullWidth="true"
+                       StartIcon="@Icons.Material.Filled.Save"
+                       OnClick="SaveReceipt"
+                       Disabled="@(_items.Count == 0)">
+                @(_isEditMode ? "Update Receipt" : "Save & Verify")
+            </MudButton>
+
+            @if (_isEditMode && _model.Status == "Verified")
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Success"
+                           FullWidth="true"
+                           StartIcon="@Icons.Material.Filled.Check"
+                           OnClick="PostToInventory"
+                           Class="mt-2">
+                    Post to Inventory
+                </MudButton>
+            }
+        </MudItem>
+    </MudGrid>
+</div>
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+
+    private bool _isEditMode => Id.HasValue;
+    private MudForm? _form;
+    private GoodsReceiptModel _model = new();
+    private DateTime? _receiptDate = DateTime.Today;
+    private List<ReceiptItemDto> _items = new();
+    private List<SupplierDto> _suppliers = new();
+    private List<RequestDto> _requests = new();
+    private List<DrugDto> _drugs = new();
+
+    private List<BreadcrumbItem> _breadcrumbItems = new();
+
+    protected override void OnInitialized()
+    {
+        LoadSuppliers();
+        LoadDrugs();
+
+        if (!_isEditMode)
+        {
+            _model.GRNNumber = $"GRN-{DateTime.Now:yyyyMMddHHmmss}";
+        }
+        else
+        {
+            LoadReceipt();
+        }
+
+        _breadcrumbItems = new List<BreadcrumbItem>
+        {
+            new("Home", href: "/"),
+            new("Goods Receipts", href: "/procurement/goods-receipts"),
+            new(_isEditMode ? "Edit" : "New", href: null, disabled: true)
+        };
+    }
+
+    private void LoadSuppliers()
+    {
+        _suppliers = new List<SupplierDto>
+        {
+            new() { Id = 1, Name = "ABC Pharmaceuticals Ltd" },
+            new() { Id = 2, Name = "XYZ Medical Supplies" },
+            new() { Id = 3, Name = "South Sudan Pharma Distributors" }
+        };
+    }
+
+    private void LoadDrugs()
+    {
+        _drugs = new List<DrugDto>
+        {
+            new() { Id = 1, Name = "Paracetamol 500mg" },
+            new() { Id = 2, Name = "Amoxicillin 250mg" },
+            new() { Id = 3, Name = "Ibuprofen 400mg" }
+        };
+    }
+
+    private void LoadReceipt()
+    {
+        // Sample data
+        _model = new GoodsReceiptModel
+        {
+            GRNNumber = "GRN-2024-0001",
+            SupplierId = 1,
+            RequestId = 1,
+            SupplierInvoiceNumber = "INV-ABC-12345",
+            Status = "Verified"
+        };
+        _receiptDate = DateTime.Now.AddDays(-2);
+    }
+
+    private void OnSupplierChanged()
+    {
+        if (_model.SupplierId.HasValue)
+        {
+            // Load pending requests for this supplier
+            _requests = new List<RequestDto>
+            {
+                new() { Id = 1, RequestNumber = "REQ-2024-0015" },
+                new() { Id = 2, RequestNumber = "REQ-2024-0016" }
+            };
+        }
+    }
+
+    private void AddItem()
+    {
+        _items.Add(new ReceiptItemDto
+        {
+            DrugId = _drugs.FirstOrDefault()?.Id ?? 0,
+            Quantity = 1,
+            UnitCostUSD = 0
+        });
+    }
+
+    private void RemoveItem(ReceiptItemDto item)
+    {
+        _items.Remove(item);
+    }
+
+    private async Task SaveReceipt()
+    {
+        await Task.Delay(500);
+        Snackbar.Add(_isEditMode ? "Receipt updated successfully" : "Receipt saved and verified successfully", Severity.Success);
+        Navigation.NavigateTo("/procurement/goods-receipts");
+    }
+
+    private async Task PostToInventory()
+    {
+        await Task.Delay(500);
+        Snackbar.Add("Receipt posted to inventory successfully. Batches created.", Severity.Success);
+        Navigation.NavigateTo("/procurement/goods-receipts");
+    }
+
+    private class GoodsReceiptModel
+    {
+        public string GRNNumber { get; set; } = string.Empty;
+        public int? SupplierId { get; set; }
+        public int? RequestId { get; set; }
+        public string? SupplierInvoiceNumber { get; set; }
+        public string? Notes { get; set; }
+        public string Status { get; set; } = "Draft";
+    }
+
+    private class ReceiptItemDto
+    {
+        public int DrugId { get; set; }
+        public string BatchNumber { get; set; } = string.Empty;
+        public DateTime? ExpiryDate { get; set; }
+        public int Quantity { get; set; }
+        public decimal UnitCostUSD { get; set; }
+    }
+
+    private class SupplierDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+    }
+
+    private class RequestDto
+    {
+        public int Id { get; set; }
+        public string RequestNumber { get; set; } = string.Empty;
+    }
+
+    private class DrugDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+    }
+}

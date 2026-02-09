@@ -51,6 +51,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
 
     // Settings
     public DbSet<CompanySettings> CompanySettings => Set<CompanySettings>();
+    public DbSet<TaxCategory> TaxCategories => Set<TaxCategory>();
 
     // Currency & Exchange Rates
     public DbSet<Currency> Currencies => Set<Currency>();
@@ -59,6 +60,12 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
 
     // Audit
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+
+    // Insurance
+    public DbSet<InsuranceProvider> InsuranceProviders => Set<InsuranceProvider>();
+    public DbSet<InsuredPatient> InsuredPatients => Set<InsuredPatient>();
+    public DbSet<InsuranceClaim> InsuranceClaims => Set<InsuranceClaim>();
+    public DbSet<InsuranceClaimItem> InsuranceClaimItems => Set<InsuranceClaimItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -392,5 +399,205 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
             .Property(erh => erh.ChangedBy)
             .HasMaxLength(256)
             .IsRequired();
+
+        // Insurance configurations
+        modelBuilder.Entity<InsuredPatient>()
+            .HasOne(ip => ip.Provider)
+            .WithMany(p => p.Patients)
+            .HasForeignKey(ip => ip.ProviderId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<InsuranceClaim>()
+            .HasOne(ic => ic.Provider)
+            .WithMany(p => p.Claims)
+            .HasForeignKey(ic => ic.ProviderId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<InsuranceClaim>()
+            .HasOne(ic => ic.Patient)
+            .WithMany(p => p.Claims)
+            .HasForeignKey(ic => ic.PatientId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<InsuranceClaim>()
+            .HasOne(ic => ic.Sale)
+            .WithMany()
+            .HasForeignKey(ic => ic.SaleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<InsuranceClaimItem>()
+            .HasOne(ici => ici.Claim)
+            .WithMany(ic => ic.Items)
+            .HasForeignKey(ici => ici.ClaimId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<InsuranceClaimItem>()
+            .HasOne(ici => ici.Drug)
+            .WithMany()
+            .HasForeignKey(ici => ici.DrugId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<InsuranceClaimItem>()
+            .HasOne(ici => ici.Batch)
+            .WithMany()
+            .HasForeignKey(ici => ici.BatchId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Configure decimal precision for money/amount fields
+        ConfigureDecimalPrecision(modelBuilder);
+    }
+
+    private static void ConfigureDecimalPrecision(ModelBuilder modelBuilder)
+    {
+        // Drug entity
+        modelBuilder.Entity<Drug>()
+            .Property(d => d.CostPrice).HasPrecision(18, 2);
+        modelBuilder.Entity<Drug>()
+            .Property(d => d.CostPriceOriginal).HasPrecision(18, 2);
+        modelBuilder.Entity<Drug>()
+            .Property(d => d.RetailPrice).HasPrecision(18, 2);
+        modelBuilder.Entity<Drug>()
+            .Property(d => d.WholesalePrice).HasPrecision(18, 2);
+        modelBuilder.Entity<Drug>()
+            .Property(d => d.TaxRate).HasPrecision(5, 2);
+
+        // Batch entity
+        modelBuilder.Entity<Batch>()
+            .Property(b => b.CostPrice).HasPrecision(18, 2);
+        modelBuilder.Entity<Batch>()
+            .Property(b => b.CostPriceOriginal).HasPrecision(18, 2);
+        modelBuilder.Entity<Batch>()
+            .Property(b => b.ExchangeRateUsed).HasPrecision(18, 6);
+
+        // Currency entities
+        modelBuilder.Entity<ExchangeRate>()
+            .Property(er => er.Rate).HasPrecision(18, 6);
+
+        // Company Settings
+        modelBuilder.Entity<CompanySettings>()
+            .Property(cs => cs.DefaultTaxRate).HasPrecision(5, 2);
+
+        // Cashier Shift
+        modelBuilder.Entity<CashierShift>()
+            .Property(cs => cs.OpeningBalance).HasPrecision(18, 2);
+        modelBuilder.Entity<CashierShift>()
+            .Property(cs => cs.ClosingBalance).HasPrecision(18, 2);
+        modelBuilder.Entity<CashierShift>()
+            .Property(cs => cs.ExpectedBalance).HasPrecision(18, 2);
+        modelBuilder.Entity<CashierShift>()
+            .Property(cs => cs.Variance).HasPrecision(18, 2);
+
+        // Stock Count
+        modelBuilder.Entity<StockCount>()
+            .Property(sc => sc.TotalVarianceValue).HasPrecision(18, 2);
+        modelBuilder.Entity<StockCountItem>()
+            .Property(sci => sci.VarianceValue).HasPrecision(18, 2);
+
+        // Drug Request
+        modelBuilder.Entity<DrugRequest>()
+            .Property(dr => dr.TotalAmount).HasPrecision(18, 2);
+        modelBuilder.Entity<DrugRequest>()
+            .Property(dr => dr.TotalAmountBase).HasPrecision(18, 2);
+        modelBuilder.Entity<DrugRequest>()
+            .Property(dr => dr.ActualAmount).HasPrecision(18, 2);
+        modelBuilder.Entity<DrugRequest>()
+            .Property(dr => dr.ActualAmountBase).HasPrecision(18, 2);
+        modelBuilder.Entity<DrugRequest>()
+            .Property(dr => dr.ExchangeRateUsed).HasPrecision(18, 6);
+
+        modelBuilder.Entity<DrugRequestItem>()
+            .Property(dri => dri.UnitPrice).HasPrecision(18, 2);
+        modelBuilder.Entity<DrugRequestItem>()
+            .Property(dri => dri.UnitPriceBase).HasPrecision(18, 2);
+        modelBuilder.Entity<DrugRequestItem>()
+            .Property(dri => dri.TotalPrice).HasPrecision(18, 2);
+        modelBuilder.Entity<DrugRequestItem>()
+            .Property(dri => dri.TotalPriceBase).HasPrecision(18, 2);
+        modelBuilder.Entity<DrugRequestItem>()
+            .Property(dri => dri.QuotedPrice).HasPrecision(18, 2);
+        modelBuilder.Entity<DrugRequestItem>()
+            .Property(dri => dri.QuotedPriceBase).HasPrecision(18, 2);
+
+        // Goods Receipt
+        modelBuilder.Entity<GoodsReceipt>()
+            .Property(gr => gr.TotalAmount).HasPrecision(18, 2);
+        modelBuilder.Entity<GoodsReceipt>()
+            .Property(gr => gr.ExchangeRateUsed).HasPrecision(18, 6);
+
+        // Wholesale Customer
+        modelBuilder.Entity<WholesaleCustomer>()
+            .Property(wc => wc.CreditLimit).HasPrecision(18, 2);
+        modelBuilder.Entity<WholesaleCustomer>()
+            .Property(wc => wc.CurrentBalance).HasPrecision(18, 2);
+
+        // Wholesale Sale
+        modelBuilder.Entity<WholesaleSale>()
+            .Property(ws => ws.SubTotal).HasPrecision(18, 2);
+        modelBuilder.Entity<WholesaleSale>()
+            .Property(ws => ws.TaxAmount).HasPrecision(18, 2);
+        modelBuilder.Entity<WholesaleSale>()
+            .Property(ws => ws.DiscountAmount).HasPrecision(18, 2);
+        modelBuilder.Entity<WholesaleSale>()
+            .Property(ws => ws.TotalAmount).HasPrecision(18, 2);
+        modelBuilder.Entity<WholesaleSale>()
+            .Property(ws => ws.PaidAmount).HasPrecision(18, 2);
+        modelBuilder.Entity<WholesaleSale>()
+            .Property(ws => ws.ExchangeRateUsed).HasPrecision(18, 6);
+
+        modelBuilder.Entity<WholesaleSaleItem>()
+            .Property(wsi => wsi.UnitPrice).HasPrecision(18, 2);
+        modelBuilder.Entity<WholesaleSaleItem>()
+            .Property(wsi => wsi.DiscountPercent).HasPrecision(5, 2);
+        modelBuilder.Entity<WholesaleSaleItem>()
+            .Property(wsi => wsi.TaxRate).HasPrecision(5, 2);
+        modelBuilder.Entity<WholesaleSaleItem>()
+            .Property(wsi => wsi.LineTotal).HasPrecision(18, 2);
+
+        // Quotation
+        modelBuilder.Entity<Quotation>()
+            .Property(q => q.SubTotal).HasPrecision(18, 2);
+        modelBuilder.Entity<Quotation>()
+            .Property(q => q.TaxAmount).HasPrecision(18, 2);
+        modelBuilder.Entity<Quotation>()
+            .Property(q => q.DiscountAmount).HasPrecision(18, 2);
+        modelBuilder.Entity<Quotation>()
+            .Property(q => q.TotalAmount).HasPrecision(18, 2);
+
+        modelBuilder.Entity<QuotationItem>()
+            .Property(qi => qi.UnitPrice).HasPrecision(18, 2);
+        modelBuilder.Entity<QuotationItem>()
+            .Property(qi => qi.DiscountPercent).HasPrecision(5, 2);
+        modelBuilder.Entity<QuotationItem>()
+            .Property(qi => qi.LineTotal).HasPrecision(18, 2);
+
+        // Payment
+        modelBuilder.Entity<Payment>()
+            .Property(p => p.Amount).HasPrecision(18, 2);
+
+        // Retail Sale
+        modelBuilder.Entity<RetailSale>()
+            .Property(rs => rs.SubTotal).HasPrecision(18, 2);
+        modelBuilder.Entity<RetailSale>()
+            .Property(rs => rs.TaxAmount).HasPrecision(18, 2);
+        modelBuilder.Entity<RetailSale>()
+            .Property(rs => rs.DiscountAmount).HasPrecision(18, 2);
+        modelBuilder.Entity<RetailSale>()
+            .Property(rs => rs.TotalAmount).HasPrecision(18, 2);
+
+        modelBuilder.Entity<RetailSaleItem>()
+            .Property(rsi => rsi.UnitPrice).HasPrecision(18, 2);
+
+        // Insurance
+        modelBuilder.Entity<InsuranceClaim>()
+            .Property(ic => ic.TotalAmount).HasPrecision(18, 2);
+        modelBuilder.Entity<InsuranceClaim>()
+            .Property(ic => ic.CoveredAmount).HasPrecision(18, 2);
+
+        modelBuilder.Entity<InsuranceClaimItem>()
+            .Property(ici => ici.UnitPrice).HasPrecision(18, 2);
+        modelBuilder.Entity<InsuranceClaimItem>()
+            .Property(ici => ici.TotalAmount).HasPrecision(18, 2);
+        modelBuilder.Entity<InsuranceClaimItem>()
+            .Property(ici => ici.CoveredAmount).HasPrecision(18, 2);
     }
 }

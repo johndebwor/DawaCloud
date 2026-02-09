@@ -9,7 +9,7 @@ public class Supplier : BaseAuditableEntity
     public string? Phone { get; set; }
     public string? Address { get; set; }
     public string? City { get; set; }
-    public string? Country { get; set; } = "Kenya";
+    public string? Country { get; set; } = "South Sudan";
     public string? TaxId { get; set; }
     public bool EmailNotificationsEnabled { get; set; } = true;
     public bool WhatsAppNotificationsEnabled { get; set; } = true;

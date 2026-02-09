@@ -1,4 +1,4 @@
-# DawaFlow - Drugs Wholesale & Retail Management System
+# DawaBes - Drugs Wholesale & Retail Management System
 
 > **Version:** 1.0.0  
 > **Last Updated:** January 2026  
@@ -27,7 +27,7 @@
 
 ### Background
 
-**DawaFlow** (Dawa = Medicine in Swahili) is a comprehensive pharmaceutical management system designed to streamline drug inventory, procurement, wholesale and retail operations for pharmacies and drug distribution businesses in Kenya and East Africa.
+**DawaBes** (Dawa = Medicine in Swahili) is a comprehensive pharmaceutical management system designed to streamline drug inventory, procurement, wholesale and retail operations for pharmacies and drug distribution businesses in South Sudan and East Africa. This instance is currently configured for **Revo Pharma & Medical Ltd**.
 
 ### Vision
 
@@ -61,7 +61,7 @@ Create an intelligent, compliance-first pharmaceutical platform that automates t
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    DawaFlow.Web                         │
+│                    DawaBes.Web                         │
 │         Single Blazor Server Application                │
 ├─────────────────────────────────────────────────────────┤
 │  UI Layer          │  MudBlazor Components              │
@@ -127,9 +127,9 @@ Create an intelligent, compliance-first pharmaceutical platform that automates t
 ### Feature-Based (Vertical Slice) Architecture
 
 ```
-DawaFlow/
+DawaBes/
 ├── src/
-│   └── DawaFlow.Web/
+│   └── DawaBes.Web/
 │       ├── Features/
 │       │   ├── Auth/
 │       │   │   ├── Pages/
@@ -305,15 +305,15 @@ DawaFlow/
 │       └── appsettings.Development.json
 │
 ├── tests/
-│   ├── DawaFlow.UnitTests/
-│   └── DawaFlow.IntegrationTests/
+│   ├── DawaBes.UnitTests/
+│   └── DawaBes.IntegrationTests/
 │
 ├── docs/
 │   └── ...
 │
 ├── CLAUDE.md
 ├── README.md
-└── DawaFlow.sln
+└── DawaBes.sln
 ```
 
 ### CQRS Pattern Implementation
@@ -354,7 +354,7 @@ public record GetDrugsQuery(
 
 ### Background Services Implementation
 
-DawaFlow uses native .NET `IHostedService` and `BackgroundService` for scheduled and background tasks instead of external job schedulers.
+DawaBes uses native .NET `IHostedService` and `BackgroundService` for scheduled and background tasks instead of external job schedulers.
 
 ```csharp
 // Expiry Alert Background Service
@@ -486,7 +486,7 @@ builder.Services.AddHostedService<ScheduledJobService>();
 
 ### Innovative Layout: "Adaptive Shell"
 
-Unlike traditional sidebar layouts, DawaFlow uses an **Adaptive Shell** design:
+Unlike traditional sidebar layouts, DawaBes uses an **Adaptive Shell** design:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -517,7 +517,7 @@ Unlike traditional sidebar layouts, DawaFlow uses an **Adaptive Shell** design:
 
 MOBILE VIEW:
 ┌─────────────────────────┐
-│  DawaFlow    🔍  🔔  👤 │
+│  DawaBes    🔍  🔔  👤 │
 ├─────────────────────────┤
 │                         │
 │                         │
@@ -654,7 +654,7 @@ Optimized for speed and ease of use:
 ### MudBlazor Theme Configuration
 
 ```csharp
-var dawaFlowTheme = new MudTheme()
+var DawaBesTheme = new MudTheme()
 {
     PaletteLight = new PaletteLight()
     {
@@ -1475,7 +1475,7 @@ public class DrugsModule : ICarterModule
 | 1.3 | Implement base entities & configurations | ✅ Completed | BaseAuditableEntity, soft delete, Drug, Batch, Supplier |
 | 1.4 | Setup ASP.NET Core Identity | ✅ Completed | ApplicationUser, ApplicationRole configured |
 | 1.5 | Configure authentication & authorization | ✅ Completed | Cookie auth, role-based policies |
-| 1.6 | Setup MudBlazor & theme configuration | ✅ Completed | DawaFlow theme with Medical Teal, custom CSS, Inter font |
+| 1.6 | Setup MudBlazor & theme configuration | ✅ Completed | DawaBes theme with Medical Teal, custom CSS, Inter font |
 | 1.7 | Create adaptive shell layout | ✅ Completed | Adaptive Shell with expandable drawer (240px/72px), Command Bar, Nav Rail, toggle menu |
 | 1.8 | Implement audit logging interceptor | ✅ Completed | AuditSaveChangesInterceptor implemented |
 | 1.9 | Setup Serilog & Seq logging | ✅ Completed | Structured logging configured |
@@ -1547,7 +1547,7 @@ public class DrugsModule : ICarterModule
 | 5.8 | Retail POS - Barcode scanning | ✅ Completed | Search input with Enter key handling |
 | 5.9 | Retail POS - Cart management | ✅ Completed | Add/remove items, quantity controls |
 | 5.10 | Retail POS - FEFO selection | ✅ Completed | Batch selection support in cart items |
-| 5.11 | Retail POS - Payment processing | ✅ Completed | Cash, M-Pesa, Card payment methods |
+| 5.11 | Retail POS - Payment processing | ✅ Completed | Cash, MoMo, Card payment methods |
 | 5.12 | Retail POS - Receipt printing | ✅ Completed | Receipt number generation, success dialog |
 | 5.13 | Retail POS - Hold & recall | ✅ Completed | HeldSale entity, UI placeholders |
 | 5.14 | Retail POS - End-of-day | ✅ Completed | CashierShift entity with reconciliation |
@@ -1604,7 +1604,7 @@ public class DrugsModule : ICarterModule
 
 ```csharp
 // Use file-scoped namespaces
-namespace DawaFlow.Web.Features.Drugs;
+namespace DawaBes.Web.Features.Drugs;
 
 // Use primary constructors for dependency injection
 public class DrugService(AppDbContext context, IMapper mapper)
@@ -1734,10 +1734,10 @@ EXPOSE 8081
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
-COPY ["src/DawaFlow.Web/DawaFlow.Web.csproj", "DawaFlow.Web/"]
-RUN dotnet restore "DawaFlow.Web/DawaFlow.Web.csproj"
+COPY ["src/DawaBes.Web/DawaBes.Web.csproj", "DawaBes.Web/"]
+RUN dotnet restore "DawaBes.Web/DawaBes.Web.csproj"
 COPY src/ .
-WORKDIR "/src/DawaFlow.Web"
+WORKDIR "/src/DawaBes.Web"
 RUN dotnet build -c Release -o /app/build
 
 FROM build AS publish
@@ -1746,7 +1746,7 @@ RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "DawaFlow.Web.dll"]
+ENTRYPOINT ["dotnet", "DawaBes.Web.dll"]
 ```
 
 ```yaml
@@ -1759,7 +1759,7 @@ services:
       - "5000:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Server=db;Database=DawaFlow;User=sa;Password=${DB_PASSWORD};TrustServerCertificate=true
+      - ConnectionStrings__DefaultConnection=Server=db;Database=DawaBes;User=sa;Password=${DB_PASSWORD};TrustServerCertificate=true
     depends_on:
       - db
       - redis
@@ -1829,7 +1829,7 @@ jobs:
 // appsettings.json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Database=DawaFlow;Trusted_Connection=True;TrustServerCertificate=True"
+    "DefaultConnection": "Server=localhost;Database=DawaBes;Trusted_Connection=True;TrustServerCertificate=True"
   },
   "Logging": {
     "LogLevel": {
@@ -1848,8 +1848,8 @@ jobs:
   "Email": {
     "SmtpHost": "",
     "SmtpPort": 587,
-    "FromEmail": "noreply@dawaflow.com",
-    "FromName": "DawaFlow"
+    "FromEmail": "noreply@revopharma.com",
+    "FromName": "Revo Pharma & Medical Ltd"
   },
   "WhatsApp": {
     "Provider": "Twilio",
@@ -1870,19 +1870,19 @@ jobs:
 
 ```bash
 # Create new migration
-dotnet ef migrations add <MigrationName> -p src/DawaFlow.Web
+dotnet ef migrations add <MigrationName> -p src/DawaBes.Web
 
 # Update database
-dotnet ef database update -p src/DawaFlow.Web
+dotnet ef database update -p src/DawaBes.Web
 
 # Run application
-dotnet run --project src/DawaFlow.Web
+dotnet run --project src/DawaBes.Web
 
 # Run tests
 dotnet test
 
 # Build Docker image
-docker build -t dawaflow:latest .
+docker build -t DawaBes:latest .
 
 # Run with Docker Compose
 docker-compose up -d
@@ -1895,10 +1895,11 @@ docker-compose logs -f web
 
 ## Contact & Support
 
-- **Project Lead**: [Your Name]
-- **Email**: support@dawaflow.com
-- **Repository**: https://github.com/your-org/dawaflow
+- **Company**: Revo Pharma & Medical Ltd
+- **Email**: info@revopharma.com
+- **Website**: www.revopharma.com
+- **Repository**: https://github.com/your-org/DawaBes
 
 ---
 
-*This document is maintained as the single source of truth for the DawaFlow project. Update this file as the project evolves.*
+*This document is maintained as the single source of truth for the DawaBes project. Update this file as the project evolves.*

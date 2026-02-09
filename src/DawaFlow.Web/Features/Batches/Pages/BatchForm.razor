@@ -6,13 +6,15 @@
 @using DawaFlow.Web.Data.Entities
 @using DawaFlow.Web.Features.Batches.Queries
 @using DawaFlow.Web.Features.Batches.Commands
+@using DawaFlow.Web.Features.Currency.Services
 @using Microsoft.EntityFrameworkCore
 @inject IMediator Mediator
 @inject AppDbContext DbContext
+@inject ICurrencyService CurrencyService
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
 
-<PageTitle>@(_isEditMode ? "Edit Batch" : "New Batch") - DawaFlow</PageTitle>
+<PageTitle>@(_isEditMode ? "Edit Batch" : "New Batch") - DawaBes</PageTitle>
 
 <div class="mb-4">
     <MudBreadcrumbs Items="_breadcrumbItems" Class="mb-4" />
@@ -84,15 +86,46 @@
                                              Required="true"
                                              HelperText="Total units in the batch" />
                         </MudItem>
-                        <MudItem xs="12" md="6">
-                            <MudNumericField @bind-Value="_model.CostPrice"
-                                             Label="Cost Price per Unit (SSP)"
-                                             Variant="Variant.Outlined"
-                                             Min="0m"
-                                             Step="0.01m"
-                                             Required="true"
-                                             HelperText="Purchase cost per unit" />
+
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.subtitle2" Class="mb-2 mt-2">Costing Information</MudText>
                         </MudItem>
+
+                        <MudItem xs="12" md="4">
+                            <MudNumericField @bind-Value="_model.CostPriceUSD"
+                                             Label="Cost Price Per Unit (USD)"
+                                             Variant="Variant.Outlined"
+                                             Required="true"
+                                             Adornment="Adornment.Start"
+                                             AdornmentText="$"
+                                             Step="0.01m"
+                                             Format="N2"
+                                             Min="0m"
+                                             OnBlur="CalculateSSPEquivalent"
+                                             HelperText="Purchase cost in USD" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="4">
+                            <MudTextField Value="@GetCurrentExchangeRate()"
+                                          Label="Exchange Rate (1 USD = X SSP)"
+                                          Variant="Variant.Outlined"
+                                          ReadOnly="true"
+                                          Adornment="Adornment.Start"
+                                          AdornmentIcon="@Icons.Material.Filled.CurrencyExchange"
+                                          HelperText="Live exchange rate from settings" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="4">
+                            <MudNumericField Value="@_calculatedSSPCost"
+                                             Label="Equivalent Cost (SSP)"
+                                             Variant="Variant.Outlined"
+                                             ReadOnly="true"
+                                             Adornment="Adornment.Start"
+                                             AdornmentText="SSP"
+                                             Format="N2"
+                                             HelperText="Auto-calculated from USD" />
+                        </MudItem>
+
                         <MudItem xs="12" md="6">
                             <MudTextField @bind-Value="_model.SupplierBatchRef"
                                           Label="Supplier Batch Reference"
@@ -181,9 +214,12 @@
                     </MudText>
                 </div>
                 <div class="mb-3">
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Value</MudText>
-                    <MudText Typo="Typo.h6" Color="Color.Success">
-                        SSP @((_model.InitialQuantity * _model.CostPrice).ToString("N2"))
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Batch Value</MudText>
+                    <MudText Typo="Typo.h5" Color="Color.Primary">
+                        SSP @((_model.InitialQuantity * _calculatedSSPCost).ToString("N2"))
+                    </MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        ($ @((_model.InitialQuantity * _model.CostPriceUSD).ToString("N2")) USD equivalent)
                     </MudText>
                 </div>
             </MudPaper>
@@ -226,6 +262,10 @@
 
     private List<BreadcrumbItem> _breadcrumbItems = new();
 
+    // Currency conversion
+    private decimal _calculatedSSPCost;
+    private ExchangeRateDto? _currentRate;
+
     protected override async Task OnInitializedAsync()
     {
         _breadcrumbItems = new List<BreadcrumbItem>
@@ -236,6 +276,7 @@
         };
 
         await LoadDrugsAsync();
+        await LoadExchangeRateAsync();
 
         if (_isEditMode)
         {
@@ -284,11 +325,52 @@
             CurrentQuantity = batch.CurrentQuantity,
             ReservedQuantity = batch.ReservedQuantity,
             CostPrice = batch.CostPrice,
+            CostPriceUSD = batch.CostPriceOriginal ?? batch.CostPrice, // Use original USD cost if available
             SupplierBatchRef = batch.SupplierBatchRef,
             Status = batch.Status
         };
         _manufactureDate = batch.ManufactureDate;
         _expiryDate = batch.ExpiryDate;
+
+        // Calculate SSP equivalent if editing
+        await CalculateSSPEquivalent();
+    }
+
+    private async Task LoadExchangeRateAsync()
+    {
+        try
+        {
+            var usdCurrency = await CurrencyService.GetCurrencyByCodeAsync("USD");
+            var sspCurrency = await CurrencyService.GetCurrencyByCodeAsync("SSP");
+
+            if (usdCurrency != null && sspCurrency != null)
+            {
+                _currentRate = await CurrencyService.GetExchangeRateAsync(usdCurrency.Id, sspCurrency.Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading exchange rate: {ex.Message}", Severity.Warning);
+        }
+    }
+
+    private string GetCurrentExchangeRate()
+    {
+        return _currentRate != null ? $"1 USD = {_currentRate.Rate:N2} SSP" : "Loading...";
+    }
+
+    private async Task CalculateSSPEquivalent()
+    {
+        if (_model.CostPriceUSD > 0 && _currentRate != null)
+        {
+            _calculatedSSPCost = await CurrencyService.ConvertAsync(
+                _model.CostPriceUSD,
+                "USD",
+                "SSP",
+                CancellationToken.None
+            );
+            StateHasChanged();
+        }
     }
 
     private async Task HandleSubmit()
@@ -311,6 +393,10 @@
         {
             if (_isEditMode)
             {
+                // Get USD currency ID
+                var usdCurrency = await CurrencyService.GetCurrencyByCodeAsync("USD");
+
+                // Use calculated SSP cost
                 var command = new UpdateBatchCommand(
                     Id!.Value,
                     _model.BatchNumber,
@@ -319,9 +405,12 @@
                     _expiryDate.Value,
                     _model.InitialQuantity,
                     _model.CurrentQuantity,
-                    _model.CostPrice,
+                    _calculatedSSPCost > 0 ? _calculatedSSPCost : _model.CostPrice,
                     _model.SupplierBatchRef,
-                    _model.Status
+                    _model.Status,
+                    _model.CostPriceUSD,
+                    usdCurrency?.Id,
+                    _currentRate?.Rate
                 );
 
                 var result = await Mediator.Send(command);
@@ -338,14 +427,21 @@
             }
             else
             {
+                // Get USD currency ID
+                var usdCurrency = await CurrencyService.GetCurrencyByCodeAsync("USD");
+
+                // Use calculated SSP cost
                 var command = new CreateBatchCommand(
                     _model.BatchNumber,
                     _model.DrugId,
                     _manufactureDate.Value,
                     _expiryDate.Value,
                     _model.InitialQuantity,
-                    _model.CostPrice,
-                    _model.SupplierBatchRef
+                    _calculatedSSPCost > 0 ? _calculatedSSPCost : _model.CostPrice,
+                    _model.SupplierBatchRef,
+                    _model.CostPriceUSD,
+                    usdCurrency?.Id,
+                    _currentRate?.Rate
                 );
 
                 var result = await Mediator.Send(command);
@@ -407,6 +503,7 @@
         public int CurrentQuantity { get; set; }
         public int ReservedQuantity { get; set; }
         public decimal CostPrice { get; set; }
+        public decimal CostPriceUSD { get; set; }
         public string? SupplierBatchRef { get; set; }
         public BatchStatus Status { get; set; } = BatchStatus.Active;
     }

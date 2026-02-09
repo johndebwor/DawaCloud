@@ -26,7 +26,7 @@ public class Drug : BaseAuditableEntity
     public Currency? PurchaseCurrency { get; set; }
     public int ReorderLevel { get; set; }
     public int MaxStockLevel { get; set; }
-    public decimal TaxRate { get; set; } = 16; // Default VAT in Kenya
+    public decimal TaxRate { get; set; } = 16; // Default VAT in South Sudan
     public bool RequiresPrescription { get; set; }
     public bool IsControlled { get; set; }
     public bool IsActive { get; set; } = true;

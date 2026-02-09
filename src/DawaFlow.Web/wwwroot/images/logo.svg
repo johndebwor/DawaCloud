@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="#00897b" opacity="0.1"/>
+
+  <!-- Medical cross with modern design -->
+  <g transform="translate(100, 100)">
+    <!-- Vertical bar of cross -->
+    <rect x="-12" y="-45" width="24" height="90" rx="4" fill="#00897b"/>
+    <!-- Horizontal bar of cross -->
+    <rect x="-45" y="-12" width="90" height="24" rx="4" fill="#00897b"/>
+
+    <!-- Center circle highlight -->
+    <circle cx="0" cy="0" r="18" fill="#ffffff"/>
+    <circle cx="0" cy="0" r="14" fill="#00897b"/>
+
+    <!-- Pharmaceutical symbol (Rx) -->
+    <text x="-8" y="8" font-family="Georgia, serif" font-size="20" font-weight="bold" fill="#ffffff">Rx</text>
+  </g>
+
+  <!-- Company name circle -->
+  <text x="100" y="170" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#00897b">REVO</text>
+  <text x="100" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#00695c">PHARMA & MEDICAL</text>
+</svg>

@@ -1,8 +1,21 @@
 @page "/wholesale/sales"
 @page "/wholesale/invoices"
 @using MudBlazor
+@using Microsoft.JSInterop
+@using MediatR
+@using DawaFlow.Web.Features.Wholesale.Commands
+@using DawaFlow.Web.Features.Wholesale.Queries
+@using DawaFlow.Web.Features.Wholesale.Components
+@using DawaFlow.Web.Features.Wholesale.Services
+@using DawaFlow.Web.Data.Entities
+@using ClosedXML.Excel
+@inject IJSRuntime JSRuntime
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject IInvoiceService InvoiceService
 
-<PageTitle>Wholesale Sales - DawaFlow</PageTitle>
+<PageTitle>Wholesale Sales - DawaBes</PageTitle>
 
 <!-- Hero Section -->
 <div class="df-hero animate-fade-in-up">
@@ -12,6 +25,9 @@
             <p>Manage invoices, orders, and wholesale transactions</p>
         </div>
         <div class="d-flex gap-2">
+            <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.FileDownload" OnClick="ExportToExcel">
+                Export
+            </MudButton>
             <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.Description" Href="/wholesale/quotations">
                 Quotations
             </MudButton>
@@ -29,15 +45,11 @@
             <div class="df-kpi-icon primary">
                 <MudIcon Icon="@Icons.Material.Filled.TrendingUp" />
             </div>
-            <div class="df-kpi-trend up">
-                <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Size="Size.Small" />
-                <span>8.2%</span>
-            </div>
         </div>
         <div class="df-kpi-body">
             <div class="df-kpi-label">This Month's Sales</div>
-            <div class="df-kpi-value">SSP 2.4M</div>
-            <div class="df-kpi-subtitle">32 invoices</div>
+            <div class="df-kpi-value">SSP @_thisMonthTotal.ToString("N0")</div>
+            <div class="df-kpi-subtitle">@_thisMonthCount invoices</div>
         </div>
     </div>
     <div class="df-kpi-card animate-fade-in-up animate-delay-2">
@@ -48,8 +60,8 @@
         </div>
         <div class="df-kpi-body">
             <div class="df-kpi-label">Paid Invoices</div>
-            <div class="df-kpi-value">SSP 1.8M</div>
-            <div class="df-kpi-subtitle">24 invoices</div>
+            <div class="df-kpi-value">SSP @_paidTotal.ToString("N0")</div>
+            <div class="df-kpi-subtitle">@_paidCount invoices</div>
         </div>
     </div>
     <div class="df-kpi-card animate-fade-in-up animate-delay-3">
@@ -60,8 +72,8 @@
         </div>
         <div class="df-kpi-body">
             <div class="df-kpi-label">Pending Payment</div>
-            <div class="df-kpi-value">SSP 450K</div>
-            <div class="df-kpi-subtitle">6 invoices</div>
+            <div class="df-kpi-value">SSP @_pendingTotal.ToString("N0")</div>
+            <div class="df-kpi-subtitle">@_pendingCount invoices</div>
         </div>
     </div>
     <div class="df-kpi-card animate-fade-in-up animate-delay-4">
@@ -71,9 +83,9 @@
             </div>
         </div>
         <div class="df-kpi-body">
-            <div class="df-kpi-label">Overdue</div>
-            <div class="df-kpi-value">SSP 150K</div>
-            <div class="df-kpi-subtitle">2 invoices</div>
+            <div class="df-kpi-label">Outstanding</div>
+            <div class="df-kpi-value">SSP @_outstandingTotal.ToString("N0")</div>
+            <div class="df-kpi-subtitle">@_outstandingCount invoices</div>
         </div>
     </div>
 </div>
@@ -87,205 +99,277 @@
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       IconSize="Size.Medium"
                       Immediate="true"
+                      OnDebounceIntervalElapsed="LoadSalesAsync"
+                      DebounceInterval="300"
                       Style="max-width: 400px;" />
         <div class="d-flex gap-2">
-            <MudSelect T="string" @bind-Value="_selectedStatus" Label="Status" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
-                <MudSelectItem Value="@("All")">All Status</MudSelectItem>
-                <MudSelectItem Value="@("Draft")">Draft</MudSelectItem>
-                <MudSelectItem Value="@("Confirmed")">Confirmed</MudSelectItem>
-                <MudSelectItem Value="@("Delivered")">Delivered</MudSelectItem>
-                <MudSelectItem Value="@("Paid")">Paid</MudSelectItem>
-                <MudSelectItem Value="@("Overdue")">Overdue</MudSelectItem>
-            </MudSelect>
-            <MudSelect T="string" @bind-Value="_selectedPayment" Label="Payment" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
-                <MudSelectItem Value="@("All")">All</MudSelectItem>
-                <MudSelectItem Value="@("Pending")">Pending</MudSelectItem>
-                <MudSelectItem Value="@("Partial")">Partial</MudSelectItem>
-                <MudSelectItem Value="@("Paid")">Paid</MudSelectItem>
+            <MudSelect T="PaymentStatus?" Value="_selectedPayment" ValueChanged="OnFilterChanged" Label="Payment" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
+                <MudSelectItem T="PaymentStatus?" Value="null">All</MudSelectItem>
+                <MudSelectItem T="PaymentStatus?" Value="PaymentStatus.Pending">Pending</MudSelectItem>
+                <MudSelectItem T="PaymentStatus?" Value="PaymentStatus.PartiallyPaid">Partially Paid</MudSelectItem>
+                <MudSelectItem T="PaymentStatus?" Value="PaymentStatus.Paid">Paid</MudSelectItem>
             </MudSelect>
         </div>
     </div>
 
-    <MudTable T="SaleDto" Items="@FilteredSales" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Class="mt-4">
-        <HeaderContent>
-            <MudTh>Invoice #</MudTh>
-            <MudTh>Customer</MudTh>
-            <MudTh>Date</MudTh>
-            <MudTh>Amount</MudTh>
-            <MudTh>Paid</MudTh>
-            <MudTh>Balance</MudTh>
-            <MudTh>Status</MudTh>
-            <MudTh>Payment</MudTh>
-            <MudTh>Actions</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Invoice #">
-                <MudText Typo="Typo.body2" Class="fw-bold">@context.InvoiceNumber</MudText>
-            </MudTd>
-            <MudTd DataLabel="Customer">
-                <div>
+    @if (_isLoading)
+    {
+        <div class="text-center pa-8">
+            <MudProgressCircular Indeterminate="true" />
+        </div>
+    }
+    else
+    {
+        <MudTable T="SaleDto" Items="@_sales" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Class="mt-4">
+            <HeaderContent>
+                <MudTh>Invoice #</MudTh>
+                <MudTh>Customer</MudTh>
+                <MudTh>Date</MudTh>
+                <MudTh>Amount</MudTh>
+                <MudTh>Paid</MudTh>
+                <MudTh>Balance</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Payment</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Invoice #">
+                    <MudText Typo="Typo.body2" Class="fw-bold">@context.InvoiceNumber</MudText>
+                </MudTd>
+                <MudTd DataLabel="Customer">
                     <MudText Typo="Typo.body2">@context.CustomerName</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.CustomerCode</MudText>
-                </div>
-            </MudTd>
-            <MudTd DataLabel="Date">@context.SaleDate.ToString("dd MMM yyyy")</MudTd>
-            <MudTd DataLabel="Amount">SSP @context.TotalAmount.ToString("N0")</MudTd>
-            <MudTd DataLabel="Paid">SSP @context.PaidAmount.ToString("N0")</MudTd>
-            <MudTd DataLabel="Balance">
-                <MudText Color="@(context.BalanceAmount > 0 ? Color.Warning : Color.Success)">
-                    SSP @context.BalanceAmount.ToString("N0")
-                </MudText>
-            </MudTd>
-            <MudTd DataLabel="Status">
-                <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">@context.Status</MudChip>
-            </MudTd>
-            <MudTd DataLabel="Payment">
-                <MudChip T="string" Size="Size.Small" Color="@GetPaymentColor(context.PaymentStatus)">@context.PaymentStatus</MudChip>
-            </MudTd>
-            <MudTd DataLabel="Actions">
-                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Color="Color.Info" Href="@($"/wholesale/sales/{context.Id}")" />
-                <MudIconButton Icon="@Icons.Material.Filled.Print" Size="Size.Small" Color="Color.Default" OnClick="@(() => PrintInvoice(context.Id))" />
-                @if (context.BalanceAmount > 0)
-                {
-                    <MudIconButton Icon="@Icons.Material.Filled.Payment" Size="Size.Small" Color="Color.Success" OnClick="@(() => RecordPayment(context))" />
-                }
-            </MudTd>
-        </RowTemplate>
-        <PagerContent>
-            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-        </PagerContent>
-    </MudTable>
+                </MudTd>
+                <MudTd DataLabel="Date">@context.SaleDate.ToString("dd MMM yyyy")</MudTd>
+                <MudTd DataLabel="Amount">SSP @context.TotalAmount.ToString("N0")</MudTd>
+                <MudTd DataLabel="Paid">SSP @context.PaidAmount.ToString("N0")</MudTd>
+                <MudTd DataLabel="Balance">
+                    <MudText Color="@(context.BalanceAmount > 0 ? Color.Warning : Color.Success)">
+                        SSP @context.BalanceAmount.ToString("N0")
+                    </MudText>
+                </MudTd>
+                <MudTd DataLabel="Status">
+                    <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">@context.Status</MudChip>
+                </MudTd>
+                <MudTd DataLabel="Payment">
+                    <MudChip T="string" Size="Size.Small" Color="@GetPaymentColor(context.PaymentStatus)">@context.PaymentStatus</MudChip>
+                </MudTd>
+                <MudTd DataLabel="Actions">
+                    <MudTooltip Text="Print Invoice"><MudIconButton Icon="@Icons.Material.Filled.Print" Size="Size.Small" Color="Color.Default" OnClick="@(() => PrintInvoice(context))" /></MudTooltip>
+                    @if (context.BalanceAmount > 0)
+                    {
+                        <MudTooltip Text="Record Payment"><MudIconButton Icon="@Icons.Material.Filled.Payment" Size="Size.Small" Color="Color.Success" OnClick="@(() => RecordPayment(context))" /></MudTooltip>
+                    }
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+            </PagerContent>
+        </MudTable>
+    }
 </div>
-
-<!-- Payment Dialog -->
-<MudDialog @bind-Visible="_showPaymentDialog" Options="_dialogOptions">
-    <TitleContent>
-        <MudText Typo="Typo.h6">Record Payment - @_selectedSale?.InvoiceNumber</MudText>
-    </TitleContent>
-    <DialogContent>
-        <MudGrid>
-            <MudItem xs="12">
-                <MudAlert Severity="Severity.Info" Class="mb-4">
-                    Outstanding Balance: <strong>SSP @_selectedSale?.BalanceAmount.ToString("N2")</strong>
-                </MudAlert>
-            </MudItem>
-            <MudItem xs="12" md="6">
-                <MudNumericField @bind-Value="_paymentAmount" Label="Payment Amount (SSP)" Variant="Variant.Outlined" Min="0m" Max="@(_selectedSale?.BalanceAmount ?? 0)" />
-            </MudItem>
-            <MudItem xs="12" md="6">
-                <MudSelect T="string" @bind-Value="_paymentMethod" Label="Payment Method" Variant="Variant.Outlined">
-                    <MudSelectItem Value="@("Cash")">Cash</MudSelectItem>
-                    <MudSelectItem Value="@("Mpesa")">M-Pesa</MudSelectItem>
-                    <MudSelectItem Value="@("Bank Transfer")">Bank Transfer</MudSelectItem>
-                    <MudSelectItem Value="@("Cheque")">Cheque</MudSelectItem>
-                </MudSelect>
-            </MudItem>
-            <MudItem xs="12">
-                <MudTextField @bind-Value="_paymentReference" Label="Reference / Transaction ID" Variant="Variant.Outlined" />
-            </MudItem>
-            <MudItem xs="12">
-                <MudTextField @bind-Value="_paymentNotes" Label="Notes" Variant="Variant.Outlined" Lines="2" />
-            </MudItem>
-        </MudGrid>
-    </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="@(() => _showPaymentDialog = false)">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SavePayment">Record Payment</MudButton>
-    </DialogActions>
-</MudDialog>
 
 @code {
     private List<SaleDto> _sales = new();
     private string _searchString = string.Empty;
-    private string _selectedStatus = "All";
-    private string _selectedPayment = "All";
-    private bool _showPaymentDialog = false;
-    private SaleDto? _selectedSale;
-    private decimal _paymentAmount;
-    private string _paymentMethod = "Cash";
-    private string _paymentReference = string.Empty;
-    private string _paymentNotes = string.Empty;
-    
-    private DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Small, FullWidth = true };
+    private PaymentStatus? _selectedPayment = null;
+    private bool _isLoading = true;
 
-    private IEnumerable<SaleDto> FilteredSales =>
-        _sales.Where(s =>
-            (string.IsNullOrWhiteSpace(_searchString) ||
-             s.InvoiceNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
-             s.CustomerName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) &&
-            (_selectedStatus == "All" || s.Status == _selectedStatus) &&
-            (_selectedPayment == "All" || s.PaymentStatus == _selectedPayment)
-        );
+    // KPI values
+    private decimal _thisMonthTotal = 0;
+    private int _thisMonthCount = 0;
+    private decimal _paidTotal = 0;
+    private int _paidCount = 0;
+    private decimal _pendingTotal = 0;
+    private int _pendingCount = 0;
+    private decimal _outstandingTotal = 0;
+    private int _outstandingCount = 0;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        LoadSales();
+        await LoadSalesAsync();
     }
 
-    private void LoadSales()
+    private async Task LoadSalesAsync()
     {
-        _sales = new List<SaleDto>
+        try
         {
-            new() { Id = 1, InvoiceNumber = "INV-2024-0032", CustomerCode = "WC-001", CustomerName = "Nairobi Pharmacy Ltd", SaleDate = DateTime.Now.AddDays(-2), TotalAmount = 125000, PaidAmount = 125000, Status = "Delivered", PaymentStatus = "Paid" },
-            new() { Id = 2, InvoiceNumber = "INV-2024-0031", CustomerCode = "WC-002", CustomerName = "Mombasa Medicals", SaleDate = DateTime.Now.AddDays(-5), TotalAmount = 85000, PaidAmount = 50000, Status = "Delivered", PaymentStatus = "Partial" },
-            new() { Id = 3, InvoiceNumber = "INV-2024-0030", CustomerCode = "WC-004", CustomerName = "Eldoret Pharmacy Group", SaleDate = DateTime.Now.AddDays(-7), TotalAmount = 250000, PaidAmount = 250000, Status = "Completed", PaymentStatus = "Paid" },
-            new() { Id = 4, InvoiceNumber = "INV-2024-0029", CustomerCode = "WC-003", CustomerName = "Kisumu Healthcare", SaleDate = DateTime.Now.AddDays(-10), TotalAmount = 45000, PaidAmount = 0, Status = "Delivered", PaymentStatus = "Pending" },
-            new() { Id = 5, InvoiceNumber = "INV-2024-0028", CustomerCode = "WC-001", CustomerName = "Nairobi Pharmacy Ltd", SaleDate = DateTime.Now.AddDays(-15), TotalAmount = 180000, PaidAmount = 180000, Status = "Completed", PaymentStatus = "Paid" },
-            new() { Id = 6, InvoiceNumber = "INV-2024-0027", CustomerCode = "WC-005", CustomerName = "Coast General Supplies", SaleDate = DateTime.Now.AddDays(-35), TotalAmount = 150000, PaidAmount = 0, Status = "Delivered", PaymentStatus = "Overdue" },
+            _isLoading = true;
+            StateHasChanged();
+
+            var query = new GetSalesQuery(null, null, null, _selectedPayment, _searchString);
+            _sales = await Mediator.Send(query);
+
+            CalculateKPIs();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading sales: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void CalculateKPIs()
+    {
+        var thisMonth = DateTime.Now.Month;
+        var thisMonthSales = _sales.Where(s => s.SaleDate.Month == thisMonth).ToList();
+
+        _thisMonthTotal = thisMonthSales.Sum(s => s.TotalAmount);
+        _thisMonthCount = thisMonthSales.Count;
+
+        _paidTotal = _sales.Where(s => s.PaymentStatus == PaymentStatus.Paid).Sum(s => s.PaidAmount);
+        _paidCount = _sales.Count(s => s.PaymentStatus == PaymentStatus.Paid);
+
+        _pendingTotal = _sales.Where(s => s.PaymentStatus == PaymentStatus.Pending).Sum(s => s.BalanceAmount);
+        _pendingCount = _sales.Count(s => s.PaymentStatus == PaymentStatus.Pending);
+
+        _outstandingTotal = _sales.Sum(s => s.BalanceAmount);
+        _outstandingCount = _sales.Count(s => s.BalanceAmount > 0);
+    }
+
+    private async Task OnFilterChanged(PaymentStatus? value)
+    {
+        _selectedPayment = value;
+        await LoadSalesAsync();
+    }
+
+    private Color GetStatusColor(SaleStatus status) => status switch
+    {
+        SaleStatus.Draft => Color.Info,
+        SaleStatus.Confirmed => Color.Primary,
+        SaleStatus.Completed => Color.Success,
+        SaleStatus.Cancelled => Color.Error,
+        _ => Color.Default
+    };
+
+    private Color GetPaymentColor(PaymentStatus status) => status switch
+    {
+        PaymentStatus.Paid => Color.Success,
+        PaymentStatus.PartiallyPaid => Color.Warning,
+        PaymentStatus.Pending => Color.Info,
+        _ => Color.Default
+    };
+
+    private async Task RecordPayment(SaleDto sale)
+    {
+        var parameters = new DialogParameters
+        {
+            { nameof(PaymentDialog.SaleId), sale.Id },
+            { nameof(PaymentDialog.InvoiceNumber), sale.InvoiceNumber },
+            { nameof(PaymentDialog.TotalAmount), sale.TotalAmount },
+            { nameof(PaymentDialog.PaidAmount), sale.PaidAmount }
         };
+
+        var options = new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<PaymentDialog>("Record Payment", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadSalesAsync();
+        }
     }
 
-    private Color GetStatusColor(string status) => status switch
+    private async Task PrintInvoice(SaleDto sale)
     {
-        "Draft" => Color.Default,
-        "Confirmed" => Color.Info,
-        "Processing" => Color.Primary,
-        "Delivered" => Color.Success,
-        "Completed" => Color.Success,
-        "Cancelled" => Color.Error,
-        _ => Color.Default
-    };
+        try
+        {
+            // Generate PDF
+            var pdfBytes = await InvoiceService.GenerateInvoicePdfAsync(sale.Id);
 
-    private Color GetPaymentColor(string status) => status switch
-    {
-        "Paid" => Color.Success,
-        "Partial" => Color.Warning,
-        "Pending" => Color.Info,
-        "Overdue" => Color.Error,
-        _ => Color.Default
-    };
+            // Convert to base64 for download
+            var base64 = Convert.ToBase64String(pdfBytes);
+            var fileName = $"Invoice_{sale.InvoiceNumber}.pdf";
 
-    private void RecordPayment(SaleDto sale)
-    {
-        _selectedSale = sale;
-        _paymentAmount = sale.BalanceAmount;
-        _showPaymentDialog = true;
+            // Trigger download via JavaScript
+            await JSRuntime.InvokeVoidAsync("downloadFile", fileName, base64, "application/pdf");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating invoice: {ex.Message}", Severity.Error);
+        }
     }
 
-    private async Task SavePayment()
+    private async Task ExportToExcel()
     {
-        // TODO: Implement payment recording
-        await Task.Delay(500);
-        _showPaymentDialog = false;
-        LoadSales();
-    }
+        try
+        {
+            if (!_sales.Any())
+            {
+                Snackbar.Add("No sales to export", Severity.Warning);
+                return;
+            }
 
-    private void PrintInvoice(int id)
-    {
-        // TODO: Implement invoice printing
-    }
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("Wholesale Sales");
 
-    private class SaleDto
-    {
-        public int Id { get; set; }
-        public string InvoiceNumber { get; set; } = string.Empty;
-        public string CustomerCode { get; set; } = string.Empty;
-        public string CustomerName { get; set; } = string.Empty;
-        public DateTime SaleDate { get; set; }
-        public decimal TotalAmount { get; set; }
-        public decimal PaidAmount { get; set; }
-        public decimal BalanceAmount => TotalAmount - PaidAmount;
-        public string Status { get; set; } = string.Empty;
-        public string PaymentStatus { get; set; } = string.Empty;
+            // Add headers
+            worksheet.Cell(1, 1).Value = "Invoice Number";
+            worksheet.Cell(1, 2).Value = "Customer";
+            worksheet.Cell(1, 3).Value = "Sale Date";
+            worksheet.Cell(1, 4).Value = "Items";
+            worksheet.Cell(1, 5).Value = "Subtotal";
+            worksheet.Cell(1, 6).Value = "Tax Amount";
+            worksheet.Cell(1, 7).Value = "Discount";
+            worksheet.Cell(1, 8).Value = "Total Amount";
+            worksheet.Cell(1, 9).Value = "Paid Amount";
+            worksheet.Cell(1, 10).Value = "Balance";
+            worksheet.Cell(1, 11).Value = "Status";
+            worksheet.Cell(1, 12).Value = "Payment Status";
+
+            // Style headers
+            var headerRange = worksheet.Range(1, 1, 1, 12);
+            headerRange.Style.Font.Bold = true;
+            headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#00897b");
+            headerRange.Style.Font.FontColor = XLColor.White;
+
+            // Add data rows
+            int row = 2;
+            foreach (var sale in _sales)
+            {
+                worksheet.Cell(row, 1).Value = sale.InvoiceNumber;
+                worksheet.Cell(row, 2).Value = sale.CustomerName;
+                worksheet.Cell(row, 3).Value = sale.SaleDate.ToString("dd MMM yyyy");
+                worksheet.Cell(row, 4).Value = sale.ItemCount;
+                worksheet.Cell(row, 5).Value = sale.SubTotal;
+                worksheet.Cell(row, 6).Value = sale.TaxAmount;
+                worksheet.Cell(row, 7).Value = sale.DiscountAmount;
+                worksheet.Cell(row, 8).Value = sale.TotalAmount;
+                worksheet.Cell(row, 9).Value = sale.PaidAmount;
+                worksheet.Cell(row, 10).Value = sale.BalanceAmount;
+                worksheet.Cell(row, 11).Value = sale.Status.ToString();
+                worksheet.Cell(row, 12).Value = sale.PaymentStatus.ToString();
+                row++;
+            }
+
+            // Format currency columns
+            worksheet.Column(5).Style.NumberFormat.Format = "#,##0.00";
+            worksheet.Column(6).Style.NumberFormat.Format = "#,##0.00";
+            worksheet.Column(7).Style.NumberFormat.Format = "#,##0.00";
+            worksheet.Column(8).Style.NumberFormat.Format = "#,##0.00";
+            worksheet.Column(9).Style.NumberFormat.Format = "#,##0.00";
+            worksheet.Column(10).Style.NumberFormat.Format = "#,##0.00";
+
+            // Auto-fit columns
+            worksheet.Columns().AdjustToContents();
+
+            // Convert to base64
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            var base64 = Convert.ToBase64String(stream.ToArray());
+
+            // Download via JavaScript
+            var fileName = $"wholesale-sales-{DateTime.Now:yyyyMMdd-HHmmss}.xlsx";
+            await JSRuntime.InvokeVoidAsync("downloadFile", fileName, base64, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+            Snackbar.Add($"Exported {_sales.Count} sales to Excel", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error exporting to Excel: {ex.Message}", Severity.Error);
+        }
     }
 }

@@ -8,9 +8,7 @@ namespace DawaFlow.Web.Features.Categories.Commands;
 public record CreateCategoryCommand(
     string Name,
     string? Description,
-    int? ParentId,
-    string Icon,
-    string Color
+    int? ParentId
 ) : IRequest<int>;
 
 public class CreateCategoryHandler : IRequestHandler<CreateCategoryCommand, int>

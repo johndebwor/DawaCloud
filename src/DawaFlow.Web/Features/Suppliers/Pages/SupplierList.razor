@@ -6,7 +6,7 @@
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
 
-<PageTitle>Suppliers - DawaFlow</PageTitle>
+<PageTitle>Suppliers - DawaBes</PageTitle>
 
 <!-- Hero Section -->
 <div class="df-hero animate-fade-in-up">
@@ -144,16 +144,8 @@
                     </MudChip>
                 </MudTd>
                 <MudTd DataLabel="Actions">
-                    <MudIconButton Icon="@Icons.Material.Filled.Visibility"
-                                   Size="Size.Small"
-                                   Color="Color.Info"
-                                   Href="@($"/suppliers/{context.Id}")"
-                                   Title="View Details" />
-                    <MudIconButton Icon="@Icons.Material.Filled.Send"
-                                   Size="Size.Small"
-                                   Color="Color.Primary"
-                                   Href="@($"/procurement/requests/new?supplierId={context.Id}")"
-                                   Title="Create Request" />
+                    <MudTooltip Text="View Details"><MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Color="Color.Info" Href="@($"/suppliers/{context.Id}")" /></MudTooltip>
+                    <MudTooltip Text="Create Request"><MudIconButton Icon="@Icons.Material.Filled.Send" Size="Size.Small" Color="Color.Primary" Href="@($"/procurement/requests/new?supplierId={context.Id}")" /></MudTooltip>
                 </MudTd>
             </RowTemplate>
         </MudTable>
