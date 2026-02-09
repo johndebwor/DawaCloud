@@ -1,9 +1,9 @@
-# DawaBes - Pharmaceutical Management System
+﻿# DawaCloud - Pharmaceutical Management System
 
 <div align="center">
-  <img src="src/DawaBes.Web/wwwroot/images/logo.svg" alt="DawaBes Logo" width="200" />
+  <img src="src/DawaCloud.Web/wwwroot/images/logo.svg" alt="DawaCloud Logo" width="200" />
 
-  **DawaBes**
+  **DawaCloud**
 
   **Modern Drugs Wholesale & Retail Management System**
 
@@ -17,24 +17,24 @@
 
 ---
 
-## 📋 Overview
+## ðŸ“‹ Overview
 
-**DawaBes** (Dawa = Medicine in Swahili) is a comprehensive pharmaceutical management system designed to streamline drug inventory, procurement, wholesale and retail operations for pharmacies and drug distribution businesses in South Sudan and East Africa.
+**DawaCloud** (Dawa = Medicine in Swahili) is a comprehensive pharmaceutical management system designed to streamline drug inventory, procurement, wholesale and retail operations for pharmacies and drug distribution businesses in South Sudan and East Africa.
 
 ### Key Features
 
-- **🏥 Drug Management**: Complete drug master data with batch tracking and expiry management
-- **📦 Inventory Control**: Real-time stock levels, movements, adjustments, and reconciliation
-- **🛒 Procurement**: Automated reordering, supplier management, and purchase workflows
-- **💳 Point of Sale**: Fast retail POS with barcode scanning and FEFO selection
-- **📊 Wholesale**: B2B customer management, quotations, invoicing, and credit control
-- **📈 Reports**: Comprehensive analytics for stock, sales, financial, and compliance reporting
-- **🔔 Notifications**: Email and WhatsApp alerts for stock and expiry management
-- **🔐 Security**: Role-based access control with comprehensive audit logging
+- **ðŸ¥ Drug Management**: Complete drug master data with batch tracking and expiry management
+- **ðŸ“¦ Inventory Control**: Real-time stock levels, movements, adjustments, and reconciliation
+- **ðŸ›’ Procurement**: Automated reordering, supplier management, and purchase workflows
+- **ðŸ’³ Point of Sale**: Fast retail POS with barcode scanning and FEFO selection
+- **ðŸ“Š Wholesale**: B2B customer management, quotations, invoicing, and credit control
+- **ðŸ“ˆ Reports**: Comprehensive analytics for stock, sales, financial, and compliance reporting
+- **ðŸ”” Notifications**: Email and WhatsApp alerts for stock and expiry management
+- **ðŸ” Security**: Role-based access control with comprehensive audit logging
 
 ---
 
-## 🚀 Quick Start
+## ðŸš€ Quick Start
 
 ### Prerequisites
 
@@ -46,24 +46,24 @@
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-org/DawaBes.git
-   cd DawaBes
+   git clone https://github.com/your-org/DawaCloud.git
+   cd DawaCloud
    ```
 
 2. **Configure the database connection**
    
-   Update `src/DawaBes.Web/appsettings.json`:
+   Update `src/DawaCloud.Web/appsettings.json`:
    ```json
    {
      "ConnectionStrings": {
-       "DefaultConnection": "Server=localhost;Database=DawaBes;Trusted_Connection=True;TrustServerCertificate=True"
+       "DefaultConnection": "Server=localhost;Database=DawaCloud;Trusted_Connection=True;TrustServerCertificate=True"
      }
    }
    ```
 
 3. **Run database migrations**
    ```bash
-   cd src/DawaBes.Web
+   cd src/DawaCloud.Web
    dotnet ef database update
    ```
 
@@ -80,45 +80,45 @@
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | admin@DawaBes.com | Admin@123 |
-| Pharmacist | pharmacist@DawaBes.com | Demo@123 |
-| Cashier | cashier@DawaBes.com | Demo@123 |
+| Admin | admin@DawaCloud.com | Admin@123 |
+| Pharmacist | pharmacist@DawaCloud.com | Demo@123 |
+| Cashier | cashier@DawaCloud.com | Demo@123 |
 
 ---
 
-## 🏗️ Architecture
+## ðŸ—ï¸ Architecture
 
-DawaBes uses a **Feature-Based (Vertical Slice) Architecture** with CQRS pattern:
+DawaCloud uses a **Feature-Based (Vertical Slice) Architecture** with CQRS pattern:
 
 ```
-DawaBes/
-├── src/
-│   └── DawaBes.Web/           # Main Blazor Server Application
-│       ├── Features/           # Feature modules (vertical slices)
-│       │   ├── Auth/          # Authentication & Authorization
-│       │   ├── Dashboard/     # Dashboard & KPIs
-│       │   ├── Drugs/         # Drug management
-│       │   ├── Batches/       # Batch & expiry tracking
-│       │   ├── Inventory/     # Stock management
-│       │   ├── Procurement/   # Drug requests & goods receiving
-│       │   ├── Suppliers/     # Supplier management
-│       │   ├── Wholesale/     # B2B sales & invoicing
-│       │   ├── Retail/        # Point of Sale
-│       │   ├── Reports/       # Analytics & reporting
-│       │   ├── Notifications/ # Alert system
-│       │   ├── Users/         # User management
-│       │   ├── Settings/      # System configuration
-│       │   └── Audit/         # Activity logging
-│       ├── Data/              # Entity models & DbContext
-│       ├── Infrastructure/    # Cross-cutting concerns
-│       └── Shared/            # Shared components
-├── tests/                     # Unit & Integration tests
-└── docs/                      # Documentation
+DawaCloud/
+â”œâ”€â”€ src/
+â”‚   â””â”€â”€ DawaCloud.Web/           # Main Blazor Server Application
+â”‚       â”œâ”€â”€ Features/           # Feature modules (vertical slices)
+â”‚       â”‚   â”œâ”€â”€ Auth/          # Authentication & Authorization
+â”‚       â”‚   â”œâ”€â”€ Dashboard/     # Dashboard & KPIs
+â”‚       â”‚   â”œâ”€â”€ Drugs/         # Drug management
+â”‚       â”‚   â”œâ”€â”€ Batches/       # Batch & expiry tracking
+â”‚       â”‚   â”œâ”€â”€ Inventory/     # Stock management
+â”‚       â”‚   â”œâ”€â”€ Procurement/   # Drug requests & goods receiving
+â”‚       â”‚   â”œâ”€â”€ Suppliers/     # Supplier management
+â”‚       â”‚   â”œâ”€â”€ Wholesale/     # B2B sales & invoicing
+â”‚       â”‚   â”œâ”€â”€ Retail/        # Point of Sale
+â”‚       â”‚   â”œâ”€â”€ Reports/       # Analytics & reporting
+â”‚       â”‚   â”œâ”€â”€ Notifications/ # Alert system
+â”‚       â”‚   â”œâ”€â”€ Users/         # User management
+â”‚       â”‚   â”œâ”€â”€ Settings/      # System configuration
+â”‚       â”‚   â””â”€â”€ Audit/         # Activity logging
+â”‚       â”œâ”€â”€ Data/              # Entity models & DbContext
+â”‚       â”œâ”€â”€ Infrastructure/    # Cross-cutting concerns
+â”‚       â””â”€â”€ Shared/            # Shared components
+â”œâ”€â”€ tests/                     # Unit & Integration tests
+â””â”€â”€ docs/                      # Documentation
 ```
 
 ---
 
-## 🛠️ Technology Stack
+## ðŸ› ï¸ Technology Stack
 
 | Layer | Technology |
 |-------|------------|
@@ -136,7 +136,7 @@ DawaBes/
 
 ---
 
-## 📖 Documentation
+## ðŸ“– Documentation
 
 - [CLAUDE.md](CLAUDE.md) - Comprehensive project documentation and implementation status
 - [API Documentation](docs/api.md) - REST API reference
@@ -145,7 +145,7 @@ DawaBes/
 
 ---
 
-## 🔧 Configuration
+## ðŸ”§ Configuration
 
 ### Email (SMTP)
 ```json
@@ -153,8 +153,8 @@ DawaBes/
   "Email": {
     "SmtpHost": "smtp.example.com",
     "SmtpPort": 587,
-    "FromEmail": "noreply@DawaBes.com",
-    "FromName": "DawaBes"
+    "FromEmail": "noreply@DawaCloud.com",
+    "FromName": "DawaCloud"
   }
 }
 ```
@@ -183,11 +183,11 @@ DawaBes/
 
 ---
 
-## 🐳 Docker Deployment
+## ðŸ³ Docker Deployment
 
 ```bash
 # Build the image
-docker build -t DawaBes:latest .
+docker build -t DawaCloud:latest .
 
 # Run with Docker Compose
 docker-compose up -d
@@ -195,7 +195,7 @@ docker-compose up -d
 
 ---
 
-## 🤝 Contributing
+## ðŸ¤ Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -205,36 +205,36 @@ docker-compose up -d
 
 ---
 
-## 📜 License
+## ðŸ“œ License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 📞 Support
+## ðŸ“ž Support
 
 - **Company**: Revo Pharma & Medical Ltd
 - **Email**: info@revopharma.com
 - **Website**: www.revopharma.com
 - **Phone**: +211 920 123456
 - **Location**: Mobil, Hai Cinema, Juba, South Sudan
-- **Issues**: [GitHub Issues](https://github.com/your-org/DawaBes/issues)
+- **Issues**: [GitHub Issues](https://github.com/your-org/DawaCloud/issues)
 
 ---
 
-## 🏢 About This Installation
+## ðŸ¢ About This Installation
 
-This DawaBes system is currently deployed for **Revo Pharma & Medical Ltd**, a leading pharmaceutical distribution company serving South Sudan.
+This DawaCloud system is currently deployed for **Revo Pharma & Medical Ltd**, a leading pharmaceutical distribution company serving South Sudan.
 
-**About DawaBes:**
-DawaBes is a flexible pharmaceutical management platform that can be configured for any pharmacy or pharmaceutical distribution business. The system provides comprehensive tools to streamline drug inventory, procurement, and distribution operations.
+**About DawaCloud:**
+DawaCloud is a flexible pharmaceutical management platform that can be configured for any pharmacy or pharmaceutical distribution business. The system provides comprehensive tools to streamline drug inventory, procurement, and distribution operations.
 
 **About Revo Pharma & Medical Ltd (Current Client):**
-Revo Pharma & Medical Ltd uses DawaBes to manage their pharmaceutical operations in South Sudan. The system is configured with features tailored to South Sudanese regulatory requirements and business practices.
+Revo Pharma & Medical Ltd uses DawaCloud to manage their pharmaceutical operations in South Sudan. The system is configured with features tailored to South Sudanese regulatory requirements and business practices.
 
 ---
 
 <div align="center">
-  DawaBes - Pharmaceutical Management System<br/>
+  DawaCloud - Pharmaceutical Management System<br/>
   Serving pharmacies and pharmaceutical businesses across South Sudan and East Africa
 </div>

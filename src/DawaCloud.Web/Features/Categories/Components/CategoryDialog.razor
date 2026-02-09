@@ -1,0 +1,184 @@
+@using MudBlazor
+@using MudBlazor.Services
+@using DawaCloud.Web.Features.Categories.Commands
+@using MediatR
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="@_isValid">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_model.Name"
+                                  Label="Category Name"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  RequiredError="Category name is required"
+                                  Immediate="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudSelect @bind-Value="_model.ParentId"
+                               Label="Parent Category (Optional)"
+                               Variant="Variant.Outlined"
+                               Clearable="true">
+                        <MudSelectItem T="int?" Value="null">None (Top Level)</MudSelectItem>
+                        @foreach (var category in _availableParents)
+                        {
+                            <MudSelectItem T="int?" Value="@category.Id">@category.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                        Select a parent category to create a subcategory
+                    </MudText>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_model.Description"
+                                  Label="Description"
+                                  Variant="Variant.Outlined"
+                                  Lines="2" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudSwitch @bind-Value="_model.IsActive"
+                               Label="Active"
+                               Color="Color.Primary" />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   OnClick="Submit"
+                   Disabled="@(!_isValid || _isProcessing)">
+            @if (_isProcessing)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                <MudText Class="ms-2">Saving...</MudText>
+            }
+            else
+            {
+                <MudText>@(CategoryId.HasValue ? "Update" : "Create")</MudText>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance? MudDialog { get; set; }
+
+    [Parameter]
+    public int? CategoryId { get; set; }
+
+    [Parameter]
+    public List<CategoryDto> AvailableCategories { get; set; } = new();
+
+    private MudForm? _form;
+    private bool _isValid;
+    private bool _isProcessing = false;
+    private CategoryFormModel _model = new();
+
+    private List<CategoryDto> _availableParents =>
+        AvailableCategories.Where(c => c.Id != CategoryId).ToList();
+
+    protected override void OnInitialized()
+    {
+        if (CategoryId.HasValue)
+        {
+            LoadCategory();
+        }
+        else
+        {
+            _model.IsActive = true;
+        }
+    }
+
+    private void LoadCategory()
+    {
+        var category = AvailableCategories.FirstOrDefault(c => c.Id == CategoryId);
+        if (category != null)
+        {
+            _model = new CategoryFormModel
+            {
+                Name = category.Name,
+                Description = category.Description,
+                ParentId = category.ParentId,
+                IsActive = category.IsActive
+            };
+        }
+    }
+
+    private async Task Submit()
+    {
+        if (!_isValid)
+        {
+            Snackbar.Add("Please fix validation errors", Severity.Error);
+            return;
+        }
+
+        _isProcessing = true;
+
+        try
+        {
+            if (CategoryId.HasValue)
+            {
+                var command = new UpdateCategoryCommand(
+                    CategoryId.Value,
+                    _model.Name,
+                    _model.Description,
+                    _model.ParentId,
+                    _model.IsActive
+                );
+                await Mediator.Send(command);
+            }
+            else
+            {
+                var command = new CreateCategoryCommand(
+                    _model.Name,
+                    _model.Description,
+                    _model.ParentId
+                );
+                await Mediator.Send(command);
+            }
+
+            Snackbar.Add(
+                CategoryId.HasValue ? "Category updated successfully" : "Category created successfully",
+                Severity.Success
+            );
+
+            MudDialog?.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog?.Cancel();
+    }
+
+    private class CategoryFormModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public int? ParentId { get; set; }
+        public bool IsActive { get; set; } = true;
+    }
+
+    public class CategoryDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public int? ParentId { get; set; }
+        public bool IsActive { get; set; }
+    }
+}

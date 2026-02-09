@@ -1,0 +1,227 @@
+@using MudBlazor
+@using MediatR
+@using DawaCloud.Web.Features.Wholesale.Commands
+@using DawaCloud.Web.Features.Wholesale.Queries
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_model.Name"
+                              Label="Customer Name"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Immediate="true" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_model.TaxId"
+                              Label="Tax ID / TIN"
+                              Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_model.Email"
+                              Label="Email"
+                              Variant="Variant.Outlined"
+                              InputType="InputType.Email" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_model.Phone"
+                              Label="Phone Number"
+                              Variant="Variant.Outlined"
+                              Placeholder="+211912345678" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="_model.Address"
+                              Label="Address"
+                              Variant="Variant.Outlined"
+                              Lines="2" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect @bind-Value="_model.City"
+                           Label="City"
+                           Variant="Variant.Outlined">
+                    <MudSelectItem Value="@("Juba")">Juba</MudSelectItem>
+                    <MudSelectItem Value="@("Yei")">Yei</MudSelectItem>
+                    <MudSelectItem Value="@("Wau")">Wau</MudSelectItem>
+                    <MudSelectItem Value="@("Rumbek")">Rumbek</MudSelectItem>
+                    <MudSelectItem Value="@("Malakal")">Malakal</MudSelectItem>
+                    <MudSelectItem Value="@("Bentiu")">Bentiu</MudSelectItem>
+                    <MudSelectItem Value="@("Bor")">Bor</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect @bind-Value="_model.PricingTier"
+                           Label="Pricing Tier"
+                           Variant="Variant.Outlined"
+                           Required="true">
+                    <MudSelectItem Value="@("Retail")">Retail</MudSelectItem>
+                    <MudSelectItem Value="@("Wholesale")">Wholesale</MudSelectItem>
+                    <MudSelectItem Value="@("Bulk")">Bulk</MudSelectItem>
+                    <MudSelectItem Value="@("VIP")">VIP</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudNumericField @bind-Value="_model.CreditLimit"
+                                 Label="Credit Limit (SSP)"
+                                 Variant="Variant.Outlined"
+                                 Min="0m"
+                                 Format="N2" />
+            </MudItem>
+            @if (CustomerId.HasValue)
+            {
+                <MudItem xs="12" md="6">
+                    <MudSwitch T="bool" @bind-Checked="_model.IsActive"
+                               Label="Active"
+                               Color="Color.Primary" />
+                </MudItem>
+            }
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit" Disabled="_isProcessing">
+            @if (_isProcessing)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                <MudText Class="ms-2">Saving...</MudText>
+            }
+            else
+            {
+                <MudText>@(CustomerId.HasValue ? "Update" : "Create")</MudText>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance? MudDialog { get; set; }
+
+    [Parameter]
+    public int? CustomerId { get; set; }
+
+    private CustomerFormModel _model = new();
+    private bool _isProcessing = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (CustomerId.HasValue)
+        {
+            await LoadCustomer();
+        }
+        else
+        {
+            // Set defaults for new customer
+            _model.PricingTier = "Retail";
+            _model.CreditLimit = 0;
+            _model.IsActive = true;
+        }
+    }
+
+    private async Task LoadCustomer()
+    {
+        var query = new GetCustomerByIdQuery(CustomerId!.Value);
+        var customer = await Mediator.Send(query);
+
+        if (customer != null)
+        {
+            _model = new CustomerFormModel
+            {
+                Name = customer.Name,
+                TaxId = customer.TaxId,
+                Email = customer.Email,
+                Phone = customer.Phone,
+                Address = customer.Address,
+                City = customer.City,
+                CreditLimit = customer.CreditLimit,
+                PricingTier = customer.PricingTier,
+                IsActive = customer.IsActive
+            };
+        }
+    }
+
+    private async Task Submit()
+    {
+        if (string.IsNullOrWhiteSpace(_model.Name))
+        {
+            Snackbar.Add("Customer name is required", Severity.Error);
+            return;
+        }
+
+        _isProcessing = true;
+
+        try
+        {
+            Result result;
+
+            if (CustomerId.HasValue)
+            {
+                var command = new UpdateCustomerCommand(
+                    CustomerId.Value,
+                    _model.Name,
+                    _model.TaxId,
+                    _model.Email,
+                    _model.Phone,
+                    _model.Address,
+                    _model.City,
+                    _model.CreditLimit,
+                    _model.PricingTier,
+                    _model.IsActive
+                );
+                result = await Mediator.Send(command);
+            }
+            else
+            {
+                var command = new CreateCustomerCommand(
+                    _model.Name,
+                    _model.TaxId,
+                    _model.Email,
+                    _model.Phone,
+                    _model.Address,
+                    _model.City,
+                    _model.CreditLimit,
+                    _model.PricingTier
+                );
+                var createResult = await Mediator.Send(command);
+                result = createResult.IsSuccess ? Result.Ok() : Result.Fail(createResult.Error ?? "Failed to create customer");
+            }
+
+            if (result.IsSuccess)
+            {
+                Snackbar.Add(
+                    CustomerId.HasValue ? "Customer updated successfully" : "Customer created successfully",
+                    Severity.Success
+                );
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                Snackbar.Add(result.Error ?? "An error occurred", Severity.Error);
+            }
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private class CustomerFormModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public string? TaxId { get; set; }
+        public string? Email { get; set; }
+        public string? Phone { get; set; }
+        public string? Address { get; set; }
+        public string? City { get; set; }
+        public decimal CreditLimit { get; set; }
+        public string PricingTier { get; set; } = "Retail";
+        public bool IsActive { get; set; } = true;
+    }
+}

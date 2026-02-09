@@ -1,0 +1,29 @@
+@using DawaCloud.Web.Shared.Extensions
+@using Microsoft.AspNetCore.Components.Authorization
+
+<MudThemeProvider Theme="@MudThemeConfiguration.DawaFlowTheme" IsDarkMode="@_isDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+                <NotAuthorized>
+                    <RedirectToLogin />
+                </NotAuthorized>
+                <Authorizing>
+                    <div class="d-flex justify-center align-center" style="height: 100vh;">
+                        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                    </div>
+                </Authorizing>
+            </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="routeData" Selector="h1" />
+        </Found>
+    </Router>
+</CascadingAuthenticationState>
+
+@code {
+    private bool _isDarkMode = false;
+}

@@ -1,0 +1,1313 @@
+@page "/pos"
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+@using Microsoft.EntityFrameworkCore
+@using MediatR
+@using System.Security.Claims
+@using System.Text.Json
+@using DawaCloud.Web.Features.Retail.Commands
+@using DawaCloud.Web.Features.Retail.Queries
+@using DawaCloud.Web.Features.Currency.Services
+@using DawaCloud.Web.Data.Enums
+@inject IJSRuntime JSRuntime
+@inject IRoundingService RoundingService
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IServiceScopeFactory ScopeFactory
+
+<PageTitle>Point of Sale - DawaCloud</PageTitle>
+
+<div class="pos-container">
+    <!-- Left Panel - Product Search & Grid -->
+    <div class="pos-left-panel">
+        <!-- Search Bar -->
+        <div class="pos-search-bar">
+            <MudTextField @bind-Value="_searchQuery"
+                          Placeholder="Scan barcode or search products... (F2)"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Variant="Variant.Outlined"
+                          Immediate="true"
+                          FullWidth="true"
+                          OnKeyDown="@HandleSearchKeyDown" />
+        </div>
+
+        <!-- Category Tabs -->
+        <div class="pos-categories">
+            <MudChipSet T="string" @bind-SelectedValue="_selectedCategory" SelectionMode="SelectionMode.SingleSelection" Class="pos-category-chips">
+                <MudChip Value="@("All")" Color="Color.Primary" Variant="Variant.Text">All</MudChip>
+                <MudChip Value="@("Analgesics")" Color="Color.Default" Variant="Variant.Text">Analgesics</MudChip>
+                <MudChip Value="@("Antibiotics")" Color="Color.Default" Variant="Variant.Text">Antibiotics</MudChip>
+                <MudChip Value="@("Antacids")" Color="Color.Default" Variant="Variant.Text">Antacids</MudChip>
+                <MudChip Value="@("Vitamins")" Color="Color.Default" Variant="Variant.Text">Vitamins</MudChip>
+            </MudChipSet>
+        </div>
+
+        <!-- Product Display -->
+        @if (_displayStyle == "list")
+        {
+            <!-- List View -->
+            <div class="pos-product-list">
+                @foreach (var product in FilteredProducts)
+                {
+                    <div class="pos-product-list-item @(product.Stock == 0 ? "out-of-stock" : "")" @onclick="@(() => AddToCart(product))">
+                        <div class="pos-product-list-icon">
+                            <MudIcon Icon="@Icons.Material.Filled.Medication" Size="Size.Large" Color="Color.Primary" />
+                        </div>
+                        <div class="pos-product-list-info">
+                            <div class="pos-product-list-name">
+                                @product.Name
+                                @if (product.RequiresPrescription)
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.MedicalServices" Size="Size.Small" Color="Color.Warning" />
+                                }
+                            </div>
+                            <div class="pos-product-list-code">@product.Code</div>
+                        </div>
+                        <div class="pos-product-list-details">
+                            <div class="pos-product-list-price">SSP @product.Price.ToString("N0")</div>
+                            <div class="pos-product-list-stock @(product.Stock <= 10 ? "warning" : "")">
+                                Stock: @product.Stock
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <!-- Grid View (Default) -->
+            <div class="pos-product-grid">
+                @foreach (var product in FilteredProducts)
+                {
+                    <div class="pos-product-card @(product.Stock == 0 ? "out-of-stock" : "")" @onclick="@(() => AddToCart(product))">
+                        <div class="pos-product-icon">
+                            <MudIcon Icon="@Icons.Material.Filled.Medication" Size="Size.Large" />
+                        </div>
+                        <div class="pos-product-name">@product.Name</div>
+                        <div class="pos-product-price">SSP @product.Price.ToString("N0")</div>
+                        @if (product.Stock <= 10)
+                        {
+                            <div class="pos-product-stock warning">@product.Stock left</div>
+                        }
+                        @if (product.RequiresPrescription)
+                        {
+                            <div class="pos-product-rx">
+                                <MudIcon Icon="@Icons.Material.Filled.MedicalServices" Size="Size.Small" />
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- Quick Actions -->
+        <div class="pos-quick-actions">
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.Pause" OnClick="HoldSale">
+                Hold (F4)
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.Replay" OnClick="RecallSale">
+                Recall (F5)
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.History" OnClick="ShowLastReceipt">
+                Last Receipt
+            </MudButton>
+        </div>
+    </div>
+
+    <!-- Right Panel - Cart -->
+    <div class="pos-right-panel">
+        <!-- Customer Info -->
+        <div class="pos-customer-bar">
+            <MudTextField @bind-Value="_customerName"
+                          Placeholder="Customer Name (Optional)"
+                          Variant="Variant.Text"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Person"
+                          Dense="true" />
+        </div>
+
+        <!-- Cart Items -->
+        <div class="pos-cart">
+            @if (_cartItems.Count == 0)
+            {
+                <div class="pos-cart-empty">
+                    <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Size="Size.Large" Color="Color.Secondary" />
+                    <MudText Color="Color.Secondary">Cart is empty</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Scan or search to add items</MudText>
+                </div>
+            }
+            else
+            {
+                @foreach (var item in _cartItems)
+                {
+                    <div class="pos-cart-item">
+                        <div class="pos-cart-item-info">
+                            <div class="pos-cart-item-name">@item.Name</div>
+                            <div class="pos-cart-item-price">SSP @item.UnitPrice.ToString("N0") × @item.Quantity</div>
+                        </div>
+                        <div class="pos-cart-item-controls">
+                            <MudIconButton Icon="@Icons.Material.Filled.Remove" Size="Size.Small" OnClick="@(() => DecreaseQuantity(item))" />
+                            <span class="pos-cart-item-qty">@item.Quantity</span>
+                            <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" OnClick="@(() => IncreaseQuantity(item))" />
+                        </div>
+                        <div class="pos-cart-item-total">
+                            SSP @item.LineTotal.ToString("N0")
+                        </div>
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => RemoveFromCart(item))" />
+                    </div>
+                }
+            }
+        </div>
+
+        <!-- Cart Totals -->
+        <div class="pos-totals">
+            <div class="pos-total-row">
+                <span>Subtotal</span>
+                <span>SSP @_subtotal.ToString("N2")</span>
+            </div>
+            <div class="pos-total-row">
+                <span>Tax (16%)</span>
+                <span>SSP @_taxAmount.ToString("N2")</span>
+            </div>
+            @if (_discountAmount > 0)
+            {
+                <div class="pos-total-row discount">
+                    <span>Discount</span>
+                    <span>- SSP @_discountAmount.ToString("N2")</span>
+                </div>
+            }
+            @if (_isRoundingEnabled && _grandTotal != _grandTotalBeforeRounding)
+            {
+                <div class="pos-total-row" style="color: var(--df-text-secondary); font-size: 0.8em;">
+                    <span>Before Rounding</span>
+                    <span>SSP @_grandTotalBeforeRounding.ToString("N2")</span>
+                </div>
+            }
+            <div class="pos-total-row grand-total">
+                <span>TOTAL</span>
+                <span>SSP @_grandTotal.ToString("N2")</span>
+            </div>
+        </div>
+
+        <!-- Payment Buttons -->
+        <div class="pos-payment-buttons">
+            <div class="pos-payment-row">
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" FullWidth="true" StartIcon="@Icons.Material.Filled.Percent" OnClick="ApplyDiscount">
+                    Discount
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" FullWidth="true" StartIcon="@Icons.Material.Filled.Clear" OnClick="ClearCart">
+                    Clear
+                </MudButton>
+            </div>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Large"
+                       StartIcon="@Icons.Material.Filled.Payment" OnClick="ProcessPayment"
+                       Disabled="@(_cartItems.Count == 0)">
+                PAY SSP @_grandTotal.ToString("N0") (F12)
+            </MudButton>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Dialog -->
+<MudDialog @bind-Visible="_showPaymentDialog" Options="_dialogOptions">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Payment" />
+            <MudText Typo="Typo.h6">Complete Payment</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="payment-dialog-total">
+            <MudText Typo="Typo.h4" Color="Color.Primary">SSP @_grandTotal.ToString("N2")</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Amount Due</MudText>
+        </div>
+
+        <MudDivider Class="my-4" />
+
+        <MudText Typo="Typo.subtitle2" Class="mb-2">Select Payment Method</MudText>
+        <div class="payment-methods">
+            <div class="payment-method @(_selectedPaymentMethod == "Cash" ? "selected" : "")" @onclick="@(() => _selectedPaymentMethod = "Cash")">
+                <MudIcon Icon="@Icons.Material.Filled.Money" />
+                <span>Cash</span>
+            </div>
+            <div class="payment-method @(_selectedPaymentMethod == "MoMo" ? "selected" : "")" @onclick="@(() => _selectedPaymentMethod = "MoMo")">
+                <MudIcon Icon="@Icons.Material.Filled.PhoneAndroid" />
+                <span>MoMo</span>
+            </div>
+            <div class="payment-method @(_selectedPaymentMethod == "Card" ? "selected" : "")" @onclick="@(() => _selectedPaymentMethod = "Card")">
+                <MudIcon Icon="@Icons.Material.Filled.CreditCard" />
+                <span>Card</span>
+            </div>
+        </div>
+
+        @if (_selectedPaymentMethod == "Cash")
+        {
+            <MudNumericField @bind-Value="_amountTendered" Label="Amount Tendered (SSP)" Variant="Variant.Outlined"
+                            Class="mt-4" Min="0m" />
+            @if (_amountTendered >= _grandTotal)
+            {
+                <MudAlert Severity="Severity.Success" Class="mt-2">
+                    Change: <strong>SSP @((_amountTendered - _grandTotal).ToString("N2"))</strong>
+                </MudAlert>
+            }
+        }
+        else if (_selectedPaymentMethod == "MoMo")
+        {
+            <MudTextField @bind-Value="_momoRef" Label="MoMo Transaction Code" Variant="Variant.Outlined" Class="mt-4" />
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showPaymentDialog = false)">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="CompleteSale" 
+                   Disabled="@(!CanCompleteSale)">
+            Complete Sale
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<!-- Success Dialog -->
+<MudDialog @bind-Visible="_showSuccessDialog" Options="_successDialogOptions">
+    <DialogContent>
+        <div class="text-center py-4">
+            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" Class="mb-3" />
+            <MudText Typo="Typo.h5" Color="Color.Success">Payment Successful!</MudText>
+            <MudText Typo="Typo.body1" Class="mt-2">Receipt #: @_lastReceiptNumber</MudText>
+            @if (_changeAmount > 0)
+            {
+                <MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-2">Change: SSP @_changeAmount.ToString("N2")</MudText>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showSuccessDialog = false)">Close</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Print" OnClick="PrintReceipt">
+            Print Receipt
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<!-- Recall Sale Dialog -->
+<MudDialog @bind-Visible="_showRecallDialog" Options="_dialogOptions">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Replay" />
+            <MudText Typo="Typo.h6">Recall Held Sale</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        @if (_heldSales.Count == 0)
+        {
+            <div class="text-center py-4">
+                <MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Secondary" Size="Size.Large" />
+                <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mt-2">No held sales found</MudText>
+            </div>
+        }
+        else
+        {
+            <MudList T="string" Clickable="true">
+                @foreach (var held in _heldSales)
+                {
+                    <MudListItem T="string" OnClick="@(() => RecallSelectedSale(held.Id))">
+                        <div>
+                            <MudText Typo="Typo.body1" Class="fw-bold">@held.Reference</MudText>
+                            @if (!string.IsNullOrEmpty(held.CustomerName))
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                    Customer: @held.CustomerName
+                                </MudText>
+                            }
+                            <MudText Typo="Typo.body2">
+                                Total: SSP @held.TotalAmount.ToString("N2")
+                            </MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                Held: @held.HeldAt.ToString("dd MMM yyyy HH:mm")
+                            </MudText>
+                        </div>
+                    </MudListItem>
+                    <MudDivider />
+                }
+            </MudList>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showRecallDialog = false)">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<!-- Discount Dialog -->
+<MudDialog @bind-Visible="_showDiscountDialog" Options="_dialogOptions">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Percent" />
+            <MudText Typo="Typo.h6">Apply Discount</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">Subtotal: SSP @_subtotal.ToString("N2")</MudText>
+        <MudRadioGroup @bind-Value="_discountType" T="string" Class="mb-3">
+            <MudRadio Value="@("Percentage")" Color="Color.Primary">Percentage (%)</MudRadio>
+            <MudRadio Value="@("Fixed")" Color="Color.Primary">Fixed Amount (SSP)</MudRadio>
+        </MudRadioGroup>
+        @if (_discountType == "Percentage")
+        {
+            <MudNumericField @bind-Value="_discountInput" Label="Discount %" Variant="Variant.Outlined"
+                             Min="0m" Max="100m" Adornment="Adornment.End" AdornmentText="%" />
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                Discount: SSP @((_subtotal * _discountInput / 100).ToString("N2"))
+            </MudText>
+        }
+        else
+        {
+            <MudNumericField @bind-Value="_discountInput" Label="Discount Amount (SSP)" Variant="Variant.Outlined"
+                             Min="0m" Max="@_subtotal" />
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showDiscountDialog = false)">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ConfirmDiscount">Apply</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<!-- Last Receipt Dialog -->
+<MudDialog @bind-Visible="_showLastReceiptDialog" Options="_dialogOptions">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Receipt" />
+            <MudText Typo="Typo.h6">Last Receipt</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        @if (_lastReceipt != null)
+        {
+            <div class="mb-4">
+                <MudText Typo="Typo.h6">@_lastReceipt.ReceiptNumber</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    @_lastReceipt.SaleDate.ToString("dd MMM yyyy HH:mm")
+                </MudText>
+                @if (!string.IsNullOrEmpty(_lastReceipt.CustomerName))
+                {
+                    <MudText Typo="Typo.body2">Customer: @_lastReceipt.CustomerName</MudText>
+                }
+            </div>
+
+            <MudTable Items="@_lastReceipt.Items" Dense="true" Hover="true">
+                <HeaderContent>
+                    <MudTh>Item</MudTh>
+                    <MudTh>Qty</MudTh>
+                    <MudTh>Price</MudTh>
+                    <MudTh>Total</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.DrugName</MudTd>
+                    <MudTd>@context.Quantity</MudTd>
+                    <MudTd>SSP @context.UnitPrice.ToString("N2")</MudTd>
+                    <MudTd>SSP @context.LineTotal.ToString("N2")</MudTd>
+                </RowTemplate>
+            </MudTable>
+
+            <MudDivider Class="my-4" />
+
+            <div class="d-flex flex-column gap-2">
+                <div class="d-flex justify-space-between">
+                    <MudText>Subtotal:</MudText>
+                    <MudText>SSP @_lastReceipt.SubTotal.ToString("N2")</MudText>
+                </div>
+                <div class="d-flex justify-space-between">
+                    <MudText>Tax (16%):</MudText>
+                    <MudText>SSP @_lastReceipt.TaxAmount.ToString("N2")</MudText>
+                </div>
+                @if (_lastReceipt.DiscountAmount > 0)
+                {
+                    <div class="d-flex justify-space-between" style="color: var(--df-success);">
+                        <MudText>Discount:</MudText>
+                        <MudText>- SSP @_lastReceipt.DiscountAmount.ToString("N2")</MudText>
+                    </div>
+                }
+                <MudDivider />
+                <div class="d-flex justify-space-between">
+                    <MudText Typo="Typo.h6" Color="Color.Primary">Total Paid:</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Primary">SSP @_lastReceipt.TotalAmount.ToString("N2")</MudText>
+                </div>
+                <div class="d-flex justify-space-between">
+                    <MudText>Payment Method:</MudText>
+                    <MudText>@_lastReceipt.PaymentMethod</MudText>
+                </div>
+                @if (_lastReceipt.ChangeAmount > 0)
+                {
+                    <div class="d-flex justify-space-between">
+                        <MudText>Change:</MudText>
+                        <MudText>SSP @_lastReceipt.ChangeAmount.ToString("N2")</MudText>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-4">
+                <MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Secondary" Size="Size.Large" />
+                <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mt-2">No recent receipts found</MudText>
+            </div>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showLastReceiptDialog = false)">Close</MudButton>
+        @if (_lastReceipt != null)
+        {
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Print" OnClick="PrintLastReceipt">
+                Print Again
+            </MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+<style>
+    .pos-container {
+        display: flex;
+        gap: 24px;
+        height: calc(100vh - 100px);
+        margin: -24px;
+    }
+
+    .pos-left-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        overflow: hidden;
+    }
+
+    .pos-right-panel {
+        width: 400px;
+        display: flex;
+        flex-direction: column;
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: var(--df-shadow-lg);
+    }
+
+    .pos-search-bar {
+        margin-bottom: 16px;
+    }
+
+    .pos-categories {
+        margin-bottom: 16px;
+        overflow-x: auto;
+    }
+
+    .pos-product-grid {
+        flex: 1;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 12px;
+        overflow-y: auto;
+        padding: 4px;
+    }
+
+    .pos-product-card {
+        background: var(--df-surface-variant);
+        border: 1px solid var(--df-border);
+        border-radius: 12px;
+        padding: 16px 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+    }
+
+    .pos-product-card:hover {
+        border-color: var(--df-primary-500);
+        transform: translateY(-2px);
+        box-shadow: var(--df-shadow-md);
+    }
+
+    .pos-product-card.out-of-stock {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+
+    .pos-product-icon {
+        color: var(--df-primary-500);
+        margin-bottom: 8px;
+    }
+
+    .pos-product-name {
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-bottom: 4px;
+        line-height: 1.2;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .pos-product-price {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: var(--df-primary-700);
+    }
+
+    .pos-product-stock {
+        font-size: 0.65rem;
+        margin-top: 4px;
+    }
+
+    .pos-product-stock.warning {
+        color: var(--df-warning);
+    }
+
+    .pos-product-rx {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        color: var(--df-danger);
+    }
+
+    /* List View Styles */
+    .pos-product-list {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        overflow-y: auto;
+        padding: 4px;
+    }
+
+    .pos-product-list-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--df-surface-variant);
+        border: 1px solid var(--df-border);
+        border-radius: 8px;
+        padding: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .pos-product-list-item:hover {
+        border-color: var(--df-primary-500);
+        background: #f5f7fa;
+        box-shadow: var(--df-shadow-sm);
+    }
+
+    .pos-product-list-item.out-of-stock {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+
+    .pos-product-list-icon {
+        flex-shrink: 0;
+    }
+
+    .pos-product-list-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .pos-product-list-name {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--df-text-primary);
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .pos-product-list-code {
+        font-size: 0.75rem;
+        color: var(--df-text-secondary);
+    }
+
+    .pos-product-list-details {
+        flex-shrink: 0;
+        text-align: right;
+    }
+
+    .pos-product-list-price {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: var(--df-primary-700);
+        margin-bottom: 4px;
+    }
+
+    .pos-product-list-stock {
+        font-size: 0.75rem;
+        color: var(--df-text-secondary);
+    }
+
+    .pos-product-list-stock.warning {
+        color: var(--df-warning);
+        font-weight: 600;
+    }
+
+    .pos-quick-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--df-border);
+    }
+
+    .pos-customer-bar {
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--df-border);
+        margin-bottom: 12px;
+    }
+
+    .pos-cart {
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .pos-cart-empty {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .pos-cart-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px;
+        background: var(--df-surface-variant);
+        border-radius: 8px;
+        margin-bottom: 8px;
+    }
+
+    .pos-cart-item-info {
+        flex: 1;
+    }
+
+    .pos-cart-item-name {
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+
+    .pos-cart-item-price {
+        font-size: 0.75rem;
+        color: var(--df-text-secondary);
+    }
+
+    .pos-cart-item-controls {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .pos-cart-item-qty {
+        width: 32px;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .pos-cart-item-total {
+        font-weight: 700;
+        color: var(--df-primary-700);
+        min-width: 80px;
+        text-align: right;
+    }
+
+    .pos-totals {
+        padding: 16px 0;
+        border-top: 1px solid var(--df-border);
+        border-bottom: 1px solid var(--df-border);
+        margin-bottom: 16px;
+    }
+
+    .pos-total-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 4px 0;
+    }
+
+    .pos-total-row.discount {
+        color: var(--df-success);
+    }
+
+    .pos-total-row.grand-total {
+        font-size: 1.25rem;
+        font-weight: 700;
+        padding-top: 12px;
+        margin-top: 8px;
+        border-top: 2px solid var(--df-primary-500);
+        color: var(--df-primary-700);
+    }
+
+    .pos-payment-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .pos-payment-row {
+        display: flex;
+        gap: 8px;
+    }
+
+    .payment-dialog-total {
+        text-align: center;
+        padding: 16px;
+        background: var(--df-surface-variant);
+        border-radius: 12px;
+    }
+
+    .payment-methods {
+        display: flex;
+        gap: 12px;
+    }
+
+    .payment-method {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 16px;
+        border: 2px solid var(--df-border);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .payment-method:hover {
+        border-color: var(--df-primary-300);
+    }
+
+    .payment-method.selected {
+        border-color: var(--df-primary-500);
+        background: var(--df-primary-50);
+        color: var(--df-primary-700);
+    }
+
+    @@media (max-width: 960px) {
+        .pos-container {
+            flex-direction: column;
+            height: auto;
+        }
+
+        .pos-right-panel {
+            width: 100%;
+        }
+    }
+</style>
+
+@code {
+    private string _searchQuery = string.Empty;
+    private string _selectedCategory = "All";
+    private string _customerName = string.Empty;
+    private List<CartItem> _cartItems = new();
+    private List<ProductDto> _products = new();
+    
+    private decimal _subtotal => _cartItems.Sum(i => i.LineTotal);
+    private decimal _taxAmount => _subtotal * 0.16m;
+    private decimal _discountAmount = 0;
+    private decimal _grandTotalBeforeRounding => _subtotal + _taxAmount - _discountAmount;
+    private decimal _grandTotal => _isRoundingEnabled
+        ? RoundingService.ApplyRounding(_grandTotalBeforeRounding, _roundingMode, _roundingValue)
+        : _grandTotalBeforeRounding;
+
+    // Discount dialog
+    private bool _showDiscountDialog = false;
+    private string _discountType = "Percentage";
+    private decimal _discountInput = 0;
+
+    // Rounding settings (loaded from DB)
+    private bool _isRoundingEnabled = false;
+    private RoundingMode _roundingMode = RoundingMode.Nearest;
+    private int _roundingValue = 10;
+
+    // Display style setting (loaded from DB)
+    private string _displayStyle = "grid";
+
+    private bool _showPaymentDialog = false;
+    private bool _showSuccessDialog = false;
+    private string _selectedPaymentMethod = "Cash";
+    private decimal _amountTendered = 0;
+    private string _momoRef = string.Empty;
+    private decimal _changeAmount = 0;
+    private string _lastReceiptNumber = string.Empty;
+    
+    private DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Small, FullWidth = true };
+    private DialogOptions _successDialogOptions = new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+
+    private bool _showRecallDialog = false;
+    private bool _showLastReceiptDialog = false;
+    private List<HeldSaleListDto> _heldSales = new();
+    private RetailReceiptDto? _lastReceipt = null;
+    private string _currentUserId = string.Empty;
+
+    private bool CanCompleteSale => _selectedPaymentMethod switch
+    {
+        "Cash" => _amountTendered >= _grandTotal,
+        "MoMo" => !string.IsNullOrWhiteSpace(_momoRef),
+        "Card" => true,
+        _ => false
+    };
+
+    private IEnumerable<ProductDto> FilteredProducts =>
+        _products.Where(p =>
+            (string.IsNullOrWhiteSpace(_searchQuery) ||
+             p.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
+             p.Code.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase)) &&
+            (_selectedCategory == "All" || p.Category == _selectedCategory)
+        );
+
+    protected override async Task OnInitializedAsync()
+    {
+        LoadProducts();
+        _currentUserId = HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+        await LoadRoundingSettingsAsync();
+        await LoadDisplayStyleAsync();
+    }
+
+    private async Task LoadRoundingSettingsAsync()
+    {
+        try
+        {
+            var settings = await RoundingService.GetRoundingSettingsAsync(CancellationToken.None);
+            _isRoundingEnabled = settings.IsEnabled && settings.ApplyToRetail;
+            _roundingMode = settings.Mode;
+            _roundingValue = settings.RoundingValue;
+        }
+        catch { /* use defaults */ }
+    }
+
+    private async Task LoadDisplayStyleAsync()
+    {
+        try
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<Data.AppDbContext>();
+            var settings = await dbContext.CompanySettings.FirstOrDefaultAsync();
+            if (settings != null)
+            {
+                _displayStyle = settings.PosProductDisplayStyle;
+            }
+        }
+        catch { /* use default grid style */ }
+    }
+
+    private void LoadProducts()
+    {
+        _products = new List<ProductDto>
+        {
+            new() { Id = 1, Code = "PARA500", Name = "Paracetamol 500mg", Category = "Analgesics", Price = 50, Stock = 450 },
+            new() { Id = 2, Code = "IBU400", Name = "Ibuprofen 400mg", Category = "Analgesics", Price = 80, Stock = 200 },
+            new() { Id = 3, Code = "AMOX250", Name = "Amoxicillin 250mg", Category = "Antibiotics", Price = 150, Stock = 30, RequiresPrescription = true },
+            new() { Id = 4, Code = "OMEP20", Name = "Omeprazole 20mg", Category = "Antacids", Price = 120, Stock = 180 },
+            new() { Id = 5, Code = "CIPR500", Name = "Ciprofloxacin 500mg", Category = "Antibiotics", Price = 180, Stock = 85, RequiresPrescription = true },
+            new() { Id = 6, Code = "VITC500", Name = "Vitamin C 500mg", Category = "Vitamins", Price = 35, Stock = 320 },
+            new() { Id = 7, Code = "CETR10", Name = "Cetirizine 10mg", Category = "Antihistamines", Price = 35, Stock = 0 },
+            new() { Id = 8, Code = "METRO400", Name = "Metronidazole 400mg", Category = "Antibiotics", Price = 60, Stock = 150, RequiresPrescription = true },
+            new() { Id = 9, Code = "PANA500", Name = "Panadol Extra", Category = "Analgesics", Price = 70, Stock = 280 },
+            new() { Id = 10, Code = "DOLO650", Name = "Doliprane 650mg", Category = "Analgesics", Price = 65, Stock = 195 },
+            new() { Id = 11, Code = "VITB12", Name = "Vitamin B12", Category = "Vitamins", Price = 45, Stock = 150 },
+            new() { Id = 12, Code = "ANTACID", Name = "ENO Antacid", Category = "Antacids", Price = 55, Stock = 220 },
+        };
+    }
+
+    private void AddToCart(ProductDto product)
+    {
+        if (product.Stock == 0) return;
+
+        var existing = _cartItems.FirstOrDefault(i => i.ProductId == product.Id);
+        if (existing != null)
+        {
+            existing.Quantity++;
+        }
+        else
+        {
+            _cartItems.Add(new CartItem
+            {
+                ProductId = product.Id,
+                Name = product.Name,
+                UnitPrice = product.Price,
+                Quantity = 1
+            });
+        }
+    }
+
+    private void IncreaseQuantity(CartItem item)
+    {
+        item.Quantity++;
+    }
+
+    private void DecreaseQuantity(CartItem item)
+    {
+        if (item.Quantity > 1)
+            item.Quantity--;
+        else
+            RemoveFromCart(item);
+    }
+
+    private void RemoveFromCart(CartItem item)
+    {
+        _cartItems.Remove(item);
+    }
+
+    private void ClearCart()
+    {
+        _cartItems.Clear();
+        _discountAmount = 0;
+        _customerName = string.Empty;
+    }
+
+    private void ApplyDiscount()
+    {
+        if (_cartItems.Count == 0)
+        {
+            Snackbar.Add("Add items to cart first", Severity.Warning);
+            return;
+        }
+        _discountType = "Percentage";
+        _discountInput = 0;
+        _showDiscountDialog = true;
+    }
+
+    private void ConfirmDiscount()
+    {
+        _discountAmount = _discountType == "Percentage"
+            ? _subtotal * _discountInput / 100
+            : Math.Min(_discountInput, _subtotal);
+        _showDiscountDialog = false;
+    }
+
+    private void ProcessPayment()
+    {
+        _amountTendered = _grandTotal;
+        _showPaymentDialog = true;
+    }
+
+    private async Task CompleteSale()
+    {
+        _changeAmount = _amountTendered - _grandTotal;
+        _lastReceiptNumber = $"RCP-{DateTime.Now:yyyyMMddHHmmss}";
+
+        // TODO: Save sale to database
+        await Task.Delay(500);
+
+        _showPaymentDialog = false;
+        _showSuccessDialog = true;
+
+        // Clear cart after successful sale
+        ClearCart();
+    }
+
+    private async Task PrintReceipt()
+    {
+        // Load company settings
+        using var scope = ScopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<Data.AppDbContext>();
+        var companySettings = await dbContext.CompanySettings.FirstOrDefaultAsync();
+
+        // Get cashier name from claims
+        var user = HttpContextAccessor.HttpContext?.User;
+        var cashierName = user?.FindFirst("FirstName")?.Value ?? user?.Identity?.Name ?? "Cashier";
+
+        // Build logo HTML if available
+        var logoHtml = "";
+        if (!string.IsNullOrEmpty(companySettings?.LogoUrl))
+        {
+            logoHtml = $"<img src='{companySettings.LogoUrl}' alt='Logo' style='max-width: 120px; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;' />";
+        }
+
+        var receiptHtml = $@"
+            <div class='receipt-header'>
+                {logoHtml}
+                <h2>{companySettings?.CompanyName ?? "Pharmacy"}</h2>
+                <p>{companySettings?.Address ?? "Address"}</p>
+                <p>{companySettings?.City}, {companySettings?.Country}</p>
+                <p>Tel: {companySettings?.Phone ?? "N/A"}</p>
+                <p>Email: {companySettings?.Email ?? "N/A"}</p>
+            </div>
+            <div class='receipt-divider'></div>
+            <p><strong>Receipt: {_lastReceiptNumber}</strong></p>
+            <p>Date: {DateTime.Now:dd/MM/yyyy HH:mm}</p>
+            <p>Cashier: {cashierName}</p>
+            {(!string.IsNullOrEmpty(_customerName) ? $"<p>Customer: {_customerName}</p>" : "")}
+            <div class='receipt-divider'></div>";
+
+        // Add actual cart items
+        foreach (var item in _cartItems)
+        {
+            receiptHtml += $@"
+            <div class='receipt-item'>
+                <span>{item.Name} x{item.Quantity} @ SSP {item.UnitPrice:N2}</span>
+                <span>SSP {item.LineTotal:N2}</span>
+            </div>";
+        }
+
+        receiptHtml += @"
+            <div class='receipt-divider'></div>
+            <div class='receipt-item'>
+                <span>Subtotal:</span>
+                <span>SSP " + _subtotal.ToString("N2") + @"</span>
+            </div>";
+
+        // Show discount BEFORE tax
+        if (_discountAmount > 0)
+        {
+            receiptHtml += @"
+            <div class='receipt-item'>
+                <span>Discount:</span>
+                <span>-SSP " + _discountAmount.ToString("N2") + @"</span>
+            </div>";
+        }
+
+        receiptHtml += @"
+            <div class='receipt-item'>
+                <span>Tax (16%):</span>
+                <span>SSP " + _taxAmount.ToString("N2") + @"</span>
+            </div>
+            <div class='receipt-divider'></div>
+            <div class='receipt-item receipt-total'>
+                <span>TOTAL:</span>
+                <span>SSP " + _grandTotal.ToString("N2") + @"</span>
+            </div>
+            <div class='receipt-item'>
+                <span>Paid (" + _selectedPaymentMethod + @"):</span>
+                <span>SSP " + _amountTendered.ToString("N2") + @"</span>
+            </div>";
+
+        if (_changeAmount > 0)
+        {
+            receiptHtml += @"
+            <div class='receipt-item'>
+                <span>Change:</span>
+                <span>SSP " + _changeAmount.ToString("N2") + @"</span>
+            </div>";
+        }
+
+        receiptHtml += $@"
+            <div class='receipt-divider'></div>
+            <div class='receipt-header'>
+                <p>Thank you for your business!</p>
+                <p>{companySettings?.Website ?? ""}</p>
+            </div>";
+
+        await JSRuntime.InvokeVoidAsync("printFunctions.printReceipt", receiptHtml);
+    }
+
+    private async Task HoldSale()
+    {
+        if (_cartItems.Count == 0)
+        {
+            Snackbar.Add("Cart is empty", Severity.Warning);
+            return;
+        }
+
+        var cartDto = _cartItems.Select(i => new CartItemDto(
+            i.ProductId,
+            i.Name,
+            i.Quantity,
+            i.UnitPrice
+        )).ToList();
+
+        var command = new HoldSaleCommand(
+            _customerName,
+            cartDto,
+            _grandTotal,
+            _subtotal,
+            _taxAmount,
+            _discountAmount,
+            _currentUserId
+        );
+
+        var result = await Mediator.Send(command);
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add($"Sale held as {result.Value}", Severity.Success);
+            ClearCart();
+        }
+        else
+        {
+            Snackbar.Add(result.Error, Severity.Error);
+        }
+    }
+
+    private async Task RecallSale()
+    {
+        var query = new GetHeldSalesQuery(_currentUserId);
+        _heldSales = await Mediator.Send(query);
+
+        if (_heldSales.Count == 0)
+        {
+            Snackbar.Add("No held sales found", Severity.Info);
+            return;
+        }
+
+        _showRecallDialog = true;
+    }
+
+    private async Task RecallSelectedSale(int heldSaleId)
+    {
+        var command = new RecallSaleCommand(heldSaleId);
+        var result = await Mediator.Send(command);
+
+        if (result.IsSuccess)
+        {
+            var heldSale = result.Value;
+
+            // Deserialize cart items
+            var items = JsonSerializer.Deserialize<List<CartItemDto>>(heldSale.ItemsJson);
+            if (items != null)
+            {
+                _cartItems = items.Select(i => new CartItem
+                {
+                    ProductId = i.ProductId,
+                    Name = i.Name,
+                    Quantity = i.Quantity,
+                    UnitPrice = i.UnitPrice
+                }).ToList();
+
+                _customerName = heldSale.CustomerName ?? string.Empty;
+                Snackbar.Add($"Sale {heldSale.Reference} recalled", Severity.Success);
+            }
+        }
+        else
+        {
+            Snackbar.Add(result.Error ?? "Failed to recall sale", Severity.Error);
+        }
+
+        _showRecallDialog = false;
+    }
+
+    private async Task ShowLastReceipt()
+    {
+        var query = new GetLastReceiptQuery(_currentUserId);
+        var result = await Mediator.Send(query);
+
+        if (result.IsSuccess)
+        {
+            _lastReceipt = result.Value;
+            _showLastReceiptDialog = true;
+        }
+        else
+        {
+            Snackbar.Add("No recent receipts found", Severity.Info);
+        }
+    }
+
+    private async Task PrintLastReceipt()
+    {
+        if (_lastReceipt == null) return;
+
+        var receiptHtml = $@"
+            <div class='receipt-header'>
+                <h2>Revo Pharma & Medical Ltd</h2>
+                <p>Mobil, Hai Cinema</p>
+                <p>Juba, South Sudan</p>
+                <p>Tel: +211 920 123456</p>
+            </div>
+            <div class='receipt-divider'></div>
+            <p><strong>Receipt: {_lastReceipt.ReceiptNumber}</strong></p>
+            <p>Date: {_lastReceipt.SaleDate:dd/MM/yyyy HH:mm}</p>
+            {(!string.IsNullOrEmpty(_lastReceipt.CustomerName) ? $"<p>Customer: {_lastReceipt.CustomerName}</p>" : "")}
+            <div class='receipt-divider'></div>";
+
+        foreach (var item in _lastReceipt.Items)
+        {
+            receiptHtml += $@"
+            <div class='receipt-item'>
+                <span>{item.DrugName} x {item.Quantity}</span>
+                <span>SSP {item.LineTotal:N2}</span>
+            </div>";
+        }
+
+        receiptHtml += $@"
+            <div class='receipt-divider'></div>
+            <div class='receipt-item'>
+                <span>Subtotal:</span>
+                <span>SSP {_lastReceipt.SubTotal:N2}</span>
+            </div>
+            <div class='receipt-item'>
+                <span>Tax (16%):</span>
+                <span>SSP {_lastReceipt.TaxAmount:N2}</span>
+            </div>";
+
+        if (_lastReceipt.DiscountAmount > 0)
+        {
+            receiptHtml += $@"
+            <div class='receipt-item'>
+                <span>Discount:</span>
+                <span>- SSP {_lastReceipt.DiscountAmount:N2}</span>
+            </div>";
+        }
+
+        receiptHtml += $@"
+            <div class='receipt-divider'></div>
+            <div class='receipt-item receipt-total'>
+                <span>TOTAL:</span>
+                <span>SSP {_lastReceipt.TotalAmount:N2}</span>
+            </div>
+            <div class='receipt-item'>
+                <span>Paid ({_lastReceipt.PaymentMethod}):</span>
+                <span>SSP {_lastReceipt.PaidAmount:N2}</span>
+            </div>";
+
+        if (_lastReceipt.ChangeAmount > 0)
+        {
+            receiptHtml += $@"
+            <div class='receipt-item'>
+                <span>Change:</span>
+                <span>SSP {_lastReceipt.ChangeAmount:N2}</span>
+            </div>";
+        }
+
+        receiptHtml += @"
+            <div class='receipt-divider'></div>
+            <div class='receipt-header'>
+                <p>Thank you for your business!</p>
+                <p>www.revopharma.com</p>
+            </div>";
+
+        await JSRuntime.InvokeVoidAsync("printFunctions.printReceipt", receiptHtml);
+    }
+
+    private void HandleSearchKeyDown(KeyboardEventArgs e)
+    {
+        // Handle barcode scanner input (typically ends with Enter)
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(_searchQuery))
+        {
+            var product = _products.FirstOrDefault(p => 
+                p.Code.Equals(_searchQuery, StringComparison.OrdinalIgnoreCase));
+            if (product != null)
+            {
+                AddToCart(product);
+                _searchQuery = string.Empty;
+            }
+        }
+    }
+
+    private class ProductDto
+    {
+        public int Id { get; set; }
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public int Stock { get; set; }
+        public bool RequiresPrescription { get; set; }
+    }
+
+    private class CartItem
+    {
+        public int ProductId { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public decimal UnitPrice { get; set; }
+        public int Quantity { get; set; }
+        public decimal LineTotal => UnitPrice * Quantity;
+    }
+}

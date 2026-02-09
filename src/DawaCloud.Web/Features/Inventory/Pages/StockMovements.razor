@@ -1,0 +1,346 @@
+@page "/inventory/movements"
+@using MudBlazor
+@using DawaCloud.Web.Features.Inventory.Queries
+@using DawaCloud.Web.Data.Entities
+@using MediatR
+@using Microsoft.JSInterop
+@using ClosedXML.Excel
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Stock Movements - DawaCloud</PageTitle>
+
+<!-- Hero Section -->
+<div class="df-hero animate-fade-in-up">
+    <div class="df-hero-content">
+        <div class="df-hero-text">
+            <h1>Stock Movements</h1>
+            <p>Complete history of all inventory transactions</p>
+        </div>
+        <div class="d-flex gap-2">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.FileDownload"
+                       OnClick="ExportToExcel">
+                Export
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       Href="/inventory/adjustments/new">
+                New Adjustment
+            </MudButton>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="df-kpi-grid">
+    <div class="df-kpi-card animate-fade-in-up animate-delay-1">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon success">
+                <MudIcon Icon="@Icons.Material.Filled.TrendingUp" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Total Movements</div>
+            <div class="df-kpi-value">@_totalCount</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-2">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon primary">
+                <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Purchases</div>
+            <div class="df-kpi-value">@_movements.Count(m => m.Type == "Purchase")</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-3">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon info">
+                <MudIcon Icon="@Icons.Material.Filled.PointOfSale" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Sales</div>
+            <div class="df-kpi-value">@_movements.Count(m => m.Type == "Sale")</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-4">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon warning">
+                <MudIcon Icon="@Icons.Material.Filled.Tune" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Adjustments</div>
+            <div class="df-kpi-value">@_movements.Count(m => m.Type == "Adjustment")</div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="df-alert-card animate-fade-in-up animate-delay-2 mt-4">
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" sm="6" md="3">
+            <MudSelect T="string" @bind-Value="_selectedType" Label="Movement Type" Variant="Variant.Outlined" Dense="true" OnSelectedValuesChanged="@((IEnumerable<string> _) => LoadMovements())">
+                <MudSelectItem Value="@("All")">All Types</MudSelectItem>
+                <MudSelectItem Value="@("Purchase")">Purchase</MudSelectItem>
+                <MudSelectItem Value="@("Sale")">Sale</MudSelectItem>
+                <MudSelectItem Value="@("Return")">Return</MudSelectItem>
+                <MudSelectItem Value="@("Adjustment")">Adjustment</MudSelectItem>
+                <MudSelectItem Value="@("Transfer")">Transfer</MudSelectItem>
+                <MudSelectItem Value="@("WriteOff")">Write Off</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudDatePicker Label="From Date" @bind-Date="_fromDate" Variant="Variant.Outlined" Dense="true" OnClosed="@(() => LoadMovements())" Clearable="true" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudDatePicker Label="To Date" @bind-Date="_toDate" Variant="Variant.Outlined" Dense="true" OnClosed="@(() => LoadMovements())" Clearable="true" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       FullWidth="true"
+                       OnClick="ClearFilters">
+                Clear Filters
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Movements Table -->
+    <MudTable T="StockMovementDto" Items="@_movements" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading">
+            <HeaderContent>
+                <MudTh>Date & Time</MudTh>
+                <MudTh>Drug</MudTh>
+                <MudTh>Batch</MudTh>
+                <MudTh>Type</MudTh>
+                <MudTh>Quantity</MudTh>
+                <MudTh>Balance</MudTh>
+                <MudTh>Reference</MudTh>
+                <MudTh>Reason</MudTh>
+                <MudTh>Created By</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Date & Time">
+                    <div>
+                        <MudText Typo="Typo.body2">@context.CreatedAt.ToString("dd MMM yyyy")</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@context.CreatedAt.ToString("HH:mm:ss")</MudText>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Drug">
+                    <div>
+                        <MudText Typo="Typo.body2" Class="fw-bold">@context.DrugName</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@context.DrugCode</MudText>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Batch">@context.BatchNumber</MudTd>
+                <MudTd DataLabel="Type">
+                    <MudChip T="string" Size="Size.Small" Color="@GetMovementTypeColor(context.Type)">@context.Type</MudChip>
+                </MudTd>
+                <MudTd DataLabel="Quantity">
+                    <MudText Typo="Typo.body2" Color="@GetQuantityColor(context.Type)">
+                        @GetQuantitySign(context.Type)@Math.Abs(context.Quantity)
+                    </MudText>
+                </MudTd>
+                <MudTd DataLabel="Balance">
+                    <div>
+                        <MudText Typo="Typo.body2">@context.BalanceBefore → @context.BalanceAfter</MudText>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Reference">@context.Reference</MudTd>
+                <MudTd DataLabel="Reason">
+                    @if (!string.IsNullOrEmpty(context.Reason))
+                    {
+                        <MudTooltip Text="@context.Notes">
+                            <MudText Typo="Typo.body2">@context.Reason</MudText>
+                        </MudTooltip>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Created By">@context.CreatedBy</MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="@(new[] { 25, 50, 100 })" />
+            </PagerContent>
+        </MudTable>
+
+        @if (_totalCount > _pageSize)
+        {
+            <div class="d-flex justify-center mt-4">
+                <MudPagination Count="@GetTotalPages()" Selected="@_pageNumber" SelectedChanged="OnPageChanged" Color="Color.Primary" />
+            </div>
+        }
+    </div>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int? DrugId { get; set; }
+
+    private List<StockMovementDto> _movements = new();
+    private int _totalCount = 0;
+    private int _pageNumber = 1;
+    private int _pageSize = 50;
+    private bool _loading = false;
+
+    private string _selectedType = "All";
+    private DateTime? _fromDate;
+    private DateTime? _toDate;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMovements();
+    }
+
+    private async Task LoadMovements()
+    {
+        _loading = true;
+        StateHasChanged();
+
+        try
+        {
+            MovementType? movementType = _selectedType != "All" ? Enum.Parse<MovementType>(_selectedType) : null;
+
+            var query = new GetStockMovementsQuery(
+                DrugId: DrugId,
+                Type: movementType,
+                FromDate: _fromDate,
+                ToDate: _toDate,
+                PageNumber: _pageNumber,
+                PageSize: _pageSize
+            );
+
+            var result = await Mediator.Send(query);
+            _movements = result.Movements;
+            _totalCount = result.TotalCount;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading stock movements: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnPageChanged(int page)
+    {
+        _pageNumber = page;
+        await LoadMovements();
+    }
+
+    private async Task ClearFilters()
+    {
+        _selectedType = "All";
+        _fromDate = null;
+        _toDate = null;
+        _pageNumber = 1;
+        await LoadMovements();
+    }
+
+    private int GetTotalPages()
+    {
+        return (int)Math.Ceiling((double)_totalCount / _pageSize);
+    }
+
+    private Color GetMovementTypeColor(string type) => type switch
+    {
+        "Purchase" => Color.Success,
+        "Sale" => Color.Info,
+        "Return" => Color.Warning,
+        "Adjustment" => Color.Primary,
+        "Transfer" => Color.Default,
+        "WriteOff" => Color.Error,
+        _ => Color.Default
+    };
+
+    private Color GetQuantityColor(string type) => type switch
+    {
+        "Purchase" or "Return" => Color.Success,
+        "Sale" or "WriteOff" or "Transfer" => Color.Error,
+        _ => Color.Default
+    };
+
+    private string GetQuantitySign(string type) => type switch
+    {
+        "Purchase" or "Return" => "+",
+        "Sale" or "WriteOff" or "Transfer" => "-",
+        _ => ""
+    };
+
+    private async Task ExportToExcel()
+    {
+        try
+        {
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("Stock Movements");
+
+            // Add headers
+            worksheet.Cell(1, 1).Value = "Date";
+            worksheet.Cell(1, 2).Value = "Time";
+            worksheet.Cell(1, 3).Value = "Drug Code";
+            worksheet.Cell(1, 4).Value = "Drug Name";
+            worksheet.Cell(1, 5).Value = "Batch Number";
+            worksheet.Cell(1, 6).Value = "Type";
+            worksheet.Cell(1, 7).Value = "Quantity";
+            worksheet.Cell(1, 8).Value = "Balance Before";
+            worksheet.Cell(1, 9).Value = "Balance After";
+            worksheet.Cell(1, 10).Value = "Reference";
+            worksheet.Cell(1, 11).Value = "Reason";
+            worksheet.Cell(1, 12).Value = "Notes";
+            worksheet.Cell(1, 13).Value = "Created By";
+
+            // Style headers
+            var headerRange = worksheet.Range(1, 1, 1, 13);
+            headerRange.Style.Font.Bold = true;
+            headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#00897b");
+            headerRange.Style.Font.FontColor = XLColor.White;
+
+            // Add data rows
+            int row = 2;
+            foreach (var movement in _movements)
+            {
+                worksheet.Cell(row, 1).Value = movement.CreatedAt.ToString("dd MMM yyyy");
+                worksheet.Cell(row, 2).Value = movement.CreatedAt.ToString("HH:mm:ss");
+                worksheet.Cell(row, 3).Value = movement.DrugCode;
+                worksheet.Cell(row, 4).Value = movement.DrugName;
+                worksheet.Cell(row, 5).Value = movement.BatchNumber;
+                worksheet.Cell(row, 6).Value = movement.Type;
+                worksheet.Cell(row, 7).Value = movement.Quantity;
+                worksheet.Cell(row, 8).Value = movement.BalanceBefore;
+                worksheet.Cell(row, 9).Value = movement.BalanceAfter;
+                worksheet.Cell(row, 10).Value = movement.Reference ?? "";
+                worksheet.Cell(row, 11).Value = movement.Reason ?? "";
+                worksheet.Cell(row, 12).Value = movement.Notes ?? "";
+                worksheet.Cell(row, 13).Value = movement.CreatedBy;
+                row++;
+            }
+
+            // Auto-fit columns
+            worksheet.Columns().AdjustToContents();
+
+            // Convert to base64
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            var base64 = Convert.ToBase64String(stream.ToArray());
+
+            // Download via JavaScript
+            var fileName = $"stock-movements-{DateTime.Now:yyyyMMdd-HHmmss}.xlsx";
+            await JSRuntime.InvokeVoidAsync("downloadFile", fileName, base64, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+            Snackbar.Add($"Exported {_movements.Count} stock movements to Excel", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error exporting to Excel: {ex.Message}", Severity.Error);
+        }
+    }
+}

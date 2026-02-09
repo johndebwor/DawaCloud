@@ -1,0 +1,172 @@
+@using MudBlazor
+@using DawaCloud.Web.Features.Settings.Commands
+@using MediatR
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="@_isValid">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_model.Name"
+                                  Label="Tax Category Name"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  RequiredError="Name is required" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudNumericField @bind-Value="_model.Rate"
+                                     Label="Tax Rate (%)"
+                                     Variant="Variant.Outlined"
+                                     Required="true"
+                                     Min="0"
+                                     Max="100"
+                                     Step="0.01m"
+                                     Format="N2"
+                                     RequiredError="Rate is required" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_model.Description"
+                                  Label="Description"
+                                  Variant="Variant.Outlined"
+                                  Lines="3"
+                                  MaxLength="500" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudSwitch @bind-Value="_model.IsDefault"
+                               Label="Set as Default Tax Category"
+                               Color="Color.Primary" />
+                </MudItem>
+
+                @if (_isEditMode)
+                {
+                    <MudItem xs="12">
+                        <MudSwitch @bind-Value="_model.IsActive"
+                                   Label="Active"
+                                   Color="Color.Primary" />
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   OnClick="Save"
+                   Disabled="@(!_isValid || _isSaving)">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                <MudText Class="ml-2">Saving...</MudText>
+            }
+            else
+            {
+                <MudText>Save</MudText>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance? MudDialog { get; set; }
+
+    [Parameter] public int? TaxCategoryId { get; set; }
+    [Parameter] public string? Name { get; set; }
+    [Parameter] public decimal? Rate { get; set; }
+    [Parameter] public string? Description { get; set; }
+    [Parameter] public bool? IsDefault { get; set; }
+    [Parameter] public bool? IsActive { get; set; }
+
+    private MudForm _form = default!;
+    private bool _isValid;
+    private bool _isSaving;
+    private bool _isEditMode => TaxCategoryId.HasValue;
+
+    private TaxCategoryModel _model = new();
+
+    protected override void OnInitialized()
+    {
+        if (_isEditMode)
+        {
+            _model = new TaxCategoryModel
+            {
+                Id = TaxCategoryId,
+                Name = Name ?? string.Empty,
+                Rate = Rate ?? 0,
+                Description = Description,
+                IsDefault = IsDefault ?? false,
+                IsActive = IsActive ?? true
+            };
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog?.Cancel();
+    }
+
+    private async Task Save()
+    {
+        await _form.Validate();
+        if (!_isValid)
+        {
+            return;
+        }
+
+        _isSaving = true;
+
+        try
+        {
+            if (_isEditMode)
+            {
+                var updateCommand = new UpdateTaxCategoryCommand(
+                    TaxCategoryId!.Value,
+                    _model.Name,
+                    _model.Rate,
+                    _model.Description,
+                    _model.IsDefault,
+                    _model.IsActive
+                );
+                await Mediator.Send(updateCommand);
+                Snackbar.Add("Tax category updated successfully", Severity.Success);
+            }
+            else
+            {
+                var createCommand = new CreateTaxCategoryCommand(
+                    _model.Name,
+                    _model.Rate,
+                    _model.Description,
+                    _model.IsDefault
+                );
+                var id = await Mediator.Send(createCommand);
+                Snackbar.Add("Tax category created successfully", Severity.Success);
+            }
+
+            MudDialog?.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private class TaxCategoryModel
+    {
+        public int? Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public decimal Rate { get; set; }
+        public string? Description { get; set; }
+        public bool IsDefault { get; set; }
+        public bool IsActive { get; set; } = true;
+    }
+}

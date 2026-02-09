@@ -1,0 +1,510 @@
+@page "/batches/new"
+@page "/batches/{id:int}/edit"
+@using MudBlazor
+@using MediatR
+@using DawaCloud.Web.Data
+@using DawaCloud.Web.Data.Entities
+@using DawaCloud.Web.Features.Batches.Queries
+@using DawaCloud.Web.Features.Batches.Commands
+@using DawaCloud.Web.Features.Currency.Services
+@using Microsoft.EntityFrameworkCore
+@inject IMediator Mediator
+@inject AppDbContext DbContext
+@inject ICurrencyService CurrencyService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<PageTitle>@(_isEditMode ? "Edit Batch" : "New Batch") - DawaCloud</PageTitle>
+
+<div class="mb-4">
+    <MudBreadcrumbs Items="_breadcrumbItems" Class="mb-4" />
+
+    <div class="d-flex justify-space-between align-center mb-4">
+        <div>
+            <MudText Typo="Typo.h4" Class="mb-1">@(_isEditMode ? "Edit Batch" : "Add New Batch")</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                @(_isEditMode ? "Update batch information" : "Record a new drug batch")
+            </MudText>
+        </div>
+    </div>
+
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+    }
+    else
+    {
+    <MudGrid>
+        <MudItem xs="12" md="8">
+            <MudPaper Elevation="2" Class="pa-6">
+                <MudForm @ref="_form" @bind-IsValid="@_isValid">
+                    <MudText Typo="Typo.h6" Class="mb-4">Batch Information</MudText>
+
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.BatchNumber"
+                                          Label="Batch Number"
+                                          Variant="Variant.Outlined"
+                                          Required="true"
+                                          RequiredError="Batch number is required"
+                                          HelperText="Unique batch identifier" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="int" @bind-Value="_model.DrugId"
+                                       Label="Drug"
+                                       Variant="Variant.Outlined"
+                                       Required="true"
+                                       RequiredError="Drug is required"
+                                       AnchorOrigin="Origin.BottomCenter">
+                                @foreach (var drug in _drugs)
+                                {
+                                    <MudSelectItem T="int" Value="@drug.Id">@drug.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudDatePicker @bind-Date="_manufactureDate"
+                                           Label="Manufacture Date"
+                                           Variant="Variant.Outlined"
+                                           Required="true"
+                                           MaxDate="DateTime.Today"
+                                           HelperText="When the batch was manufactured" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudDatePicker @bind-Date="_expiryDate"
+                                           Label="Expiry Date"
+                                           Variant="Variant.Outlined"
+                                           Required="true"
+                                           MinDate="DateTime.Today"
+                                           HelperText="When the batch expires" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudNumericField @bind-Value="_model.InitialQuantity"
+                                             Label="Initial Quantity"
+                                             Variant="Variant.Outlined"
+                                             Min="1"
+                                             Required="true"
+                                             HelperText="Total units in the batch" />
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.subtitle2" Class="mb-2 mt-2">Costing Information</MudText>
+                        </MudItem>
+
+                        <MudItem xs="12" md="4">
+                            <MudNumericField @bind-Value="_model.CostPriceUSD"
+                                             Label="Cost Price Per Unit (USD)"
+                                             Variant="Variant.Outlined"
+                                             Required="true"
+                                             Adornment="Adornment.Start"
+                                             AdornmentText="$"
+                                             Step="0.01m"
+                                             Format="N2"
+                                             Min="0m"
+                                             OnBlur="CalculateSSPEquivalent"
+                                             HelperText="Purchase cost in USD" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="4">
+                            <MudTextField Value="@GetCurrentExchangeRate()"
+                                          Label="Exchange Rate (1 USD = X SSP)"
+                                          Variant="Variant.Outlined"
+                                          ReadOnly="true"
+                                          Adornment="Adornment.Start"
+                                          AdornmentIcon="@Icons.Material.Filled.CurrencyExchange"
+                                          HelperText="Live exchange rate from settings" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="4">
+                            <MudNumericField Value="@_calculatedSSPCost"
+                                             Label="Equivalent Cost (SSP)"
+                                             Variant="Variant.Outlined"
+                                             ReadOnly="true"
+                                             Adornment="Adornment.Start"
+                                             AdornmentText="SSP"
+                                             Format="N2"
+                                             HelperText="Auto-calculated from USD" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.SupplierBatchRef"
+                                          Label="Supplier Batch Reference"
+                                          Variant="Variant.Outlined"
+                                          HelperText="Supplier's batch reference number" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="BatchStatus" @bind-Value="_model.Status"
+                                       Label="Status"
+                                       Variant="Variant.Outlined">
+                                <MudSelectItem Value="@BatchStatus.Active">Active</MudSelectItem>
+                                <MudSelectItem Value="@BatchStatus.Quarantined">Quarantined</MudSelectItem>
+                                <MudSelectItem Value="@BatchStatus.Expired">Expired</MudSelectItem>
+                                <MudSelectItem Value="@BatchStatus.Recalled">Recalled</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                    </MudGrid>
+
+                    @if (_isEditMode)
+                    {
+                        <MudDivider Class="my-6" />
+                        <MudText Typo="Typo.h6" Class="mb-4">Current Stock</MudText>
+
+                        <MudGrid>
+                            <MudItem xs="12" md="6">
+                                <MudNumericField @bind-Value="_model.CurrentQuantity"
+                                                 Label="Current Quantity"
+                                                 Variant="Variant.Outlined"
+                                                 Min="0"
+                                                 Max="_model.InitialQuantity"
+                                                 HelperText="Current available units" />
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudNumericField @bind-Value="_model.ReservedQuantity"
+                                                 Label="Reserved Quantity"
+                                                 Variant="Variant.Outlined"
+                                                 Min="0"
+                                                 ReadOnly="true"
+                                                 HelperText="Units reserved for orders" />
+                            </MudItem>
+                        </MudGrid>
+                    }
+
+                    <MudDivider Class="my-6" />
+
+                    <div class="d-flex justify-space-between">
+                        <MudButton Variant="Variant.Text"
+                                   Color="Color.Default"
+                                   Href="/batches"
+                                   StartIcon="@Icons.Material.Filled.ArrowBack">
+                            Cancel
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Disabled="@(!_isValid || _isSaving)"
+                                   OnClick="HandleSubmit"
+                                   StartIcon="@Icons.Material.Filled.Save">
+                            @if (_isSaving)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                                <span class="ml-2">Saving...</span>
+                            }
+                            else
+                            {
+                                <span>@(_isEditMode ? "Update Batch" : "Save Batch")</span>
+                            }
+                        </MudButton>
+                    </div>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="2" Class="pa-4 mb-4">
+                <MudText Typo="Typo.h6" Class="mb-3">Batch Summary</MudText>
+                <div class="mb-3">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Shelf Life</MudText>
+                    <MudText Typo="Typo.h6">
+                        @GetShelfLifeDays() days
+                    </MudText>
+                </div>
+                <div class="mb-3">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Days to Expiry</MudText>
+                    <MudText Typo="Typo.h6" Color="@GetExpiryColor()">
+                        @GetDaysToExpiry() days
+                    </MudText>
+                </div>
+                <div class="mb-3">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Batch Value</MudText>
+                    <MudText Typo="Typo.h5" Color="Color.Primary">
+                        SSP @((_model.InitialQuantity * _calculatedSSPCost).ToString("N2"))
+                    </MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        ($ @((_model.InitialQuantity * _model.CostPriceUSD).ToString("N2")) USD equivalent)
+                    </MudText>
+                </div>
+            </MudPaper>
+
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-3">Guidelines</MudText>
+                <MudList T="string" Dense="true">
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
+                        <MudText Typo="Typo.body2">Use unique batch numbers</MudText>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
+                        <MudText Typo="Typo.body2">Verify expiry dates carefully</MudText>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
+                        <MudText Typo="Typo.body2">Match supplier documentation</MudText>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Info" IconColor="Color.Info">
+                        <MudText Typo="Typo.body2">Batches near expiry are auto-flagged</MudText>
+                    </MudListItem>
+                </MudList>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+    }
+</div>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private MudForm? _form;
+    private bool _isValid;
+    private bool _isSaving;
+    private bool _isLoading = true;
+    private bool _isEditMode => Id.HasValue;
+
+    private BatchFormModel _model = new();
+    private DateTime? _manufactureDate;
+    private DateTime? _expiryDate;
+    private List<Drug> _drugs = new();
+
+    private List<BreadcrumbItem> _breadcrumbItems = new();
+
+    // Currency conversion
+    private decimal _calculatedSSPCost;
+    private ExchangeRateDto? _currentRate;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _breadcrumbItems = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Home", href: "/"),
+            new BreadcrumbItem("Batches", href: "/batches"),
+            new BreadcrumbItem(_isEditMode ? "Edit" : "New", href: null, disabled: true)
+        };
+
+        await LoadDrugsAsync();
+        await LoadExchangeRateAsync();
+
+        if (_isEditMode)
+        {
+            await LoadBatchAsync(Id!.Value);
+        }
+        else
+        {
+            _manufactureDate = DateTime.Today;
+            _expiryDate = DateTime.Today.AddYears(2);
+
+            // Set default drug if available
+            if (_drugs.Any() && _model.DrugId == 0)
+            {
+                _model.DrugId = _drugs.First().Id;
+            }
+        }
+
+        _isLoading = false;
+    }
+
+    private async Task LoadDrugsAsync()
+    {
+        _drugs = await DbContext.Drugs
+            .Where(d => d.IsActive)
+            .OrderBy(d => d.Name)
+            .ToListAsync();
+    }
+
+    private async Task LoadBatchAsync(int id)
+    {
+        var result = await Mediator.Send(new GetBatchByIdQuery(id));
+
+        if (!result.Success || result.Batch == null)
+        {
+            Snackbar.Add(result.ErrorMessage ?? "Batch not found", Severity.Error);
+            NavigationManager.NavigateTo("/batches");
+            return;
+        }
+
+        var batch = result.Batch;
+        _model = new BatchFormModel
+        {
+            BatchNumber = batch.BatchNumber,
+            DrugId = batch.DrugId,
+            InitialQuantity = batch.InitialQuantity,
+            CurrentQuantity = batch.CurrentQuantity,
+            ReservedQuantity = batch.ReservedQuantity,
+            CostPrice = batch.CostPrice,
+            CostPriceUSD = batch.CostPriceOriginal ?? batch.CostPrice, // Use original USD cost if available
+            SupplierBatchRef = batch.SupplierBatchRef,
+            Status = batch.Status
+        };
+        _manufactureDate = batch.ManufactureDate;
+        _expiryDate = batch.ExpiryDate;
+
+        // Calculate SSP equivalent if editing
+        await CalculateSSPEquivalent();
+    }
+
+    private async Task LoadExchangeRateAsync()
+    {
+        try
+        {
+            var usdCurrency = await CurrencyService.GetCurrencyByCodeAsync("USD");
+            var sspCurrency = await CurrencyService.GetCurrencyByCodeAsync("SSP");
+
+            if (usdCurrency != null && sspCurrency != null)
+            {
+                _currentRate = await CurrencyService.GetExchangeRateAsync(usdCurrency.Id, sspCurrency.Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading exchange rate: {ex.Message}", Severity.Warning);
+        }
+    }
+
+    private string GetCurrentExchangeRate()
+    {
+        return _currentRate != null ? $"1 USD = {_currentRate.Rate:N2} SSP" : "Loading...";
+    }
+
+    private async Task CalculateSSPEquivalent()
+    {
+        if (_model.CostPriceUSD > 0 && _currentRate != null)
+        {
+            _calculatedSSPCost = await CurrencyService.ConvertAsync(
+                _model.CostPriceUSD,
+                "USD",
+                "SSP",
+                CancellationToken.None
+            );
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (_form == null) return;
+
+        await _form.Validate();
+        if (!_isValid) return;
+
+        if (!_manufactureDate.HasValue || !_expiryDate.HasValue)
+        {
+            Snackbar.Add("Please select manufacture and expiry dates", Severity.Error);
+            return;
+        }
+
+        _isSaving = true;
+        StateHasChanged();
+
+        try
+        {
+            if (_isEditMode)
+            {
+                // Get USD currency ID
+                var usdCurrency = await CurrencyService.GetCurrencyByCodeAsync("USD");
+
+                // Use calculated SSP cost
+                var command = new UpdateBatchCommand(
+                    Id!.Value,
+                    _model.BatchNumber,
+                    _model.DrugId,
+                    _manufactureDate.Value,
+                    _expiryDate.Value,
+                    _model.InitialQuantity,
+                    _model.CurrentQuantity,
+                    _calculatedSSPCost > 0 ? _calculatedSSPCost : _model.CostPrice,
+                    _model.SupplierBatchRef,
+                    _model.Status,
+                    _model.CostPriceUSD,
+                    usdCurrency?.Id,
+                    _currentRate?.Rate
+                );
+
+                var result = await Mediator.Send(command);
+
+                if (result.Success)
+                {
+                    Snackbar.Add(result.Message, Severity.Success);
+                    NavigationManager.NavigateTo("/batches");
+                }
+                else
+                {
+                    Snackbar.Add(result.Message, Severity.Error);
+                }
+            }
+            else
+            {
+                // Get USD currency ID
+                var usdCurrency = await CurrencyService.GetCurrencyByCodeAsync("USD");
+
+                // Use calculated SSP cost
+                var command = new CreateBatchCommand(
+                    _model.BatchNumber,
+                    _model.DrugId,
+                    _manufactureDate.Value,
+                    _expiryDate.Value,
+                    _model.InitialQuantity,
+                    _calculatedSSPCost > 0 ? _calculatedSSPCost : _model.CostPrice,
+                    _model.SupplierBatchRef,
+                    _model.CostPriceUSD,
+                    usdCurrency?.Id,
+                    _currentRate?.Rate
+                );
+
+                var result = await Mediator.Send(command);
+
+                if (result.Success)
+                {
+                    Snackbar.Add(result.Message, Severity.Success);
+                    NavigationManager.NavigateTo("/batches");
+                }
+                else
+                {
+                    Snackbar.Add(result.Message, Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving batch: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private int GetShelfLifeDays()
+    {
+        if (_manufactureDate.HasValue && _expiryDate.HasValue)
+        {
+            return (_expiryDate.Value - _manufactureDate.Value).Days;
+        }
+        return 0;
+    }
+
+    private int GetDaysToExpiry()
+    {
+        if (_expiryDate.HasValue)
+        {
+            return (_expiryDate.Value - DateTime.Today).Days;
+        }
+        return 0;
+    }
+
+    private Color GetExpiryColor()
+    {
+        var days = GetDaysToExpiry();
+        if (days <= 0) return Color.Error;
+        if (days <= 30) return Color.Warning;
+        if (days <= 90) return Color.Info;
+        return Color.Success;
+    }
+
+    private class BatchFormModel
+    {
+        public string BatchNumber { get; set; } = string.Empty;
+        public int DrugId { get; set; }
+        public int InitialQuantity { get; set; } = 1;
+        public int CurrentQuantity { get; set; }
+        public int ReservedQuantity { get; set; }
+        public decimal CostPrice { get; set; }
+        public decimal CostPriceUSD { get; set; }
+        public string? SupplierBatchRef { get; set; }
+        public BatchStatus Status { get; set; } = BatchStatus.Active;
+    }
+}

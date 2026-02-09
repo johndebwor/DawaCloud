@@ -1,0 +1,432 @@
+@page "/"
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Authorization
+@using MediatR
+@using DawaCloud.Web.Features.Dashboard.Queries
+@attribute [Authorize]
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IMediator Mediator
+
+<PageTitle>Dashboard - DawaCloud</PageTitle>
+
+<!-- Hero Welcome Section -->
+<div class="df-hero animate-fade-in-up">
+    <div class="df-hero-content">
+        <div class="df-hero-text">
+            <h1>@_greeting, @_firstName!</h1>
+            <p>Here's what's happening with your pharmacy today.</p>
+        </div>
+        <div class="df-hero-date">
+            <MudIcon Icon="@Icons.Material.Filled.CalendarToday" Class="df-hero-date-icon" Size="Size.Small" />
+            <span class="df-hero-date-text">@DateTime.Now.ToString("dddd, MMMM d, yyyy")</span>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions Bar -->
+<div class="df-quick-actions animate-fade-in-up animate-delay-1">
+    <div class="df-quick-actions-content">
+        <div class="df-quick-actions-text">
+            <h3>Quick Actions</h3>
+            <p>Perform common tasks with one click</p>
+        </div>
+        <div class="df-quick-actions-buttons">
+            <a href="/pos" class="df-quick-btn primary">
+                <MudIcon Icon="@Icons.Material.Filled.PointOfSale" Size="Size.Small" />
+                New Sale
+            </a>
+            <a href="/drugs/new" class="df-quick-btn outline">
+                <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                New Drug
+            </a>
+            <a href="/procurement/goods-receipts/new" class="df-quick-btn outline">
+                <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Size="Size.Small" />
+                Receive Stock
+            </a>
+            <a href="/reports" class="df-quick-btn outline">
+                <MudIcon Icon="@Icons.Material.Filled.Assessment" Size="Size.Small" />
+                Generate Report
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Cards Grid -->
+<div class="df-kpi-grid">
+    <!-- Featured Card - Today's Sales -->
+    <div class="df-kpi-card featured animate-fade-in-up animate-delay-1">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon primary">
+                <MudIcon Icon="@Icons.Material.Filled.PointOfSale" />
+            </div>
+            <div class="df-kpi-trend up">
+                <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Size="Size.Small" />
+                <span>12.5%</span>
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Today's Sales</div>
+            <div class="df-kpi-value">SSP 125,450</div>
+            <div class="df-kpi-subtitle">+SSP 13,945 from yesterday</div>
+        </div>
+    </div>
+
+    <!-- Stock Value Card -->
+    <div class="df-kpi-card animate-fade-in-up animate-delay-2">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon success">
+                <MudIcon Icon="@Icons.Material.Filled.Inventory2" />
+            </div>
+            <div class="df-kpi-trend neutral">
+                <MudIcon Icon="@Icons.Material.Filled.Remove" Size="Size.Small" />
+                <span>Stable</span>
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Stock Value</div>
+            <div class="df-kpi-value">SSP 2.4M</div>
+            <div class="df-kpi-subtitle">758 items in inventory</div>
+        </div>
+    </div>
+
+    <!-- Low Stock Card -->
+    <div class="df-kpi-card animate-fade-in-up animate-delay-3">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon warning">
+                <MudIcon Icon="@Icons.Material.Filled.Warning" />
+            </div>
+            <div class="df-kpi-trend down">
+                <MudIcon Icon="@Icons.Material.Filled.TrendingDown" Size="Size.Small" />
+                <span>+3</span>
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Low Stock Items</div>
+            <div class="df-kpi-value">12</div>
+            <div class="df-kpi-subtitle">Requires immediate attention</div>
+        </div>
+    </div>
+
+    <!-- Expiring Soon Card -->
+    <div class="df-kpi-card animate-fade-in-up animate-delay-4">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon danger">
+                <MudIcon Icon="@Icons.Material.Filled.EventBusy" />
+            </div>
+            <div class="df-kpi-trend down">
+                <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" />
+                <span>Urgent</span>
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Expiring Soon</div>
+            <div class="df-kpi-value">5</div>
+            <div class="df-kpi-subtitle">Within next 30 days</div>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Widgets Row -->
+<MudGrid Class="mb-6">
+    <!-- Low Stock Alerts -->
+    <MudItem xs="12" md="6">
+        <div class="df-alert-card animate-fade-in-up animate-delay-2">
+            <div class="df-alert-header">
+                <div class="df-alert-title">
+                    <div class="df-alert-title-icon warning">
+                        <MudIcon Icon="@Icons.Material.Filled.Inventory" />
+                    </div>
+                    <span>Low Stock Alerts</span>
+                </div>
+                <span class="df-alert-count warning">12 Items</span>
+            </div>
+            <div class="df-alert-body">
+                <div class="df-alert-item">
+                    <div class="df-alert-item-info">
+                        <h4>Paracetamol 500mg</h4>
+                        <p>Current: 45 units | Reorder level: 100</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div class="df-progress-bar">
+                            <div class="df-progress-bar-fill warning" style="width: 45%;"></div>
+                        </div>
+                        <span class="df-alert-item-badge warning">45%</span>
+                    </div>
+                </div>
+                <div class="df-alert-item">
+                    <div class="df-alert-item-info">
+                        <h4>Amoxicillin 250mg</h4>
+                        <p>Current: 30 units | Reorder level: 120</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div class="df-progress-bar">
+                            <div class="df-progress-bar-fill critical" style="width: 25%;"></div>
+                        </div>
+                        <span class="df-alert-item-badge critical">25%</span>
+                    </div>
+                </div>
+                <div class="df-alert-item">
+                    <div class="df-alert-item-info">
+                        <h4>Ibuprofen 400mg</h4>
+                        <p>Current: 55 units | Reorder level: 100</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div class="df-progress-bar">
+                            <div class="df-progress-bar-fill warning" style="width: 55%;"></div>
+                        </div>
+                        <span class="df-alert-item-badge warning">55%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="df-alert-footer">
+                <a href="/inventory/stock-levels" class="df-alert-link">
+                    View All Low Stock Items
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                </a>
+            </div>
+        </div>
+    </MudItem>
+
+    <!-- Expiry Alerts -->
+    <MudItem xs="12" md="6">
+        <div class="df-alert-card animate-fade-in-up animate-delay-3">
+            <div class="df-alert-header">
+                <div class="df-alert-title">
+                    <div class="df-alert-title-icon danger">
+                        <MudIcon Icon="@Icons.Material.Filled.EventBusy" />
+                    </div>
+                    <span>Expiry Alerts</span>
+                </div>
+                <span class="df-alert-count danger">5 Batches</span>
+            </div>
+            <div class="df-alert-body">
+                <div class="df-alert-item">
+                    <div class="df-alert-item-info">
+                        <h4>Metformin 500mg</h4>
+                        <p>Batch: MET2024-001 | Qty: 120 units</p>
+                    </div>
+                    <span class="df-alert-item-badge critical">15 days</span>
+                </div>
+                <div class="df-alert-item">
+                    <div class="df-alert-item-info">
+                        <h4>Ciprofloxacin 500mg</h4>
+                        <p>Batch: CIP2024-003 | Qty: 80 units</p>
+                    </div>
+                    <span class="df-alert-item-badge warning">22 days</span>
+                </div>
+                <div class="df-alert-item">
+                    <div class="df-alert-item-info">
+                        <h4>Aspirin 75mg</h4>
+                        <p>Batch: ASP2024-002 | Qty: 200 units</p>
+                    </div>
+                    <span class="df-alert-item-badge warning">28 days</span>
+                </div>
+            </div>
+            <div class="df-alert-footer">
+                <a href="/inventory" class="df-alert-link">
+                    View All Expiring Batches
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                </a>
+            </div>
+        </div>
+    </MudItem>
+</MudGrid>
+
+<!-- Sales Chart and Activity Row -->
+<MudGrid>
+    <!-- Sales Chart -->
+    <MudItem xs="12" lg="8">
+        <div class="df-chart-card animate-fade-in-up animate-delay-3">
+            <div class="df-chart-header">
+                <span class="df-chart-title">Sales Trend</span>
+                <div class="df-chart-toggle-group">
+                    <button class="df-chart-toggle @(_chartDays == 7 ? "active" : "")" @onclick="@(() => LoadChartAsync(7))">7D</button>
+                    <button class="df-chart-toggle @(_chartDays == 30 ? "active" : "")" @onclick="@(() => LoadChartAsync(30))">30D</button>
+                    <button class="df-chart-toggle @(_chartDays == 90 ? "active" : "")" @onclick="@(() => LoadChartAsync(90))">90D</button>
+                </div>
+            </div>
+            <div class="df-chart-body">
+                @if (_chartLoading)
+                {
+                    <div class="df-chart-placeholder">
+                        <MudProgressCircular Indeterminate="true" Size="Size.Large" />
+                    </div>
+                }
+                else if (_salesTrend != null && _salesTrend.Labels.Length > 0)
+                {
+                    <MudChart ChartType="ChartType.Line"
+                              ChartSeries="@_chartSeries"
+                              XAxisLabels="@_salesTrend.Labels"
+                              Width="100%" Height="250px"
+                              ChartOptions="@_chartOptions" />
+                }
+                else
+                {
+                    <div class="df-chart-placeholder">
+                        <MudIcon Icon="@Icons.Material.Filled.ShowChart" Class="df-chart-placeholder-icon" />
+                        <span class="df-chart-placeholder-text">No sales data for this period</span>
+                    </div>
+                }
+                <div class="df-chart-stats">
+                    <div class="df-chart-stat">
+                        <div class="df-chart-stat-label">Total (@_chartDays d)</div>
+                        <div class="df-chart-stat-value">SSP @(_salesTrend?.TotalAmount.ToString("N0") ?? "0")</div>
+                    </div>
+                    <div class="df-chart-stat">
+                        <div class="df-chart-stat-label">Daily Average</div>
+                        <div class="df-chart-stat-value">SSP @(_salesTrend?.DailyAverage.ToString("N0") ?? "0")</div>
+                    </div>
+                    <div class="df-chart-stat">
+                        <div class="df-chart-stat-label">Best Day</div>
+                        <div class="df-chart-stat-value">SSP @(_salesTrend?.BestDay.ToString("N0") ?? "0")</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </MudItem>
+
+    <!-- Recent Activity -->
+    <MudItem xs="12" lg="4">
+        <div class="df-activity-card animate-fade-in-up animate-delay-4">
+            <div class="df-activity-header">
+                <div class="df-activity-header-icon">
+                    <MudIcon Icon="@Icons.Material.Filled.Timeline" Size="Size.Small" />
+                </div>
+                <span class="df-activity-title">Recent Activity</span>
+            </div>
+            <div class="df-activity-body">
+                <div class="df-timeline">
+                    <div class="df-timeline-item">
+                        <div class="df-timeline-dot success"></div>
+                        <div class="df-timeline-content">
+                            <h4>Sale #1234 completed</h4>
+                            <p>2 minutes ago</p>
+                        </div>
+                    </div>
+                    <div class="df-timeline-item">
+                        <div class="df-timeline-dot info"></div>
+                        <div class="df-timeline-content">
+                            <h4>Stock received from ABC Pharma</h4>
+                            <p>1 hour ago</p>
+                        </div>
+                    </div>
+                    <div class="df-timeline-item">
+                        <div class="df-timeline-dot warning"></div>
+                        <div class="df-timeline-content">
+                            <h4>Low stock alert: Paracetamol</h4>
+                            <p>3 hours ago</p>
+                        </div>
+                    </div>
+                    <div class="df-timeline-item">
+                        <div class="df-timeline-dot primary"></div>
+                        <div class="df-timeline-content">
+                            <h4>Supplier request sent to XYZ Ltd</h4>
+                            <p>5 hours ago</p>
+                        </div>
+                    </div>
+                    <div class="df-timeline-item">
+                        <div class="df-timeline-dot success"></div>
+                        <div class="df-timeline-content">
+                            <h4>Inventory count completed</h4>
+                            <p>Yesterday</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="df-activity-footer">
+                <a href="/activity" class="df-alert-link">
+                    View All Activity
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                </a>
+            </div>
+        </div>
+    </MudItem>
+</MudGrid>
+
+<!-- Floating Action Button (Mobile) -->
+<div class="df-fab-container d-lg-none @(_fabOpen ? "open" : "")">
+    <div class="df-fab-menu">
+        <div class="df-fab-item">
+            <span class="df-fab-item-label">New Sale</span>
+            <button class="df-fab-item-btn">
+                <MudIcon Icon="@Icons.Material.Filled.PointOfSale" Size="Size.Small" />
+            </button>
+        </div>
+        <div class="df-fab-item">
+            <span class="df-fab-item-label">New Drug</span>
+            <button class="df-fab-item-btn">
+                <MudIcon Icon="@Icons.Material.Filled.Medication" Size="Size.Small" />
+            </button>
+        </div>
+        <div class="df-fab-item">
+            <span class="df-fab-item-label">Receive Stock</span>
+            <button class="df-fab-item-btn">
+                <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Size="Size.Small" />
+            </button>
+        </div>
+    </div>
+    <button class="df-fab-main" @onclick="ToggleFab">
+        <MudIcon Icon="@(_fabOpen ? Icons.Material.Filled.Close : Icons.Material.Filled.Add)" />
+    </button>
+</div>
+
+@code {
+    private bool _fabOpen = false;
+    private string _firstName = "there";
+    private string _greeting => GetGreeting();
+
+    // Chart
+    private int _chartDays = 7;
+    private bool _chartLoading = false;
+    private SalesTrendResult? _salesTrend;
+    private List<ChartSeries> _chartSeries = new();
+    private ChartOptions _chartOptions = new() { YAxisTicks = 4 };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            _firstName = user.FindFirst("FirstName")?.Value
+                ?? (user.Identity.Name?.Contains('@') == true ? user.Identity.Name.Split('@')[0] : user.Identity.Name)
+                ?? "there";
+        }
+        await LoadChartAsync(7);
+    }
+
+    private async Task LoadChartAsync(int days)
+    {
+        _chartDays = days;
+        _chartLoading = true;
+        try
+        {
+            _salesTrend = await Mediator.Send(new GetSalesTrendQuery(days));
+            _chartSeries = new List<ChartSeries>
+            {
+                new ChartSeries { Name = "Retail", Data = _salesTrend.RetailTotals },
+                new ChartSeries { Name = "Wholesale", Data = _salesTrend.WholesaleTotals }
+            };
+        }
+        catch { /* keep previous data */ }
+        finally
+        {
+            _chartLoading = false;
+        }
+    }
+
+    private string GetGreeting()
+    {
+        var hour = DateTime.Now.Hour;
+        if (hour < 12)
+            return "Good morning";
+        if (hour < 17)
+            return "Good afternoon";
+        return "Good evening";
+    }
+
+    private void ToggleFab()
+    {
+        _fabOpen = !_fabOpen;
+    }
+}

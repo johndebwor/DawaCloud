@@ -1,0 +1,273 @@
+@page "/wholesale/quotations"
+@using MudBlazor
+@using MediatR
+@using DawaCloud.Web.Features.Wholesale.Commands
+@using DawaCloud.Web.Features.Wholesale.Queries
+@using DawaCloud.Web.Data.Entities
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
+@inject IDialogService DialogService
+
+<PageTitle>Quotations - DawaCloud</PageTitle>
+
+<!-- Hero Section -->
+<div class="df-hero animate-fade-in-up">
+    <div class="df-hero-content">
+        <div class="df-hero-text">
+            <h1>Quotations</h1>
+            <p>Manage price quotations and proposals for wholesale customers</p>
+        </div>
+        <div class="d-flex gap-2">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="CreateQuotation">
+                New Quotation
+            </MudButton>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="df-kpi-grid">
+    <div class="df-kpi-card animate-fade-in-up animate-delay-1">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon primary">
+                <MudIcon Icon="@Icons.Material.Filled.Description" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Total Quotations</div>
+            <div class="df-kpi-value">@_quotations.Count</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-2">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon warning">
+                <MudIcon Icon="@Icons.Material.Filled.Pending" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Pending Response</div>
+            <div class="df-kpi-value">@_quotations.Count(q => q.Status == QuotationStatus.Sent)</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-3">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon success">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Accepted</div>
+            <div class="df-kpi-value">@_quotations.Count(q => q.Status == QuotationStatus.Accepted)</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-4">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon info">
+                <MudIcon Icon="@Icons.Material.Filled.TrendingUp" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Total Value</div>
+            <div class="df-kpi-value">SSP @_quotations.Sum(q => q.TotalAmount).ToString("N0")</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quotations Table -->
+<div class="df-alert-card animate-fade-in-up animate-delay-2 mt-4">
+    <div class="df-alert-header">
+        <MudTextField @bind-Value="_searchString"
+                      Placeholder="Search quotations..."
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      IconSize="Size.Medium"
+                      Immediate="true"
+                      Style="max-width: 400px;" />
+        <div class="d-flex gap-2">
+            <MudSelect T="string" @bind-Value="_selectedStatus" Label="Status" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
+                <MudSelectItem Value="@("All")">All Status</MudSelectItem>
+                <MudSelectItem Value="@("Draft")">Draft</MudSelectItem>
+                <MudSelectItem Value="@("Pending")">Pending</MudSelectItem>
+                <MudSelectItem Value="@("Accepted")">Accepted</MudSelectItem>
+                <MudSelectItem Value="@("Rejected")">Rejected</MudSelectItem>
+                <MudSelectItem Value="@("Expired")">Expired</MudSelectItem>
+            </MudSelect>
+        </div>
+    </div>
+
+    @if (_isLoading)
+    {
+        <div class="text-center pa-8">
+            <MudProgressCircular Indeterminate="true" />
+        </div>
+    }
+    else
+    {
+        <MudTable T="Queries.QuotationDto" Items="@FilteredQuotations" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Class="mt-4">
+            <HeaderContent>
+                <MudTh>Quotation #</MudTh>
+                <MudTh>Customer</MudTh>
+                <MudTh>Date</MudTh>
+                <MudTh>Valid Until</MudTh>
+                <MudTh>Items</MudTh>
+                <MudTh>Total Amount</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Quotation #">
+                    <MudText Typo="Typo.body2" Class="fw-bold">@context.QuotationNumber</MudText>
+                </MudTd>
+                <MudTd DataLabel="Customer">
+                    <MudText Typo="Typo.body2">@context.CustomerName</MudText>
+                </MudTd>
+                <MudTd DataLabel="Date">@context.QuotationDate.ToString("dd MMM yyyy")</MudTd>
+                <MudTd DataLabel="Valid Until">
+                    <MudText Color="@(context.IsExpired ? Color.Error : Color.Default)">
+                        @context.ValidUntil.ToString("dd MMM yyyy")
+                    </MudText>
+                    @if (context.IsExpired)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Error">Expired</MudChip>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Items">@context.ItemCount items</MudTd>
+                <MudTd DataLabel="Total Amount">SSP @context.TotalAmount.ToString("N0")</MudTd>
+                <MudTd DataLabel="Status">
+                    <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">@context.Status.ToString()</MudChip>
+                </MudTd>
+                <MudTd DataLabel="Actions">
+                    <MudTooltip Text="View"><MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Color="Color.Info" OnClick="@(() => ViewQuotation(context))" /></MudTooltip>
+                    <MudTooltip Text="Duplicate"><MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" Color="Color.Default" OnClick="@(() => DuplicateQuotation(context))" /></MudTooltip>
+                    @if (context.Status == QuotationStatus.Accepted && !context.IsExpired && context.ConvertedToSaleId == null)
+                    {
+                        <MudTooltip Text="Convert to Sale"><MudIconButton Icon="@Icons.Material.Filled.ShoppingCart" Size="Size.Small" Color="Color.Success" OnClick="@(() => ConvertToSale(context))" /></MudTooltip>
+                    }
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+            </PagerContent>
+        </MudTable>
+    }
+</div>
+
+@code {
+    private List<QuotationDto> _quotations = new();
+    private string _searchString = string.Empty;
+    private QuotationStatus? _selectedStatusFilter = null;
+    private string _selectedStatus = "All";
+    private bool _isLoading = true;
+
+    // KPIs
+    private decimal _totalValue => _quotations.Sum(q => q.TotalAmount);
+    private int _pendingCount => _quotations.Count(q => q.Status == QuotationStatus.Sent);
+    private int _acceptedCount => _quotations.Count(q => q.Status == QuotationStatus.Accepted);
+
+    private IEnumerable<Queries.QuotationDto> FilteredQuotations
+    {
+        get
+        {
+            var filtered = _quotations.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(_searchString))
+            {
+                filtered = filtered.Where(q =>
+                    q.QuotationNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                    q.CustomerName.Contains(_searchString, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (_selectedStatus != "All" && Enum.TryParse<QuotationStatus>(_selectedStatus, out var status))
+            {
+                filtered = filtered.Where(q => q.Status == status);
+            }
+
+            return filtered;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadQuotationsAsync();
+    }
+
+    private async Task LoadQuotationsAsync()
+    {
+        try
+        {
+            _isLoading = true;
+            StateHasChanged();
+
+            var query = new GetQuotationsQuery(null, null, null, _selectedStatusFilter, _searchString);
+            _quotations = await Mediator.Send(query);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading quotations: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private Color GetStatusColor(QuotationStatus status) => status switch
+    {
+        QuotationStatus.Draft => Color.Default,
+        QuotationStatus.Sent => Color.Warning,
+        QuotationStatus.Accepted => Color.Success,
+        QuotationStatus.Rejected => Color.Error,
+        QuotationStatus.Expired => Color.Secondary,
+        QuotationStatus.Converted => Color.Info,
+        _ => Color.Default
+    };
+
+    private void CreateQuotation()
+    {
+        Navigation.NavigateTo("/wholesale/quotations/new");
+    }
+
+    private void ViewQuotation(Queries.QuotationDto quotation)
+    {
+        Navigation.NavigateTo($"/wholesale/quotations/{quotation.Id}");
+    }
+
+    private void DuplicateQuotation(Queries.QuotationDto quotation)
+    {
+        Snackbar.Add("Duplicate quotation functionality coming soon", Severity.Info);
+    }
+
+    private async Task ConvertToSale(Queries.QuotationDto quotation)
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Convert to Sale",
+            $"Convert quotation {quotation.QuotationNumber} to a sale order?",
+            yesText: "Convert",
+            cancelText: "Cancel");
+
+        if (result == true)
+        {
+            try
+            {
+                var command = new ConvertQuotationToSaleCommand(quotation.Id);
+                var conversionResult = await Mediator.Send(command);
+
+                if (conversionResult.IsSuccess)
+                {
+                    Snackbar.Add("Quotation converted to sale successfully", Severity.Success);
+                    Navigation.NavigateTo($"/wholesale/sales/{conversionResult.Value}");
+                }
+                else
+                {
+                    Snackbar.Add(conversionResult.Error ?? "Failed to convert quotation", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error converting quotation: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+}

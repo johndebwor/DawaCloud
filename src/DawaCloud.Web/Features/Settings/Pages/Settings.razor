@@ -1,0 +1,1193 @@
+@page "/settings"
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.EntityFrameworkCore
+@using DawaCloud.Web.Features.Currency.Services
+@using DawaCloud.Web.Data
+@using DawaCloud.Web.Data.Enums
+@using DawaCloud.Web.Features.Notifications.Commands
+@using DawaCloud.Web.Features.Settings.Commands
+@using DawaCloud.Web.Features.Settings.Queries
+@using MediatR
+@inject ICurrencyService CurrencyService
+@inject IRoundingService RoundingService
+@inject IServiceScopeFactory ScopeFactory
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject IMediator Mediator
+
+<PageTitle>Settings - DawaCloud</PageTitle>
+
+<!-- Hero Section -->
+<div class="df-hero animate-fade-in-up">
+    <div class="df-hero-content">
+        <div class="df-hero-text">
+            <h1>System Settings</h1>
+            <p>Configure your pharmacy system preferences</p>
+        </div>
+    </div>
+</div>
+
+<MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" Class="mt-4" PanelClass="pa-4">
+    <!-- Company Profile Tab -->
+    <MudTabPanel Text="Company Profile" Icon="@Icons.Material.Filled.Business">
+        <MudPaper Elevation="0" Class="pa-4">
+            <MudForm @ref="_companyForm">
+                <MudGrid>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_companySettings.CompanyName" Label="Company Name" Variant="Variant.Outlined" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_companySettings.PharmacyLicenseNumber" Label="Pharmacy License Number" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_companySettings.TaxId" Label="Tax ID / TIN" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_companySettings.Email" Label="Email" InputType="InputType.Email" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_companySettings.Phone" Label="Phone" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_companySettings.Website" Label="Website" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="_companySettings.Address" Label="Address" Variant="Variant.Outlined" Lines="2" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_companySettings.City" Label="City" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_companySettings.Country" Label="Country" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.subtitle2" Class="mb-2">Company Logo</MudText>
+                        <div class="d-flex align-center gap-4">
+                            <MudFileUpload T="IBrowserFile" Accept="image/*" MaximumFileCount="1" OnFilesChanged="OnLogoSelected">
+                                <ActivatorContent>
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload">
+                                        Upload Logo
+                                    </MudButton>
+                                </ActivatorContent>
+                            </MudFileUpload>
+                            @if (!string.IsNullOrEmpty(_logoPreviewUrl))
+                            {
+                                <MudImage Src="@_logoPreviewUrl" Alt="Company Logo" Height="80" ObjectFit="ObjectFit.Contain" Class="rounded" Style="border: 1px solid #ddd; padding: 8px;" />
+                            }
+                            else if (!string.IsNullOrEmpty(_companySettings.LogoUrl))
+                            {
+                                <MudImage Src="@_companySettings.LogoUrl" Alt="Company Logo" Height="80" ObjectFit="ObjectFit.Contain" Class="rounded" Style="border: 1px solid #ddd; padding: 8px;" />
+                            }
+                        </div>
+                        <MudText Typo="Typo.caption" Class="mt-1">Recommended: PNG or JPG, max 2MB, transparent background</MudText>
+                    </MudItem>
+                </MudGrid>
+                <div class="mt-4">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveCompanySettings">
+                        Save Changes
+                    </MudButton>
+                </div>
+            </MudForm>
+        </MudPaper>
+    </MudTabPanel>
+
+    <!-- Tax Configuration Tab -->
+    <MudTabPanel Text="Tax Configuration" Icon="@Icons.Material.Filled.Receipt">
+        <MudPaper Elevation="0" Class="pa-4">
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" @bind-Value="_companySettings.Currency" Label="Currency" Variant="Variant.Outlined">
+                        <MudSelectItem Value="@("SSP")">SSP - South Sudan Pound</MudSelectItem>
+                        <MudSelectItem Value="@("USD")">USD - US Dollar</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField @bind-Value="_companySettings.DefaultTaxRate" Label="Default VAT Rate (%)" Variant="Variant.Outlined" Min="0m" Max="100m" />
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-6" />
+
+            <MudText Typo="Typo.h6" Class="mb-4">Tax Categories</MudText>
+            <MudTable Items="@_taxCategories" Dense="true" Hover="true">
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Rate (%)</MudTh>
+                    <MudTh>Description</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Name</MudTd>
+                    <MudTd>@context.Rate%</MudTd>
+                    <MudTd>@context.Description</MudTd>
+                    <MudTd>
+                        <MudTooltip Text="Edit Tax Category">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Info" OnClick="@(() => EditTaxCategory(context))" />
+                        </MudTooltip>
+                        <MudTooltip Text="Delete Tax Category">
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteTaxCategory(context))" />
+                        </MudTooltip>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+
+            <div class="mt-4">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="CreateTaxCategory">
+                    Add Tax Category
+                </MudButton>
+            </div>
+        </MudPaper>
+    </MudTabPanel>
+
+    <!-- Currency Tab -->
+    <MudTabPanel Text="Currency" Icon="@Icons.Material.Filled.CurrencyExchange">
+        <MudPaper Elevation="0" Class="pa-4">
+            <MudText Typo="Typo.h6" Class="mb-4">Currency Configuration</MudText>
+            <MudGrid>
+                <MudItem xs="12" md="4">
+                    <MudSelect T="int" @bind-Value="_baseCurrencyId" Label="Base Currency" Variant="Variant.Outlined">
+                        @foreach (var currency in _currencies)
+                        {
+                            <MudSelectItem T="int" Value="@currency.Id">@currency.Code - @currency.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">All amounts will be stored/reported in this currency</MudText>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudSelect T="int" @bind-Value="_purchaseCurrencyId" Label="Default Purchase Currency" Variant="Variant.Outlined">
+                        @foreach (var currency in _currencies)
+                        {
+                            <MudSelectItem T="int" Value="@currency.Id">@currency.Code - @currency.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Used for supplier orders and goods receipts</MudText>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudSelect T="int" @bind-Value="_salesCurrencyId" Label="Default Sales Currency" Variant="Variant.Outlined">
+                        @foreach (var currency in _currencies)
+                        {
+                            <MudSelectItem T="int" Value="@currency.Id">@currency.Code - @currency.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Used for retail and wholesale sales</MudText>
+                </MudItem>
+            </MudGrid>
+
+            <div class="mt-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveCurrencySettings">
+                    Save Currency Settings
+                </MudButton>
+            </div>
+
+            <MudDivider Class="my-6" />
+
+            <div class="d-flex justify-space-between align-center mb-4">
+                <MudText Typo="Typo.h6">Current Exchange Rates</MudText>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Edit"
+                           Href="/settings/exchange-rates">
+                    Manage Rates
+                </MudButton>
+            </div>
+
+            @if (_isLoadingCurrencies)
+            {
+                <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+            }
+            else
+            {
+                <MudGrid>
+                    @foreach (var rate in _exchangeRates)
+                    {
+                        <MudItem xs="12" md="4">
+                            <MudCard Outlined="true" Class="pa-3">
+                                <MudCardContent Class="pa-0">
+                                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">@rate.FromCurrencyCode to @rate.ToCurrencyCode</MudText>
+                                    <MudText Typo="Typo.h4" Color="Color.Primary">@rate.Rate.ToString("N4")</MudText>
+                                    <MudText Typo="Typo.caption">Effective: @rate.EffectiveDate.ToString("MMM d, yyyy")</MudText>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    }
+                </MudGrid>
+            }
+
+            @if (!_exchangeRates.Any() && !_isLoadingCurrencies)
+            {
+                <MudAlert Severity="Severity.Info" Class="mt-4">
+                    No exchange rates configured. Click "Manage Rates" to add exchange rates.
+                </MudAlert>
+            }
+        </MudPaper>
+    </MudTabPanel>
+
+    <!-- Rounding Tab -->
+    <MudTabPanel Text="Rounding" Icon="@Icons.Material.Filled.Calculate">
+        <MudPaper Elevation="0" Class="pa-4">
+            <MudText Typo="Typo.h6" Class="mb-4">Amount Rounding Settings</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+                Configure automatic rounding for SSP amounts across the system
+            </MudText>
+
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudSwitch @bind-Value="_roundingSettings.IsEnabled"
+                               Color="Color.Primary"
+                               Label="Enable Automatic Rounding"
+                               OnChanged="OnRoundingEnabledChanged" />
+                </MudItem>
+
+                @if (_roundingSettings.IsEnabled)
+                {
+                    <MudItem xs="12" md="6">
+                        <MudSelect @bind-Value="_roundingSettings.Mode" Label="Rounding Mode" Variant="Variant.Outlined">
+                            <MudSelectItem Value="RoundingMode.Nearest">Round to Nearest (Recommended)</MudSelectItem>
+                            <MudSelectItem Value="RoundingMode.Up">Always Round Up</MudSelectItem>
+                            <MudSelectItem Value="RoundingMode.Down">Always Round Down</MudSelectItem>
+                        </MudSelect>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                            Controls how amounts are rounded (up, down, or to nearest)
+                        </MudText>
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudSelect @bind-Value="_roundingSettings.RoundingValue" Label="Round To" Variant="Variant.Outlined">
+                            <MudSelectItem Value="1">1 SSP (No Rounding)</MudSelectItem>
+                            <MudSelectItem Value="10">10 SSP (Recommended)</MudSelectItem>
+                            <MudSelectItem Value="100">100 SSP</MudSelectItem>
+                            <MudSelectItem Value="1000">1000 SSP</MudSelectItem>
+                        </MudSelect>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                            The value to round to (e.g., 10 SSP rounds 1,234.56 to 1,230)
+                        </MudText>
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.subtitle2" Class="mb-2 mt-4">Apply Rounding To:</MudText>
+                    </MudItem>
+
+                    <MudItem xs="12" md="4">
+                        <MudSwitch @bind-Value="_roundingSettings.ApplyToRetail"
+                                   Label="Retail Sales (POS)"
+                                   Color="Color.Primary" />
+                    </MudItem>
+
+                    <MudItem xs="12" md="4">
+                        <MudSwitch @bind-Value="_roundingSettings.ApplyToWholesale"
+                                   Label="Wholesale Sales"
+                                   Color="Color.Primary" />
+                    </MudItem>
+
+                    <MudItem xs="12" md="4">
+                        <MudSwitch @bind-Value="_roundingSettings.ApplyToInvoices"
+                                   Label="Invoices"
+                                   Color="Color.Primary" />
+                    </MudItem>
+
+                    <MudItem xs="12" Class="mt-4">
+                        <MudAlert Severity="Severity.Info" Dense="true">
+                            <strong>Example:</strong> @GetRoundingExample()
+                        </MudAlert>
+                    </MudItem>
+                }
+            </MudGrid>
+
+            <MudDivider Class="my-4" />
+
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveRoundingSettings">
+                Save Rounding Settings
+            </MudButton>
+        </MudPaper>
+    </MudTabPanel>
+
+    <!-- POS Settings Tab -->
+    <MudTabPanel Text="POS Settings" Icon="@Icons.Material.Filled.PointOfSale">
+        <MudPaper Elevation="0" Class="pa-4">
+            <MudText Typo="Typo.h6" Class="mb-4">Point of Sale Display</MudText>
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudRadioGroup @bind-Value="_companySettings.PosProductDisplayStyle">
+                        <MudRadio Value="@("grid")" Color="Color.Primary">
+                            <div>
+                                <MudText Typo="Typo.body1">Grid View</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Display products as cards in a grid layout (default)</MudText>
+                            </div>
+                        </MudRadio>
+                        <MudRadio Value="@("list")" Color="Color.Primary" Class="mt-3">
+                            <div>
+                                <MudText Typo="Typo.body1">List View</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Display products as horizontal list items</MudText>
+                            </div>
+                        </MudRadio>
+                    </MudRadioGroup>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudPaper Class="pa-4" Outlined="true">
+                        <MudText Typo="Typo.subtitle2" Class="mb-2">Preview</MudText>
+                        @if (_companySettings.PosProductDisplayStyle == "grid")
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                <MudIcon Icon="@Icons.Material.Filled.GridView" Size="Size.Small" Class="mr-2" />
+                                Products will appear as cards with images in a responsive grid
+                            </MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                <MudIcon Icon="@Icons.Material.Filled.ViewList" Size="Size.Small" Class="mr-2" />
+                                Products will appear as compact horizontal list items
+                            </MudText>
+                        }
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+            <div class="mt-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveCompanySettings">
+                    Save POS Settings
+                </MudButton>
+            </div>
+        </MudPaper>
+    </MudTabPanel>
+
+    <!-- Alert Thresholds Tab -->
+    <MudTabPanel Text="Alert Thresholds" Icon="@Icons.Material.Filled.NotificationsActive">
+        <MudPaper Elevation="0" Class="pa-4">
+            <MudText Typo="Typo.h6" Class="mb-4">Stock Alerts</MudText>
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudNumericField @bind-Value="_companySettings.LowStockThresholdDays" Label="Low Stock Alert (Days of Supply)" Variant="Variant.Outlined" Min="1" />
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-6" />
+
+            <MudText Typo="Typo.h6" Class="mb-4">Expiry Alerts</MudText>
+            <MudGrid>
+                <MudItem xs="12" md="4">
+                    <MudNumericField @bind-Value="_companySettings.ExpiryAlertDays90" Label="First Alert (Days Before Expiry)" Variant="Variant.Outlined" Min="1" HelperText="Typically 90 days" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudNumericField @bind-Value="_companySettings.ExpiryAlertDays60" Label="Second Alert (Days Before Expiry)" Variant="Variant.Outlined" Min="1" HelperText="Typically 60 days" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudNumericField @bind-Value="_companySettings.ExpiryAlertDays30" Label="Urgent Alert (Days Before Expiry)" Variant="Variant.Outlined" Min="1" HelperText="Typically 30 days" />
+                </MudItem>
+            </MudGrid>
+
+            <div class="mt-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAlertSettings">
+                    Save Changes
+                </MudButton>
+            </div>
+        </MudPaper>
+    </MudTabPanel>
+
+    <!-- Email Configuration Tab -->
+    <MudTabPanel Text="Email / SMS" Icon="@Icons.Material.Filled.Email">
+        <MudPaper Elevation="0" Class="pa-4">
+            <MudText Typo="Typo.h6" Class="mb-4">Email (SMTP) Configuration</MudText>
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_emailSettings.SmtpHost" Label="SMTP Host" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField @bind-Value="_emailSettings.SmtpPort" Label="SMTP Port" Variant="Variant.Outlined" Min="1" Max="65535" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_emailSettings.Username" Label="Username" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_emailSettings.Password" Label="Password" InputType="InputType.Password" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_emailSettings.FromEmail" Label="From Email" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_emailSettings.FromName" Label="From Name" Variant="Variant.Outlined" />
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-6" />
+
+            <MudText Typo="Typo.h6" Class="mb-4">WhatsApp / Twilio Configuration</MudText>
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_whatsAppSettings.AccountSid" Label="Twilio Account SID" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_whatsAppSettings.AuthToken" Label="Auth Token" InputType="InputType.Password" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_whatsAppSettings.FromNumber" Label="WhatsApp Number" Variant="Variant.Outlined" HelperText="Format: +211XXXXXXXXX" />
+                </MudItem>
+            </MudGrid>
+
+            <div class="mt-4">
+                <MudButton Variant="Variant.Outlined" Color="Color.Info" Class="mr-2" OnClick="TestEmailConnection">
+                    Test Email Connection
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveNotificationSettings">
+                    Save Changes
+                </MudButton>
+            </div>
+        </MudPaper>
+    </MudTabPanel>
+
+    <!-- Notification Templates Tab -->
+    <MudTabPanel Text="Templates" Icon="@Icons.Material.Filled.Description">
+        <MudPaper Elevation="0" Class="pa-4">
+            <div class="d-flex justify-space-between align-center mb-4">
+                <MudText Typo="Typo.h6">Notification Templates</MudText>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="CreateTemplate">
+                    New Template
+                </MudButton>
+            </div>
+
+            <MudTable Items="@_templates" Dense="true" Hover="true">
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Type</MudTh>
+                    <MudTh>Channel</MudTh>
+                    <MudTh>Subject</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Name</MudTd>
+                    <MudTd>@context.Type</MudTd>
+                    <MudTd>
+                        <MudChip T="string" Size="Size.Small" Color="@GetChannelColor(context.Channel)">@context.Channel</MudChip>
+                    </MudTd>
+                    <MudTd>@context.Subject</MudTd>
+                    <MudTd>
+                        <MudChip T="string" Size="Size.Small" Color="@(context.IsActive ? Color.Success : Color.Default)">
+                            @(context.IsActive ? "Active" : "Inactive")
+                        </MudChip>
+                    </MudTd>
+                    <MudTd>
+                        <MudTooltip Text="Edit Template">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Info" OnClick="@(() => EditTemplate(context))" />
+                        </MudTooltip>
+                        <MudTooltip Text="Copy Template">
+                            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" Color="Color.Default" OnClick="@(() => CopyTemplate(context))" />
+                        </MudTooltip>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudPaper>
+    </MudTabPanel>
+</MudTabs>
+
+@code {
+    private MudForm? _companyForm;
+    private CompanySettingsModel _companySettings = new();
+    private EmailSettingsModel _emailSettings = new();
+    private WhatsAppSettingsModel _whatsAppSettings = new();
+    private List<TaxCategoryModel> _taxCategories = new();
+    private List<TemplateModel> _templates = new();
+    private string? _logoPreviewUrl;
+    private IBrowserFile? _logoFile;
+
+    // Currency settings
+    private List<CurrencyDto> _currencies = new();
+    private List<ExchangeRateDto> _exchangeRates = new();
+    private int _baseCurrencyId;
+    private int _purchaseCurrencyId;
+    private int _salesCurrencyId;
+    private bool _isLoadingCurrencies = true;
+
+    // Rounding settings
+    private RoundingSettingsModel _roundingSettings = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSettingsAsync();
+        await LoadCurrencySettingsAsync();
+        await LoadRoundingSettingsAsync();
+    }
+
+    private async Task LoadCurrencySettingsAsync()
+    {
+        try
+        {
+            _isLoadingCurrencies = true;
+            _currencies = await CurrencyService.GetAllCurrenciesAsync();
+            _exchangeRates = await CurrencyService.GetAllExchangeRatesAsync();
+
+            var baseCurrency = _currencies.FirstOrDefault(c => c.IsBaseCurrency);
+            var purchaseCurrency = _currencies.FirstOrDefault(c => c.IsDefaultPurchaseCurrency);
+            var salesCurrency = _currencies.FirstOrDefault(c => c.IsDefaultSalesCurrency);
+
+            _baseCurrencyId = baseCurrency?.Id ?? 0;
+            _purchaseCurrencyId = purchaseCurrency?.Id ?? 0;
+            _salesCurrencyId = salesCurrency?.Id ?? 0;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading currencies: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoadingCurrencies = false;
+        }
+    }
+
+    private async Task LoadSettingsAsync()
+    {
+        try
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var settings = await dbContext.CompanySettings.FirstOrDefaultAsync();
+            if (settings != null)
+            {
+                _companySettings = new CompanySettingsModel
+                {
+                    CompanyName = settings.CompanyName,
+                    PharmacyLicenseNumber = settings.PharmacyLicenseNumber,
+                    TaxId = settings.TaxId,
+                    Email = settings.Email,
+                    Phone = settings.Phone,
+                    Website = settings.Website,
+                    Address = settings.Address,
+                    City = settings.City,
+                    Country = settings.Country,
+                    LogoUrl = settings.LogoUrl,
+                    Currency = settings.DefaultCurrency,
+                    DefaultTaxRate = settings.DefaultTaxRate,
+                    LowStockThresholdDays = settings.LowStockThresholdDays,
+                    ExpiryAlertDays30 = settings.ExpiryAlertDays30,
+                    ExpiryAlertDays60 = settings.ExpiryAlertDays60,
+                    ExpiryAlertDays90 = settings.ExpiryAlertDays90,
+                    PosProductDisplayStyle = settings.PosProductDisplayStyle
+                };
+                _emailSettings = new EmailSettingsModel
+                {
+                    SmtpHost = settings.SmtpHost,
+                    SmtpPort = settings.SmtpPort,
+                    Username = settings.SmtpUsername,
+                    Password = settings.SmtpPassword,
+                    FromEmail = settings.FromEmail,
+                    FromName = settings.FromName
+                };
+                _whatsAppSettings = new WhatsAppSettingsModel
+                {
+                    AccountSid = settings.TwilioAccountSid,
+                    AuthToken = settings.TwilioAuthToken,
+                    FromNumber = settings.TwilioFromNumber
+                };
+            }
+            else
+            {
+                // Defaults
+                _companySettings = new CompanySettingsModel
+                {
+                    CompanyName = "Revo Pharma & Medical Ltd",
+                    DefaultTaxRate = 16,
+                    LowStockThresholdDays = 14,
+                    ExpiryAlertDays30 = 30,
+                    ExpiryAlertDays60 = 60,
+                    ExpiryAlertDays90 = 90,
+                    Currency = "SSP"
+                };
+            }
+
+            // Load notification templates from DB
+            _templates = (await dbContext.NotificationTemplates.ToListAsync())
+                .Select(t => new TemplateModel
+                {
+                    Id = t.Id,
+                    Name = t.Name,
+                    Type = t.Type.ToString(),
+                    Channel = t.Channel.ToString(),
+                    Subject = t.Subject,
+                    Body = t.Body,
+                    IsActive = t.IsActive
+                }).ToList();
+
+            if (!_templates.Any())
+            {
+                _templates = new List<TemplateModel>
+                {
+                    new() { Name = "Low Stock Alert", Type = "Stock Alert", Channel = "Email", Subject = "Low Stock Alert - Action Required", IsActive = true },
+                    new() { Name = "Expiry Warning", Type = "Expiry Alert", Channel = "Email", Subject = "Drug Expiry Warning", IsActive = true },
+                    new() { Name = "Order Confirmation", Type = "Order Update", Channel = "WhatsApp", Subject = "Order Confirmed", IsActive = true }
+                };
+            }
+
+            // Load tax categories from database
+            var taxCategoriesDto = await Mediator.Send(new GetTaxCategoriesQuery());
+            _taxCategories = taxCategoriesDto.Select(tc => new TaxCategoryModel
+            {
+                Id = tc.Id,
+                Name = tc.Name,
+                Rate = tc.Rate,
+                Description = tc.Description,
+                IsDefault = tc.IsDefault,
+                IsActive = tc.IsActive
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading settings: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private Color GetChannelColor(string channel) => channel switch
+    {
+        "Email" => Color.Info,
+        "WhatsApp" => Color.Success,
+        "SMS" => Color.Warning,
+        _ => Color.Default
+    };
+
+    private async Task OnLogoSelected(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            var file = e.File;
+            if (file != null)
+            {
+                // Validate file size (2MB max)
+                if (file.Size > 2 * 1024 * 1024)
+                {
+                    Snackbar.Add("File size must be less than 2MB", Severity.Warning);
+                    return;
+                }
+
+                _logoFile = file;
+
+                // Generate preview
+                var buffer = new byte[file.Size];
+                await file.OpenReadStream(maxAllowedSize: 2 * 1024 * 1024).ReadAsync(buffer);
+                _logoPreviewUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading logo: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task SaveCompanySettings()
+    {
+        try
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var settings = await dbContext.CompanySettings.FirstOrDefaultAsync();
+            if (settings == null)
+            {
+                settings = new Data.Entities.CompanySettings();
+                dbContext.CompanySettings.Add(settings);
+            }
+
+            // Save logo file if one was uploaded
+            if (_logoFile != null)
+            {
+                var uploadsPath = Path.Combine("wwwroot", "images");
+                Directory.CreateDirectory(uploadsPath);
+
+                var fileName = $"company-logo{Path.GetExtension(_logoFile.Name)}";
+                var filePath = Path.Combine(uploadsPath, fileName);
+
+                // Save file
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await _logoFile.OpenReadStream(maxAllowedSize: 2 * 1024 * 1024).CopyToAsync(stream);
+                }
+
+                _companySettings.LogoUrl = $"/images/{fileName}";
+                _logoFile = null;
+                _logoPreviewUrl = null;
+            }
+
+            settings.CompanyName = _companySettings.CompanyName;
+            settings.PharmacyLicenseNumber = _companySettings.PharmacyLicenseNumber;
+            settings.TaxId = _companySettings.TaxId;
+            settings.Email = _companySettings.Email;
+            settings.Phone = _companySettings.Phone;
+            settings.Website = _companySettings.Website;
+            settings.Address = _companySettings.Address;
+            settings.City = _companySettings.City;
+            settings.Country = _companySettings.Country;
+            settings.LogoUrl = _companySettings.LogoUrl;
+            settings.DefaultCurrency = _companySettings.Currency;
+            settings.DefaultTaxRate = _companySettings.DefaultTaxRate;
+            settings.PosProductDisplayStyle = _companySettings.PosProductDisplayStyle;
+            await dbContext.SaveChangesAsync();
+            Snackbar.Add("Company settings saved successfully", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving company settings: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task SaveAlertSettings()
+    {
+        try
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var settings = await dbContext.CompanySettings.FirstOrDefaultAsync();
+            if (settings == null)
+            {
+                settings = new Data.Entities.CompanySettings();
+                dbContext.CompanySettings.Add(settings);
+            }
+            settings.LowStockThresholdDays = _companySettings.LowStockThresholdDays;
+            settings.ExpiryAlertDays30 = _companySettings.ExpiryAlertDays30;
+            settings.ExpiryAlertDays60 = _companySettings.ExpiryAlertDays60;
+            settings.ExpiryAlertDays90 = _companySettings.ExpiryAlertDays90;
+            await dbContext.SaveChangesAsync();
+            Snackbar.Add("Alert thresholds saved successfully", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving alert settings: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task SaveCurrencySettings()
+    {
+        try
+        {
+            if (_baseCurrencyId == 0 || _purchaseCurrencyId == 0 || _salesCurrencyId == 0)
+            {
+                Snackbar.Add("Please select all currency options", Severity.Warning);
+                return;
+            }
+
+            using var scope = ScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            // Update all currencies to remove the flags first
+            var allCurrencies = await dbContext.Currencies.ToListAsync();
+            foreach (var currency in allCurrencies)
+            {
+                currency.IsBaseCurrency = false;
+                currency.IsDefaultPurchaseCurrency = false;
+                currency.IsDefaultSalesCurrency = false;
+            }
+
+            // Set the selected currencies
+            var baseCurrency = allCurrencies.FirstOrDefault(c => c.Id == _baseCurrencyId);
+            if (baseCurrency != null)
+                baseCurrency.IsBaseCurrency = true;
+
+            var purchaseCurrency = allCurrencies.FirstOrDefault(c => c.Id == _purchaseCurrencyId);
+            if (purchaseCurrency != null)
+                purchaseCurrency.IsDefaultPurchaseCurrency = true;
+
+            var salesCurrency = allCurrencies.FirstOrDefault(c => c.Id == _salesCurrencyId);
+            if (salesCurrency != null)
+                salesCurrency.IsDefaultSalesCurrency = true;
+
+            await dbContext.SaveChangesAsync();
+            Snackbar.Add("Currency settings saved successfully", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving currency settings: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task SaveNotificationSettings()
+    {
+        try
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var settings = await dbContext.CompanySettings.FirstOrDefaultAsync();
+            if (settings == null)
+            {
+                settings = new Data.Entities.CompanySettings();
+                dbContext.CompanySettings.Add(settings);
+            }
+            settings.SmtpHost = _emailSettings.SmtpHost;
+            settings.SmtpPort = _emailSettings.SmtpPort;
+            settings.SmtpUsername = _emailSettings.Username;
+            settings.SmtpPassword = _emailSettings.Password;
+            settings.FromEmail = _emailSettings.FromEmail;
+            settings.FromName = _emailSettings.FromName;
+            settings.TwilioAccountSid = _whatsAppSettings.AccountSid;
+            settings.TwilioAuthToken = _whatsAppSettings.AuthToken;
+            settings.TwilioFromNumber = _whatsAppSettings.FromNumber;
+            await dbContext.SaveChangesAsync();
+            Snackbar.Add("Notification settings saved successfully", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving notification settings: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task TestEmailConnection()
+    {
+        Snackbar.Add("Test email feature coming soon", Severity.Info);
+        await Task.CompletedTask;
+    }
+
+    private async Task LoadRoundingSettingsAsync()
+    {
+        try
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var companySettings = await dbContext.CompanySettings.FirstOrDefaultAsync();
+
+            if (companySettings != null)
+            {
+                _roundingSettings = new RoundingSettingsModel
+                {
+                    IsEnabled = companySettings.IsRoundingEnabled,
+                    Mode = companySettings.RoundingMode,
+                    RoundingValue = companySettings.RoundingValue,
+                    ApplyToRetail = companySettings.ApplyRoundingToRetail,
+                    ApplyToWholesale = companySettings.ApplyRoundingToWholesale,
+                    ApplyToInvoices = companySettings.ApplyRoundingToInvoices
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading rounding settings: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task SaveRoundingSettings()
+    {
+        try
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var companySettings = await dbContext.CompanySettings.FirstOrDefaultAsync();
+
+            if (companySettings == null)
+            {
+                companySettings = new Data.Entities.CompanySettings();
+                dbContext.CompanySettings.Add(companySettings);
+            }
+
+            companySettings.IsRoundingEnabled = _roundingSettings.IsEnabled;
+            companySettings.RoundingMode = _roundingSettings.Mode;
+            companySettings.RoundingValue = _roundingSettings.RoundingValue;
+            companySettings.ApplyRoundingToRetail = _roundingSettings.ApplyToRetail;
+            companySettings.ApplyRoundingToWholesale = _roundingSettings.ApplyToWholesale;
+            companySettings.ApplyRoundingToInvoices = _roundingSettings.ApplyToInvoices;
+
+            await dbContext.SaveChangesAsync();
+
+            Snackbar.Add("Rounding settings saved successfully", Severity.Success);
+
+            // Clear rounding cache
+            await RoundingService.GetRoundingSettingsAsync(CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving rounding settings: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private string GetRoundingExample()
+    {
+        decimal sample = 1234.56m;
+        decimal rounded = RoundingService.ApplyRounding(sample, _roundingSettings.Mode, _roundingSettings.RoundingValue);
+        return $"SSP {sample:N2} becomes SSP {rounded:N0}";
+    }
+
+    private void OnRoundingEnabledChanged(bool enabled)
+    {
+        _roundingSettings.IsEnabled = enabled;
+    }
+
+    // Tax Category Methods
+    private async Task CreateTaxCategory()
+    {
+        var parameters = new DialogParameters();
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<Components.TaxCategoryDialog>("Create Tax Category", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            // Reload tax categories from database
+            await LoadTaxCategories();
+        }
+    }
+
+    private async Task EditTaxCategory(TaxCategoryModel category)
+    {
+        var parameters = new DialogParameters
+        {
+            { "TaxCategoryId", category.Id },
+            { "Name", category.Name },
+            { "Rate", category.Rate },
+            { "Description", category.Description },
+            { "IsDefault", category.IsDefault },
+            { "IsActive", category.IsActive }
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<Components.TaxCategoryDialog>("Edit Tax Category", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            // Reload tax categories from database
+            await LoadTaxCategories();
+        }
+    }
+
+    private async Task DeleteTaxCategory(TaxCategoryModel category)
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            "Delete Tax Category",
+            $"Are you sure you want to delete '{category.Name}'?",
+            yesText: "Delete",
+            cancelText: "Cancel");
+
+        if (result == true)
+        {
+            try
+            {
+                await Mediator.Send(new DeleteTaxCategoryCommand(category.Id));
+                Snackbar.Add($"Tax category '{category.Name}' deleted successfully", Severity.Success);
+
+                // Reload tax categories from database
+                await LoadTaxCategories();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting tax category: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private async Task LoadTaxCategories()
+    {
+        try
+        {
+            var taxCategoriesDto = await Mediator.Send(new GetTaxCategoriesQuery());
+            _taxCategories = taxCategoriesDto.Select(tc => new TaxCategoryModel
+            {
+                Id = tc.Id,
+                Name = tc.Name,
+                Rate = tc.Rate,
+                Description = tc.Description,
+                IsDefault = tc.IsDefault,
+                IsActive = tc.IsActive
+            }).ToList();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading tax categories: {ex.Message}", Severity.Error);
+        }
+    }
+
+    // Template Methods
+    private async Task CreateTemplate()
+    {
+        var parameters = new DialogParameters();
+        var options = new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<Components.TemplateEditorDialog>("Create Notification Template", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data != null)
+        {
+            try
+            {
+                var template = (dynamic)result.Data;
+                var command = new CreateNotificationTemplateCommand(
+                    template.Name,
+                    template.Code,
+                    template.Type,
+                    template.Channel,
+                    template.Subject,
+                    template.Body,
+                    template.IsActive
+                );
+
+                await Mediator.Send(command);
+                Snackbar.Add("Template created successfully", Severity.Success);
+                await LoadSettingsAsync();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error creating template: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private async Task EditTemplate(TemplateModel template)
+    {
+        try
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var dbTemplate = await dbContext.NotificationTemplates.FindAsync(template.Id);
+
+            if (dbTemplate == null)
+            {
+                Snackbar.Add("Template not found", Severity.Error);
+                return;
+            }
+
+            var parameters = new DialogParameters
+            {
+                { nameof(Components.TemplateEditorDialog.TemplateId), template.Id },
+                { nameof(Components.TemplateEditorDialog.Template), dbTemplate }
+            };
+
+            var options = new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true };
+            var dialog = await DialogService.ShowAsync<Components.TemplateEditorDialog>("Edit Notification Template", parameters, options);
+            var result = await dialog.Result;
+
+            if (!result.Canceled && result.Data != null)
+            {
+                var updatedTemplate = (dynamic)result.Data;
+                var command = new UpdateNotificationTemplateCommand(
+                    template.Id,
+                    updatedTemplate.Name,
+                    updatedTemplate.Code,
+                    updatedTemplate.Type,
+                    updatedTemplate.Channel,
+                    updatedTemplate.Subject,
+                    updatedTemplate.Body,
+                    updatedTemplate.IsActive
+                );
+
+                await Mediator.Send(command);
+                Snackbar.Add("Template updated successfully", Severity.Success);
+                await LoadSettingsAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error editing template: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task CopyTemplate(TemplateModel template)
+    {
+        try
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var dbTemplate = await dbContext.NotificationTemplates.FindAsync(template.Id);
+
+            if (dbTemplate == null)
+            {
+                Snackbar.Add("Template not found", Severity.Error);
+                return;
+            }
+
+            var parameters = new DialogParameters
+            {
+                { nameof(Components.TemplateEditorDialog.Template), dbTemplate },
+                { nameof(Components.TemplateEditorDialog.IsCopyMode), true }
+            };
+
+            var options = new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true };
+            var dialog = await DialogService.ShowAsync<Components.TemplateEditorDialog>("Copy Notification Template", parameters, options);
+            var result = await dialog.Result;
+
+            if (!result.Canceled && result.Data != null)
+            {
+                var newTemplate = (dynamic)result.Data;
+                var command = new CreateNotificationTemplateCommand(
+                    newTemplate.Name,
+                    newTemplate.Code,
+                    newTemplate.Type,
+                    newTemplate.Channel,
+                    newTemplate.Subject,
+                    newTemplate.Body,
+                    newTemplate.IsActive
+                );
+
+                await Mediator.Send(command);
+                Snackbar.Add("Template copied successfully", Severity.Success);
+                await LoadSettingsAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error copying template: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private class CompanySettingsModel
+    {
+        public string CompanyName { get; set; } = string.Empty;
+        public string? PharmacyLicenseNumber { get; set; }
+        public string? TaxId { get; set; }
+        public string? Email { get; set; }
+        public string? Phone { get; set; }
+        public string? Website { get; set; }
+        public string? Address { get; set; }
+        public string? City { get; set; }
+        public string? Country { get; set; }
+        public string? LogoUrl { get; set; }
+        public string Currency { get; set; } = "SSP";
+        public decimal DefaultTaxRate { get; set; } = 16;
+        public int LowStockThresholdDays { get; set; } = 14;
+        public int ExpiryAlertDays30 { get; set; } = 30;
+        public int ExpiryAlertDays60 { get; set; } = 60;
+        public int ExpiryAlertDays90 { get; set; } = 90;
+        public string PosProductDisplayStyle { get; set; } = "grid";
+    }
+
+    private class EmailSettingsModel
+    {
+        public string? SmtpHost { get; set; }
+        public int SmtpPort { get; set; } = 587;
+        public string? Username { get; set; }
+        public string? Password { get; set; }
+        public string? FromEmail { get; set; }
+        public string? FromName { get; set; }
+    }
+
+    private class WhatsAppSettingsModel
+    {
+        public string? AccountSid { get; set; }
+        public string? AuthToken { get; set; }
+        public string? FromNumber { get; set; }
+    }
+
+    private class TaxCategoryModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public decimal Rate { get; set; }
+        public string? Description { get; set; }
+        public bool IsDefault { get; set; }
+        public bool IsActive { get; set; }
+    }
+
+    private class TemplateModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
+        public string Channel { get; set; } = string.Empty;
+        public string Subject { get; set; } = string.Empty;
+        public string Body { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
+    }
+
+    private class RoundingSettingsModel
+    {
+        public bool IsEnabled { get; set; }
+        public RoundingMode Mode { get; set; } = RoundingMode.Nearest;
+        public int RoundingValue { get; set; } = 10;
+        public bool ApplyToRetail { get; set; } = true;
+        public bool ApplyToWholesale { get; set; } = true;
+        public bool ApplyToInvoices { get; set; } = true;
+    }
+}

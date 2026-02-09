@@ -1,0 +1,249 @@
+@page "/wholesale"
+@page "/wholesale/customers"
+@using MudBlazor
+@using MediatR
+@using DawaCloud.Web.Features.Wholesale.Commands
+@using DawaCloud.Web.Features.Wholesale.Queries
+@using DawaCloud.Web.Features.Wholesale.Components
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<PageTitle>Wholesale Customers - DawaCloud</PageTitle>
+
+<!-- Hero Section -->
+<div class="df-hero animate-fade-in-up">
+    <div class="df-hero-content">
+        <div class="df-hero-text">
+            <h1>Wholesale Customers</h1>
+            <p>Manage B2B customers, credit limits, and pricing tiers</p>
+        </div>
+        <div class="d-flex gap-2">
+            <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.FileDownload">
+                Export
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="CreateCustomer">
+                Add Customer
+            </MudButton>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="df-kpi-grid">
+    <div class="df-kpi-card animate-fade-in-up animate-delay-1">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon primary">
+                <MudIcon Icon="@Icons.Material.Filled.Groups" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Total Customers</div>
+            <div class="df-kpi-value">@_customers.Count</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-2">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon success">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Active Customers</div>
+            <div class="df-kpi-value">@_customers.Count(c => c.IsActive)</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-3">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon warning">
+                <MudIcon Icon="@Icons.Material.Filled.AccountBalance" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Total Outstanding</div>
+            <div class="df-kpi-value">SSP @_customers.Sum(c => c.CurrentBalance).ToString("N0")</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-4">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon danger">
+                <MudIcon Icon="@Icons.Material.Filled.Warning" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Over Credit Limit</div>
+            <div class="df-kpi-value">@_customers.Count(c => c.CurrentBalance > c.CreditLimit)</div>
+        </div>
+    </div>
+</div>
+
+<!-- Customers Table -->
+<div class="df-alert-card animate-fade-in-up animate-delay-2 mt-4">
+    <div class="df-alert-header">
+        <MudTextField @bind-Value="_searchString"
+                      Placeholder="Search customers..."
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      IconSize="Size.Medium"
+                      Immediate="true"
+                      OnDebounceIntervalElapsed="LoadCustomersAsync"
+                      DebounceInterval="300"
+                      Style="max-width: 400px;" />
+        <div class="d-flex gap-2">
+            <MudSelect T="string" Value="_selectedTier" ValueChanged="OnFilterChanged" Label="Pricing Tier" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
+                <MudSelectItem Value="@("All")">All Tiers</MudSelectItem>
+                <MudSelectItem Value="@("Retail")">Retail</MudSelectItem>
+                <MudSelectItem Value="@("Wholesale")">Wholesale</MudSelectItem>
+                <MudSelectItem Value="@("Bulk")">Bulk</MudSelectItem>
+                <MudSelectItem Value="@("VIP")">VIP</MudSelectItem>
+            </MudSelect>
+        </div>
+    </div>
+
+    <MudTable T="CustomerDto" Items="@FilteredCustomers" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Class="mt-4">
+        <HeaderContent>
+            <MudTh>Code</MudTh>
+            <MudTh>Customer</MudTh>
+            <MudTh>Contact</MudTh>
+            <MudTh>Tier</MudTh>
+            <MudTh>Credit Limit</MudTh>
+            <MudTh>Balance</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Code">
+                <MudText Typo="Typo.body2" Class="fw-bold">@context.Code</MudText>
+            </MudTd>
+            <MudTd DataLabel="Customer">
+                <div>
+                    <MudText Typo="Typo.body2" Class="fw-bold">@context.Name</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.City</MudText>
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Contact">
+                <div>
+                    @if (!string.IsNullOrEmpty(context.Email))
+                    {
+                        <MudText Typo="Typo.body2">@context.Email</MudText>
+                    }
+                    @if (!string.IsNullOrEmpty(context.Phone))
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Phone</MudText>
+                    }
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Tier">
+                <MudChip T="string" Size="Size.Small" Color="@GetTierColor(context.PricingTier)">@context.PricingTier</MudChip>
+            </MudTd>
+            <MudTd DataLabel="Credit Limit">SSP @context.CreditLimit.ToString("N0")</MudTd>
+            <MudTd DataLabel="Balance">
+                <MudText Color="@(context.CurrentBalance > context.CreditLimit ? Color.Error : Color.Default)">
+                    SSP @context.CurrentBalance.ToString("N0")
+                </MudText>
+            </MudTd>
+            <MudTd DataLabel="Status">
+                <MudChip T="string" Size="Size.Small" Color="@(context.IsActive ? Color.Success : Color.Default)">
+                    @(context.IsActive ? "Active" : "Inactive")
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Actions">
+                <MudTooltip Text="Edit"><MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Default" OnClick="@(() => EditCustomer(context.Id))" /></MudTooltip>
+                <MudTooltip Text="View Sales"><MudIconButton Icon="@Icons.Material.Filled.Receipt" Size="Size.Small" Color="Color.Primary" Href="@($"/wholesale/sales?customerId={context.Id}")" /></MudTooltip>
+                <MudTooltip Text="Delete"><MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteCustomer(context.Id))" /></MudTooltip>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</div>
+
+
+@code {
+    private List<CustomerDto> _customers = new();
+    private string _searchString = string.Empty;
+    private string _selectedTier = "All";
+
+    private IEnumerable<CustomerDto> FilteredCustomers => _customers;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCustomersAsync();
+    }
+
+    private async Task LoadCustomersAsync()
+    {
+        var query = new GetCustomersQuery(_searchString, _selectedTier, true);
+        _customers = await Mediator.Send(query);
+    }
+
+    private async Task OnFilterChanged(string value)
+    {
+        _selectedTier = value;
+        await LoadCustomersAsync();
+    }
+
+    private Color GetTierColor(string tier) => tier switch
+    {
+        "VIP" => Color.Primary,
+        "Bulk" => Color.Warning,
+        "Wholesale" => Color.Info,
+        _ => Color.Default
+    };
+
+    private async Task CreateCustomer()
+    {
+        var parameters = new DialogParameters();
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+        var dialog = await DialogService.ShowAsync<CustomerDialog>("Add New Customer", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadCustomersAsync();
+        }
+    }
+
+    private async Task EditCustomer(int customerId)
+    {
+        var parameters = new DialogParameters
+        {
+            { nameof(CustomerDialog.CustomerId), customerId }
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+        var dialog = await DialogService.ShowAsync<CustomerDialog>("Edit Customer", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadCustomersAsync();
+        }
+    }
+
+    private async Task DeleteCustomer(int customerId)
+    {
+        bool? confirm = await DialogService.ShowMessageBox(
+            "Confirm Delete",
+            "Are you sure you want to delete this customer?",
+            yesText: "Delete",
+            cancelText: "Cancel"
+        );
+
+        if (confirm == true)
+        {
+            var command = new DeleteCustomerCommand(customerId);
+            var result = await Mediator.Send(command);
+
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Customer deleted successfully", Severity.Success);
+                await LoadCustomersAsync();
+            }
+            else
+            {
+                Snackbar.Add(result.Error ?? "Failed to delete customer", Severity.Error);
+            }
+        }
+    }
+}

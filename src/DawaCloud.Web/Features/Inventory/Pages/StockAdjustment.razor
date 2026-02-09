@@ -1,0 +1,350 @@
+@page "/inventory/adjustments/new"
+@using MudBlazor
+@using DawaCloud.Web.Features.Inventory.Commands
+@using DawaCloud.Web.Features.Inventory.Queries
+@using FV = FluentValidation
+@using MediatR
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+@inject FV.IValidator<AdjustStockCommand> Validator
+
+<PageTitle>Stock Adjustment - DawaCloud</PageTitle>
+
+<!-- Hero Section -->
+<div class="df-hero animate-fade-in-up">
+    <div class="df-hero-content">
+        <div class="df-hero-text">
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                           OnClick="@(() => Navigation.NavigateTo("/inventory/movements"))"
+                           Title="Back to Movements"
+                           Class="mr-2" />
+            <div>
+                <h1>Stock Adjustment</h1>
+                <p>Add or remove stock with reason tracking</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<MudGrid Class="mt-4">
+    <MudItem xs="12" md="8">
+        <div class="df-alert-card animate-fade-in-up animate-delay-1">
+            <div class="df-alert-header">
+                <div class="df-alert-title">
+                    <div class="df-alert-title-icon primary">
+                        <MudIcon Icon="@Icons.Material.Filled.Tune" />
+                    </div>
+                    <span>Adjustment Details</span>
+                </div>
+            </div>
+            <div class="df-alert-body">
+                <MudForm @ref="_form" @bind-IsValid="@_isValid">
+                    <MudGrid>
+
+                        <MudItem xs="12">
+                            <MudAutocomplete T="BatchForAdjustmentDto"
+                                             Label="Select Batch"
+                                             @bind-Value="_selectedBatch"
+                                             SearchFunc="SearchBatches"
+                                             ToStringFunc="@(b => b?.DisplayText ?? string.Empty)"
+                                             Required="true"
+                                             RequiredError="Please select a batch"
+                                             Variant="Variant.Outlined"
+                                             AdornmentIcon="@Icons.Material.Filled.Search"
+                                             Adornment="Adornment.End"
+                                             OnSelectedValuesChanged="@((IEnumerable<BatchForAdjustmentDto> _) => OnBatchSelected())" />
+                        </MudItem>
+
+                        @if (_selectedBatch != null)
+                        {
+                            <MudItem xs="12">
+                                <MudAlert Severity="Severity.Info" Dense="true">
+                                    <MudText Typo="Typo.body2">
+                                        Current Quantity: <strong>@_selectedBatch.CurrentQuantity</strong> units
+                                        @if (_selectedBatch.ReservedQuantity > 0)
+                                        {
+                                            <span> (Reserved: @_selectedBatch.ReservedQuantity)</span>
+                                        }
+                                    </MudText>
+                                    <MudText Typo="Typo.body2">
+                                        Expiry Date: <strong>@_selectedBatch.ExpiryDate.ToString("dd MMM yyyy")</strong>
+                                    </MudText>
+                                </MudAlert>
+                            </MudItem>
+                        }
+
+                        <MudItem xs="12" sm="6">
+                            <MudRadioGroup T="string" @bind-Value="_adjustmentType" Required="true">
+                                <MudRadio T="string" Value="@("Add")" Color="Color.Success">Add to Stock (Increase)</MudRadio>
+                                <MudRadio T="string" Value="@("Remove")" Color="Color.Error">Remove from Stock (Decrease)</MudRadio>
+                            </MudRadioGroup>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6">
+                            <MudNumericField @bind-Value="_quantity"
+                                             Label="Quantity"
+                                             Min="1"
+                                             Required="true"
+                                             RequiredError="Quantity is required"
+                                             Variant="Variant.Outlined"
+                                             Adornment="Adornment.End"
+                                             AdornmentText="units" />
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudSelect T="string" @bind-Value="_reason" Label="Reason" Variant="Variant.Outlined" Required="true" RequiredError="Please select a reason">
+                                <MudSelectItem Value="@("")">-- Select Reason --</MudSelectItem>
+                                @if (_adjustmentType == "Add")
+                                {
+                                    <MudSelectItem Value="@("Found during stock count")">Found during stock count</MudSelectItem>
+                                    <MudSelectItem Value="@("Return from customer")">Return from customer</MudSelectItem>
+                                    <MudSelectItem Value="@("Transfer in")">Transfer in</MudSelectItem>
+                                    <MudSelectItem Value="@("Data correction")">Data correction</MudSelectItem>
+                                }
+                                else
+                                {
+                                    <MudSelectItem Value="@("Damaged")">Damaged</MudSelectItem>
+                                    <MudSelectItem Value="@("Expired")">Expired</MudSelectItem>
+                                    <MudSelectItem Value="@("Theft/Loss")">Theft/Loss</MudSelectItem>
+                                    <MudSelectItem Value="@("Missing during stock count")">Missing during stock count</MudSelectItem>
+                                    <MudSelectItem Value="@("Transfer out")">Transfer out</MudSelectItem>
+                                    <MudSelectItem Value="@("Data correction")">Data correction</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="_notes"
+                                          Label="Additional Notes"
+                                          Lines="3"
+                                          Variant="Variant.Outlined"
+                                          MaxLength="500" />
+                        </MudItem>
+
+                        @if (_selectedBatch != null && _quantity > 0)
+                        {
+                            <MudItem xs="12">
+                                <MudAlert Severity="@GetAlertSeverity()" Dense="true">
+                                    <MudText Typo="Typo.body2">
+                                        <strong>Preview:</strong>
+                                        @_selectedBatch.CurrentQuantity
+                                        @(_adjustmentType == "Add" ? "+" : "-")
+                                        @_quantity
+                                        = <strong>@GetNewQuantity()</strong> units
+                                    </MudText>
+                                </MudAlert>
+                            </MudItem>
+                        }
+
+                        <MudItem xs="12" Class="d-flex gap-2 justify-end">
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Default"
+                                       OnClick="@(() => Navigation.NavigateTo("/inventory/movements"))">
+                                Cancel
+                            </MudButton>
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       Disabled="@(!_isValid || _processing || _selectedBatch == null)"
+                                       OnClick="SubmitAdjustment">
+                                @if (_processing)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                                    <span class="ml-2">Processing...</span>
+                                }
+                                else
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.Save" Class="mr-2" />
+                                    <span>Submit Adjustment</span>
+                                }
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </MudForm>
+            </div>
+        </div>
+    </MudItem>
+
+    <MudItem xs="12" md="4">
+        <div class="df-alert-card animate-fade-in-up animate-delay-2 mb-4">
+            <div class="df-alert-header">
+                <div class="df-alert-title">
+                    <div class="df-alert-title-icon info">
+                        <MudIcon Icon="@Icons.Material.Filled.Lightbulb" />
+                    </div>
+                    <span>Guidelines</span>
+                </div>
+            </div>
+            <div class="df-alert-body">
+                <MudList T="string" Dense="true">
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Info" IconColor="Color.Info">
+                        <MudText Typo="Typo.body2">Select the batch to adjust</MudText>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Info" IconColor="Color.Info">
+                        <MudText Typo="Typo.body2">Choose add or remove</MudText>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Info" IconColor="Color.Info">
+                        <MudText Typo="Typo.body2">Enter the quantity to adjust</MudText>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Info" IconColor="Color.Info">
+                        <MudText Typo="Typo.body2">Provide a valid reason</MudText>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Warning" IconColor="Color.Warning">
+                        <MudText Typo="Typo.body2">All adjustments are audited</MudText>
+                    </MudListItem>
+                </MudList>
+            </div>
+        </div>
+
+        @if (_selectedBatch != null)
+        {
+            <div class="df-alert-card animate-fade-in-up animate-delay-3">
+                <div class="df-alert-header">
+                    <div class="df-alert-title">
+                        <div class="df-alert-title-icon success">
+                            <MudIcon Icon="@Icons.Material.Filled.Inventory2" />
+                        </div>
+                        <span>Batch Information</span>
+                    </div>
+                </div>
+                <div class="df-alert-body">
+                    <MudList T="string" Dense="true">
+                        <MudListItem T="string">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Drug</MudText>
+                            <MudText Typo="Typo.body2" Class="fw-bold">@_selectedBatch.DrugName</MudText>
+                        </MudListItem>
+                        <MudListItem T="string">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Batch Number</MudText>
+                            <MudText Typo="Typo.body2">@_selectedBatch.BatchNumber</MudText>
+                        </MudListItem>
+                        <MudListItem T="string">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Current Stock</MudText>
+                            <MudText Typo="Typo.body2">@_selectedBatch.CurrentQuantity units</MudText>
+                        </MudListItem>
+                        <MudListItem T="string">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Status</MudText>
+                            <MudChip T="string" Size="Size.Small">@_selectedBatch.Status</MudChip>
+                        </MudListItem>
+                    </MudList>
+                </div>
+            </div>
+        }
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int? DrugId { get; set; }
+
+    private MudForm? _form;
+    private bool _isValid;
+    private bool _processing;
+
+    private List<BatchForAdjustmentDto> _batches = new();
+    private BatchForAdjustmentDto? _selectedBatch;
+    private string _adjustmentType = "Add";
+    private int _quantity = 0;
+    private string _reason = string.Empty;
+    private string _notes = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBatches();
+    }
+
+    private async Task LoadBatches()
+    {
+        try
+        {
+            _batches = await Mediator.Send(new GetBatchesForAdjustmentQuery(DrugId));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading batches: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task<IEnumerable<BatchForAdjustmentDto>> SearchBatches(string searchText, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(searchText))
+            return _batches;
+
+        return _batches.Where(b =>
+            b.DrugName.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+            b.BatchNumber.Contains(searchText, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void OnBatchSelected()
+    {
+        StateHasChanged();
+    }
+
+    private int GetNewQuantity()
+    {
+        if (_selectedBatch == null) return 0;
+
+        return _adjustmentType == "Add"
+            ? _selectedBatch.CurrentQuantity + _quantity
+            : _selectedBatch.CurrentQuantity - _quantity;
+    }
+
+    private MudBlazor.Severity GetAlertSeverity()
+    {
+        var newQty = GetNewQuantity();
+        if (newQty < 0) return MudBlazor.Severity.Error;
+        if (_adjustmentType == "Remove" && newQty < _selectedBatch!.ReservedQuantity) return MudBlazor.Severity.Warning;
+        return MudBlazor.Severity.Success;
+    }
+
+    private async Task SubmitAdjustment()
+    {
+        if (_selectedBatch == null) return;
+
+        _processing = true;
+        StateHasChanged();
+
+        try
+        {
+            var quantityChange = _adjustmentType == "Add" ? _quantity : -_quantity;
+
+            var command = new AdjustStockCommand(
+                BatchId: _selectedBatch.Id,
+                QuantityChange: quantityChange,
+                Reason: _reason,
+                Notes: string.IsNullOrWhiteSpace(_notes) ? null : _notes
+            );
+
+            var validationResult = await Validator.ValidateAsync(command);
+            if (!validationResult.IsValid)
+            {
+                foreach (var error in validationResult.Errors)
+                {
+                    Snackbar.Add(error.ErrorMessage, Severity.Error);
+                }
+                return;
+            }
+
+            var result = await Mediator.Send(command);
+
+            if (result.Success)
+            {
+                Snackbar.Add(result.Message, Severity.Success);
+                Navigation.NavigateTo("/inventory/movements");
+            }
+            else
+            {
+                Snackbar.Add(result.Message, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error processing adjustment: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _processing = false;
+            StateHasChanged();
+        }
+    }
+}

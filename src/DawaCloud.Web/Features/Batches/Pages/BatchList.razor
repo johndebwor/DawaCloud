@@ -1,0 +1,261 @@
+@page "/batches"
+@using MudBlazor
+@using MediatR
+@using DawaCloud.Web.Features.Batches.Queries
+@using DawaCloud.Web.Features.Batches.Commands
+@using DawaCloud.Web.Shared.Components
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<PageTitle>Drug Batches - DawaCloud</PageTitle>
+
+<!-- Hero Section -->
+<div class="df-hero animate-fade-in-up">
+    <div class="df-hero-content">
+        <div class="df-hero-text">
+            <h1>Drug Batches</h1>
+            <p>Track batch inventory, expiry, and quarantine</p>
+        </div>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   Href="/batches/new">
+            Add Batch
+        </MudButton>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="df-kpi-grid">
+    <div class="df-kpi-card animate-fade-in-up animate-delay-1">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon success">
+                <MudIcon Icon="@Icons.Material.Filled.Inventory" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Active Batches</div>
+            <div class="df-kpi-value">@(_isLoading ? "-" : _batches.Count(b => b.Status == "Active").ToString())</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-2">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon warning">
+                <MudIcon Icon="@Icons.Material.Filled.Warning" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Expiring Soon</div>
+            <div class="df-kpi-value">@(_isLoading ? "-" : _batches.Count(b => b.DaysToExpiry <= 30 && b.DaysToExpiry > 0).ToString())</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-3">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon danger">
+                <MudIcon Icon="@Icons.Material.Filled.Error" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Expired</div>
+            <div class="df-kpi-value">@(_isLoading ? "-" : _batches.Count(b => b.Status == "Expired").ToString())</div>
+        </div>
+    </div>
+    <div class="df-kpi-card animate-fade-in-up animate-delay-4">
+        <div class="df-kpi-header">
+            <div class="df-kpi-icon default">
+                <MudIcon Icon="@Icons.Material.Filled.Block" />
+            </div>
+        </div>
+        <div class="df-kpi-body">
+            <div class="df-kpi-label">Quarantined</div>
+            <div class="df-kpi-value">@(_isLoading ? "-" : _batches.Count(b => b.Status == "Quarantined").ToString())</div>
+        </div>
+    </div>
+</div>
+
+<!-- Batches Table -->
+<div class="df-alert-card animate-fade-in-up animate-delay-2 mt-4">
+    <div class="df-alert-header">
+        <MudTextField Value="_searchString"
+                      ValueChanged="@((string value) => OnSearchChanged(value))"
+                      Placeholder="Search batches..."
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Immediate="true"
+                      DebounceInterval="300"
+                      Style="max-width: 400px;" />
+
+        <div class="d-flex gap-2">
+            <MudSelect T="string" Value="_selectedStatus" ValueChanged="@((string value) => OnStatusChanged(value))" Label="Status" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
+                <MudSelectItem Value="@("All")">All Status</MudSelectItem>
+                <MudSelectItem Value="@("Active")">Active</MudSelectItem>
+                <MudSelectItem Value="@("Expired")">Expired</MudSelectItem>
+                <MudSelectItem Value="@("Expiring Soon")">Expiring Soon</MudSelectItem>
+                <MudSelectItem Value="@("Quarantined")">Quarantined</MudSelectItem>
+            </MudSelect>
+        </div>
+    </div>
+
+    @if (_isLoading)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mt-4" />
+        }
+        else
+        {
+            <MudTable T="BatchListDto" Items="@FilteredBatches" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Class="mt-4">
+                <HeaderContent>
+                    <MudTh>Batch Number</MudTh>
+                    <MudTh>Drug</MudTh>
+                    <MudTh>Manufacture Date</MudTh>
+                    <MudTh>Expiry Date</MudTh>
+                    <MudTh>Quantity</MudTh>
+                    <MudTh>Cost Price</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Batch Number">
+                        <MudText Typo="Typo.body2" Class="fw-bold">@context.BatchNumber</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Drug">@context.DrugName</MudTd>
+                    <MudTd DataLabel="Manufacture Date">@context.ManufactureDate.ToString("dd MMM yyyy")</MudTd>
+                    <MudTd DataLabel="Expiry Date">
+                        <div>
+                            <MudText Typo="Typo.body2">@context.ExpiryDate.ToString("dd MMM yyyy")</MudText>
+                            @if (context.DaysToExpiry <= 30 && context.DaysToExpiry > 0)
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Warning">@context.DaysToExpiry days left</MudText>
+                            }
+                            else if (context.DaysToExpiry <= 0)
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Error">Expired</MudText>
+                            }
+                        </div>
+                    </MudTd>
+                    <MudTd DataLabel="Quantity">
+                        <div>
+                            <MudText Typo="Typo.body2">@context.CurrentQuantity / @context.InitialQuantity</MudText>
+                            @if (context.ReservedQuantity > 0)
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Info">(@context.ReservedQuantity reserved)</MudText>
+                            }
+                        </div>
+                    </MudTd>
+                    <MudTd DataLabel="Cost Price">SSP @context.CostPrice.ToString("N2")</MudTd>
+                    <MudTd DataLabel="Status">
+                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">@context.Status</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Actions">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                       Size="Size.Small"
+                                       Color="Color.Info"
+                                       Href="@($"/batches/{context.Id}/edit")"
+                                       Title="Edit" />
+                        @if (context.Status == "Active" && context.DaysToExpiry <= 0)
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.Block"
+                                           Size="Size.Small"
+                                           Color="Color.Warning"
+                                           OnClick="@(() => QuarantineBatch(context.Id))"
+                                           Title="Quarantine" />
+                        }
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText>No batches found</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        }
+    </div>
+
+@code {
+    private List<BatchListDto> _batches = new();
+    private string _searchString = string.Empty;
+    private string _selectedStatus = "All";
+    private bool _isLoading = true;
+    private int _totalCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBatches();
+    }
+
+    private async Task LoadBatches()
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        var result = await Mediator.Send(new GetBatchesQuery(
+            SearchTerm: string.IsNullOrWhiteSpace(_searchString) ? null : _searchString,
+            Status: _selectedStatus == "All" ? null : _selectedStatus
+        ));
+
+        if (result.Success)
+        {
+            _batches = result.Batches;
+            _totalCount = result.TotalCount;
+        }
+        else
+        {
+            Snackbar.Add(result.ErrorMessage ?? "Error loading batches", Severity.Error);
+        }
+
+        _isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task OnSearchChanged(string value)
+    {
+        _searchString = value;
+        await LoadBatches();
+    }
+
+    private async Task OnStatusChanged(string value)
+    {
+        _selectedStatus = value;
+        await LoadBatches();
+    }
+
+    private IEnumerable<BatchListDto> FilteredBatches => _batches;
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Active" => Color.Success,
+        "Expired" => Color.Error,
+        "Quarantined" => Color.Warning,
+        "Depleted" => Color.Default,
+        _ => Color.Default
+    };
+
+    private async Task QuarantineBatch(int id)
+    {
+        var batch = _batches.FirstOrDefault(b => b.Id == id);
+        if (batch == null) return;
+
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Are you sure you want to quarantine batch {batch.BatchNumber}? This will prevent it from being used in sales." },
+            { x => x.ButtonText, "Quarantine" },
+            { x => x.Color, Color.Warning }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Quarantine Batch", parameters);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            var commandResult = await Mediator.Send(new QuarantineBatchCommand(id, "Manually quarantined"));
+
+            if (commandResult.Success)
+            {
+                Snackbar.Add(commandResult.Message, Severity.Success);
+                await LoadBatches();
+            }
+            else
+            {
+                Snackbar.Add(commandResult.Message, Severity.Error);
+            }
+        }
+    }
+}

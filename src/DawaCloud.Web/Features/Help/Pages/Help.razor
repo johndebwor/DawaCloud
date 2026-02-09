@@ -1,0 +1,161 @@
+@page "/help"
+@using MudBlazor
+
+<PageTitle>Help & Support - DawaCloud</PageTitle>
+
+<div class="df-hero animate-fade-in-up">
+    <div class="df-hero-content">
+        <div class="df-hero-text">
+            <h1>Help & Support</h1>
+            <p>Frequently asked questions and user guides</p>
+        </div>
+    </div>
+</div>
+
+<MudGrid Class="mt-4">
+    <MudItem xs="12" md="8">
+        <MudText Typo="Typo.h6" Class="mb-3">Getting Started</MudText>
+        <MudExpansionPanels MultiExpansion="true">
+            <MudExpansionPanel Text="How do I add a new drug to the system?">
+                <MudText>
+                    Go to <strong>Drugs &rarr; New Drug</strong> or use the quick action on the dashboard.
+                    Fill in the drug name, generic name, category, pricing and stock information, then click Save.
+                </MudText>
+            </MudExpansionPanel>
+            <MudExpansionPanel Text="How do I receive stock from a supplier?">
+                <MudText>
+                    Navigate to <strong>Procurement &rarr; Goods Receipt &rarr; New Receipt</strong>.
+                    Select the supplier, enter the GRN number, and add the drugs received with batch numbers and expiry dates.
+                    Click "Post to Inventory" to update stock levels.
+                </MudText>
+            </MudExpansionPanel>
+            <MudExpansionPanel Text="How do I create a drug request?">
+                <MudText>
+                    Go to <strong>Procurement &rarr; Drug Requests &rarr; New Request</strong>.
+                    Select a supplier, add the drugs you need, and submit for approval.
+                    The system will notify the supplier via Email or WhatsApp once approved.
+                </MudText>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+
+        <MudText Typo="Typo.h6" Class="mb-3 mt-6">Inventory Management</MudText>
+        <MudExpansionPanels MultiExpansion="true">
+            <MudExpansionPanel Text="How does batch tracking work?">
+                <MudText>
+                    Every drug is tracked by batch with a batch number, manufacture date, and expiry date.
+                    The system enforces <strong>FEFO (First Expiry, First Out)</strong> — batches expiring soonest are sold first.
+                    You can view all batches under <strong>Drugs &rarr; Batches</strong>.
+                </MudText>
+            </MudExpansionPanel>
+            <MudExpansionPanel Text="How do I do a stock adjustment?">
+                <MudText>
+                    Go to <strong>Inventory &rarr; Stock Adjustment</strong>, select the drug and batch,
+                    choose Add or Remove, enter the quantity and reason, then save.
+                    All adjustments are logged in the audit trail.
+                </MudText>
+            </MudExpansionPanel>
+            <MudExpansionPanel Text="What are expiry alerts?">
+                <MudText>
+                    The system automatically alerts you when drugs are approaching expiry:
+                    <ul>
+                        <li>90 days — first warning</li>
+                        <li>60 days — email notification</li>
+                        <li>30 days — urgent alert (Email + WhatsApp)</li>
+                    </ul>
+                    You can customize these thresholds in <strong>Settings &rarr; Alert Thresholds</strong>.
+                </MudText>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+
+        <MudText Typo="Typo.h6" Class="mb-3 mt-6">Point of Sale (POS)</MudText>
+        <MudExpansionPanels MultiExpansion="true">
+            <MudExpansionPanel Text="How do I process a retail sale?">
+                <MudText>
+                    Open the <strong>POS</strong> module, search or scan the drug barcode to add it to the cart.
+                    When done, click <strong>PAY</strong>, select the payment method (Cash / MoMo / Card), and complete the sale.
+                    A receipt is generated automatically.
+                </MudText>
+            </MudExpansionPanel>
+            <MudExpansionPanel Text="How do I apply a discount?">
+                <MudText>
+                    In the POS cart, click the <strong>Discount</strong> button.
+                    You can enter a percentage (e.g., 10%) or a fixed amount (e.g., SSP 50).
+                    The discount is applied to the subtotal before tax.
+                </MudText>
+            </MudExpansionPanel>
+            <MudExpansionPanel Text="Can I put a sale on hold?">
+                <MudText>
+                    Yes — click the <strong>Hold (F4)</strong> button to save the current cart.
+                    Use <strong>Recall (F5)</strong> to retrieve it later. This is useful when serving multiple customers.
+                </MudText>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+
+        <MudText Typo="Typo.h6" Class="mb-3 mt-6">Wholesale</MudText>
+        <MudExpansionPanels MultiExpansion="true">
+            <MudExpansionPanel Text="How do I create a wholesale sale?">
+                <MudText>
+                    Go to <strong>Wholesale &rarr; New Sale</strong>, select the customer, add drugs with quantities,
+                    apply any discounts, and save. An invoice is automatically generated.
+                </MudText>
+            </MudExpansionPanel>
+            <MudExpansionPanel Text="How do credit limits work?">
+                <MudText>
+                    Each wholesale customer has a credit limit set in their profile.
+                    The system warns you if a sale would exceed their credit limit.
+                    You can record payments under the customer's outstanding invoices.
+                </MudText>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+
+        <MudText Typo="Typo.h6" Class="mb-3 mt-6">Reports</MudText>
+        <MudExpansionPanels MultiExpansion="true">
+            <MudExpansionPanel Text="What reports are available?">
+                <MudText>
+                    DawaCloud includes: Stock Reports, Expiry Reports, Sales Reports (daily/weekly/monthly),
+                    Supplier Reports, Financial Reports (P&amp;L, receivables), and Compliance Reports.
+                    All reports can be exported to Excel or PDF.
+                </MudText>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+    </MudItem>
+
+    <MudItem xs="12" md="4">
+        <MudPaper Elevation="1" Class="pa-4">
+            <MudText Typo="Typo.h6" Class="mb-3">Quick Tips</MudText>
+            <MudList T="string" Dense="true">
+                <MudListItem T="string" Icon="@Icons.Material.Filled.Keyboard">
+                    <strong>Ctrl+K</strong> opens the command palette
+                </MudListItem>
+                <MudListItem T="string" Icon="@Icons.Material.Filled.Keyboard">
+                    <strong>F2</strong> focuses the POS search bar
+                </MudListItem>
+                <MudListItem T="string" Icon="@Icons.Material.Filled.Keyboard">
+                    <strong>F4/F5</strong> hold and recall sales in POS
+                </MudListItem>
+                <MudListItem T="string" Icon="@Icons.Material.Filled.Keyboard">
+                    <strong>F12</strong> processes payment in POS
+                </MudListItem>
+                <MudListItem T="string" Icon="@Icons.Material.Filled.QrCodeScanner">
+                    Barcode scanners work automatically in POS search
+                </MudListItem>
+            </MudList>
+        </MudPaper>
+
+        <MudPaper Elevation="1" Class="pa-4 mt-4">
+            <MudText Typo="Typo.h6" Class="mb-3">Contact Support</MudText>
+            <MudText Typo="Typo.body2">
+                <strong>Revo Pharma & Medical Ltd</strong>
+            </MudText>
+            <MudText Typo="Typo.body2" Class="mt-1">
+                <MudIcon Icon="@Icons.Material.Filled.Email" Size="Size.Small" /> info@revopharma.com
+            </MudText>
+            <MudText Typo="Typo.body2" Class="mt-1">
+                <MudIcon Icon="@Icons.Material.Filled.Phone" Size="Size.Small" /> +211 920 123456
+            </MudText>
+            <MudText Typo="Typo.body2" Class="mt-1">
+                <MudIcon Icon="@Icons.Material.Filled.Web" Size="Size.Small" /> www.revopharma.com
+            </MudText>
+        </MudPaper>
+    </MudItem>
+</MudGrid>

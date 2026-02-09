@@ -1,0 +1,232 @@
+@page "/auth/register"
+@using MudBlazor
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authorization
+@layout Shared.Layout.AuthLayout
+@attribute [AllowAnonymous]
+@inject NavigationManager NavigationManager
+
+<PageTitle>Register - DawaCloud</PageTitle>
+
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="text-center mb-6">
+            <MudText Typo="Typo.h4" Class="mb-2">
+                Create Your <span class="text-gradient-primary">DawaCloud</span> Account
+            </MudText>
+            <MudText Typo="Typo.body1" Color="Color.Secondary">
+                Get started with modern pharmacy management
+            </MudText>
+        </div>
+
+        <form method="post" action="/api/auth/register-form" id="registerForm">
+            <MudGrid Spacing="2">
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="First Name"
+                                  @bind-Value="_model.FirstName"
+                                  name="firstName"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  RequiredError="First name is required" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="Last Name"
+                                  @bind-Value="_model.LastName"
+                                  name="lastName"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  RequiredError="Last name is required" />
+                </MudItem>
+            </MudGrid>
+
+            <MudTextField Label="Email Address"
+                          @bind-Value="_model.Email"
+                          name="email"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Normal"
+                          Required="true"
+                          RequiredError="Email is required"
+                          Validation="@(new EmailAddressAttribute())"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Email" />
+
+            <MudTextField Label="Phone Number"
+                          @bind-Value="_model.PhoneNumber"
+                          name="phoneNumber"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Normal"
+                          HelperText="Format: +211712345678"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Phone" />
+
+            <MudTextField Label="Password"
+                          @bind-Value="_model.Password"
+                          name="password"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Normal"
+                          InputType="@_passwordInputType"
+                          Required="true"
+                          RequiredError="Password is required"
+                          HelperText="Min. 12 characters, with uppercase, lowercase, number & special char"
+                          Adornment="Adornment.End"
+                          AdornmentIcon="@_passwordIcon"
+                          OnAdornmentClick="TogglePasswordVisibility"
+                          Immediate="true"
+                          TextChanged="OnPasswordChanged" />
+
+            <MudTextField Label="Confirm Password"
+                          @bind-Value="_model.ConfirmPassword"
+                          name="confirmPassword"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Normal"
+                          InputType="@_passwordInputType"
+                          Required="true"
+                          RequiredError="Please confirm your password" />
+
+            @if (!string.IsNullOrEmpty(_model.Password))
+            {
+                <div class="my-3">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">Password Strength</MudText>
+                    <MudProgressLinear Value="@_passwordStrength" Color="@_passwordStrengthColor" Size="Size.Small" />
+                    <MudText Typo="Typo.caption" Color="@_passwordStrengthColor">@_passwordStrengthText</MudText>
+                </div>
+            }
+
+            <MudCheckBox @bind-Value="_model.AcceptTerms" Color="Color.Primary" Class="my-2">
+                <MudText Typo="Typo.body2">
+                    I agree to the
+                    <MudLink Href="/terms" Color="Color.Primary">Terms & Conditions</MudLink>
+                    and
+                    <MudLink Href="/privacy" Color="Color.Primary">Privacy Policy</MudLink>
+                </MudText>
+            </MudCheckBox>
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       FullWidth="true"
+                       Size="Size.Large"
+                       Class="mt-3 mb-3"
+                       ButtonType="ButtonType.Submit"
+                       Disabled="@(!_model.AcceptTerms || string.IsNullOrEmpty(_model.Email) || string.IsNullOrEmpty(_model.Password))">
+                <MudIcon Icon="@Icons.Material.Filled.PersonAdd" Class="mr-2" />
+                <span>Create Account</span>
+            </MudButton>
+        </form>
+
+        <MudDivider Class="my-4" />
+
+        <div class="text-center">
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                Already have an account?
+                <MudLink Href="/auth/login" Color="Color.Primary" Typo="Typo.body2">
+                    <strong>Sign in here</strong>
+                </MudLink>
+            </MudText>
+        </div>
+
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-4" Dense="true" ShowCloseIcon="true" CloseIconClicked="() => _errorMessage = null">
+                @_errorMessage
+            </MudAlert>
+        }
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public string? Error { get; set; }
+
+    private bool _passwordVisible;
+    private InputType _passwordInputType = InputType.Password;
+    private string _passwordIcon = Icons.Material.Filled.VisibilityOff;
+
+    private int _passwordStrength;
+    private Color _passwordStrengthColor = Color.Default;
+    private string _passwordStrengthText = string.Empty;
+    private string? _errorMessage;
+
+    private RegisterModel _model = new();
+
+    protected override void OnInitialized()
+    {
+        if (!string.IsNullOrEmpty(Error))
+        {
+            _errorMessage = Uri.UnescapeDataString(Error);
+        }
+    }
+
+    private void TogglePasswordVisibility()
+    {
+        if (_passwordVisible)
+        {
+            _passwordVisible = false;
+            _passwordInputType = InputType.Password;
+            _passwordIcon = Icons.Material.Filled.VisibilityOff;
+        }
+        else
+        {
+            _passwordVisible = true;
+            _passwordInputType = InputType.Text;
+            _passwordIcon = Icons.Material.Filled.Visibility;
+        }
+    }
+
+    private void OnPasswordChanged(string password)
+    {
+        _model.Password = password;
+        CalculatePasswordStrength();
+    }
+
+    private void CalculatePasswordStrength()
+    {
+        if (string.IsNullOrEmpty(_model.Password))
+        {
+            _passwordStrength = 0;
+            _passwordStrengthColor = Color.Default;
+            _passwordStrengthText = string.Empty;
+            return;
+        }
+
+        var score = 0;
+        if (_model.Password.Length >= 12) score += 25;
+        if (_model.Password.Any(char.IsUpper)) score += 25;
+        if (_model.Password.Any(char.IsLower)) score += 25;
+        if (_model.Password.Any(char.IsDigit)) score += 15;
+        if (_model.Password.Any(ch => !char.IsLetterOrDigit(ch))) score += 10;
+
+        _passwordStrength = score;
+
+        if (score < 40)
+        {
+            _passwordStrengthColor = Color.Error;
+            _passwordStrengthText = "Weak";
+        }
+        else if (score < 70)
+        {
+            _passwordStrengthColor = Color.Warning;
+            _passwordStrengthText = "Fair";
+        }
+        else if (score < 90)
+        {
+            _passwordStrengthColor = Color.Info;
+            _passwordStrengthText = "Good";
+        }
+        else
+        {
+            _passwordStrengthColor = Color.Success;
+            _passwordStrengthText = "Strong";
+        }
+    }
+
+    private class RegisterModel
+    {
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string ConfirmPassword { get; set; } = string.Empty;
+        public bool AcceptTerms { get; set; }
+    }
+}

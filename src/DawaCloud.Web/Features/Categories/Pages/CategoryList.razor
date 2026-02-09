@@ -1,0 +1,244 @@
+@page "/categories"
+@using MudBlazor
+@using DawaCloud.Web.Features.Categories.Queries
+@using DawaCloud.Web.Features.Categories.Commands
+@using DawaCloud.Web.Features.Categories.Components
+@using MediatR
+@inject IMediator Mediator
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>Categories - DawaCloud</PageTitle>
+
+<!-- Hero Section -->
+<div class="df-hero animate-fade-in-up">
+    <div class="df-hero-content">
+        <div class="df-hero-text">
+            <h1>Drug Categories</h1>
+            <p>Manage hierarchical drug classifications</p>
+        </div>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="@(() => OpenDialog(null))">
+            Add Category
+        </MudButton>
+    </div>
+</div>
+
+<MudGrid Class="mt-4">
+    <MudItem xs="12" md="8">
+        <div class="df-alert-card animate-fade-in-up animate-delay-1">
+            <div class="df-alert-header">
+                <div class="df-alert-title">
+                    <div class="df-alert-title-icon primary">
+                        <MudIcon Icon="@Icons.Material.Filled.Category" />
+                    </div>
+                    <span>Category Tree</span>
+                </div>
+            </div>
+            <div class="df-alert-body">
+                @if (_isLoading)
+                {
+                    <div class="d-flex justify-center align-center pa-8">
+                        <MudProgressCircular Indeterminate="true" />
+                    </div>
+                }
+                else if (_categories.Any())
+                {
+                    <MudList T="string" Dense="true">
+                        @foreach (var category in _categories)
+                        {
+                            <CategoryTreeItem Category="category"
+                                              OnAdd="OpenDialog"
+                                              OnEdit="EditCategory"
+                                              OnDelete="DeleteCategory"
+                                              Level="0" />
+                        }
+                    </MudList>
+                }
+                else
+                {
+                    <div class="text-center pa-8">
+                        <MudIcon Icon="@Icons.Material.Filled.Category" Size="Size.Large" Color="Color.Default" Class="mb-3" />
+                        <MudText Typo="Typo.h6" Color="Color.Secondary">No categories yet</MudText>
+                        <MudButton Color="Color.Primary" Variant="Variant.Text" OnClick="@(() => OpenDialog(null))" Class="mt-3">
+                            Create your first category
+                        </MudButton>
+                    </div>
+                }
+            </div>
+        </div>
+    </MudItem>
+
+    <MudItem xs="12" md="4">
+        <!-- Statistics Card -->
+        <div class="df-kpi-card animate-fade-in-up animate-delay-2 mb-4">
+            <div class="df-kpi-header">
+                <div class="df-kpi-icon primary">
+                    <MudIcon Icon="@Icons.Material.Filled.Analytics" />
+                </div>
+            </div>
+            <div class="df-kpi-body">
+                <div class="df-kpi-label">Total Categories</div>
+                <div class="df-kpi-value">@GetTotalCategories()</div>
+            </div>
+        </div>
+
+        <div class="df-kpi-card animate-fade-in-up animate-delay-3 mb-4">
+            <div class="df-kpi-header">
+                <div class="df-kpi-icon info">
+                    <MudIcon Icon="@Icons.Material.Filled.AccountTree" />
+                </div>
+            </div>
+            <div class="df-kpi-body">
+                <div class="df-kpi-label">Parent Categories</div>
+                <div class="df-kpi-value">@_categories.Count</div>
+            </div>
+        </div>
+
+        <div class="df-kpi-card animate-fade-in-up animate-delay-4 mb-4">
+            <div class="df-kpi-header">
+                <div class="df-kpi-icon success">
+                    <MudIcon Icon="@Icons.Material.Filled.Medication" />
+                </div>
+            </div>
+            <div class="df-kpi-body">
+                <div class="df-kpi-label">Total Drugs</div>
+                <div class="df-kpi-value">@GetTotalDrugs()</div>
+            </div>
+        </div>
+
+        <div class="df-alert-card animate-fade-in-up animate-delay-4">
+            <div class="df-alert-header">
+                <div class="df-alert-title">
+                    <div class="df-alert-title-icon info">
+                        <MudIcon Icon="@Icons.Material.Filled.Lightbulb" />
+                    </div>
+                    <span>Quick Tips</span>
+                </div>
+            </div>
+            <div class="df-alert-body">
+                <MudList T="string" Dense="true">
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Info" IconColor="Color.Info">
+                        <MudText Typo="Typo.body2">Create parent categories first</MudText>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Info" IconColor="Color.Info">
+                        <MudText Typo="Typo.body2">Use subcategories for specifics</MudText>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Info" IconColor="Color.Info">
+                        <MudText Typo="Typo.body2">Max depth: 3 levels</MudText>
+                    </MudListItem>
+                </MudList>
+            </div>
+        </div>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private List<CategoryDto> _categories = new();
+    private List<CategoryDto> _allCategories = new();
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategories();
+    }
+
+    private async Task LoadCategories()
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            _categories = await Mediator.Send(new GetCategoriesQuery());
+            _allCategories = FlattenCategories(_categories);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading categories: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private List<CategoryDto> FlattenCategories(List<CategoryDto> categories)
+    {
+        var result = new List<CategoryDto>();
+        foreach (var cat in categories)
+        {
+            result.Add(cat);
+            if (cat.Children.Any())
+                result.AddRange(FlattenCategories(cat.Children));
+        }
+        return result;
+    }
+
+    private async Task OpenDialog(int? parentId)
+    {
+        var parameters = new DialogParameters
+        {
+            { nameof(CategoryDialog.CategoryId), (int?)null },
+            { nameof(CategoryDialog.AvailableCategories), _allCategories }
+        };
+        var dialog = await DialogService.ShowAsync<CategoryDialog>("New Category", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        var result = await dialog.Result;
+        if (!result.Canceled)
+            await LoadCategories();
+    }
+
+    private async Task EditCategory(int categoryId)
+    {
+        var parameters = new DialogParameters
+        {
+            { nameof(CategoryDialog.CategoryId), categoryId },
+            { nameof(CategoryDialog.AvailableCategories), _allCategories }
+        };
+        var dialog = await DialogService.ShowAsync<CategoryDialog>("Edit Category", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        var result = await dialog.Result;
+        if (!result.Canceled)
+            await LoadCategories();
+    }
+
+    private async Task DeleteCategory(int id)
+    {
+        var category = _allCategories.FirstOrDefault(c => c.Id == id);
+        if (category == null) return;
+
+        var confirmed = await DialogService.ShowMessageBox(
+            "Confirm Delete",
+            $"Are you sure you want to delete '{category.Name}'?",
+            yesText: "Delete",
+            cancelText: "Cancel");
+
+        if (confirmed == true)
+        {
+            try
+            {
+                await Mediator.Send(new DeleteCategoryCommand(id));
+                Snackbar.Add("Category deleted successfully", Severity.Success);
+                await LoadCategories();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
+        }
+    }
+
+    private int GetTotalCategories()
+    {
+        return _allCategories.Count;
+    }
+
+    private int GetTotalDrugs()
+    {
+        return _allCategories.Sum(c => c.DrugCount);
+    }
+}

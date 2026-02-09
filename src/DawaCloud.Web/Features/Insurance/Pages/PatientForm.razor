@@ -1,0 +1,167 @@
+@page "/insurance/patients/new"
+@page "/insurance/patients/{Id:int}/edit"
+@using MudBlazor
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>@(_isEditMode ? "Edit Patient" : "Register Patient") - DawaCloud</PageTitle>
+
+<div class="mb-4">
+    <div class="d-flex justify-space-between align-center mb-4">
+        <div>
+            <MudText Typo="Typo.h4" Class="mb-1">@(_isEditMode ? "Edit Patient" : "Register Patient")</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                Register patient with health insurance coverage
+            </MudText>
+        </div>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Default"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Href="/insurance/patients">
+            Back to List
+        </MudButton>
+    </div>
+
+    <MudGrid>
+        <MudItem xs="12" md="8">
+            <MudPaper Elevation="2" Class="pa-6">
+                <MudForm @ref="_form">
+                    <MudText Typo="Typo.h6" Class="mb-4">Patient Information</MudText>
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.FirstName" Label="First Name" Variant="Variant.Outlined" Required="true" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.LastName" Label="Last Name" Variant="Variant.Outlined" Required="true" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudDatePicker @bind-Date="_dateOfBirth" Label="Date of Birth" Variant="Variant.Outlined" Required="true" MaxDate="DateTime.Today" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="string" @bind-Value="_model.Gender" Label="Gender" Variant="Variant.Outlined" Required="true">
+                                <MudSelectItem Value="@("Male")">Male</MudSelectItem>
+                                <MudSelectItem Value="@("Female")">Female</MudSelectItem>
+                                <MudSelectItem Value="@("Other")">Other</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.Phone" Label="Phone" Variant="Variant.Outlined" Placeholder="+211912345678" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.Email" Label="Email" InputType="InputType.Email" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.IdNumber" Label="National ID Number" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.Address" Label="Address" Variant="Variant.Outlined" />
+                        </MudItem>
+                    </MudGrid>
+
+                    <MudDivider Class="my-4" />
+
+                    <MudText Typo="Typo.h6" Class="mb-4">Insurance Coverage</MudText>
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="int?" @bind-Value="_model.ProviderId" Label="Insurance Provider" Variant="Variant.Outlined" Required="true">
+                                <MudSelectItem T="int?" Value="1">Phoenix Health Insurance</MudSelectItem>
+                                <MudSelectItem T="int?" Value="2">National Health Insurance Fund</MudSelectItem>
+                                <MudSelectItem T="int?" Value="3">Private Health Plans</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.MemberNumber" Label="Member/Policy Number" Variant="Variant.Outlined" Required="true" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudDatePicker @bind-Date="_coverageStartDate" Label="Coverage Start Date" Variant="Variant.Outlined" Required="true" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudDatePicker @bind-Date="_coverageEndDate" Label="Coverage End Date (Optional)" Variant="Variant.Outlined" Clearable="true" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudNumericField @bind-Value="_model.AnnualCoverageLimit" Label="Annual Coverage Limit (SSP)" Variant="Variant.Outlined" Format="N0" Min="0m" HelperText="Leave blank for unlimited" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudNumericField @bind-Value="_model.CoveragePercentage" Label="Coverage Percentage (%)" Variant="Variant.Outlined" Min="0m" Max="100m" HelperText="Leave blank to use provider default" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="_model.Notes" Label="Notes" Variant="Variant.Outlined" Lines="2" />
+                        </MudItem>
+                    </MudGrid>
+
+                    <div class="mt-4">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SavePatient">
+                            @(_isEditMode ? "Update Patient" : "Register Patient")
+                        </MudButton>
+                    </div>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-3">Coverage Summary</MudText>
+                <div class="d-flex flex-column gap-2">
+                    <div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Provider</MudText>
+                        <MudText Typo="Typo.body1">@GetProviderName(_model.ProviderId)</MudText>
+                    </div>
+                    @if (_model.AnnualCoverageLimit.HasValue && _model.AnnualCoverageLimit.Value > 0)
+                    {
+                        <div>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Annual Limit</MudText>
+                            <MudText Typo="Typo.h6" Color="Color.Primary">SSP @_model.AnnualCoverageLimit.Value.ToString("N0")</MudText>
+                        </div>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Success">Unlimited Coverage</MudText>
+                    }
+                </div>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</div>
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+
+    private bool _isEditMode => Id.HasValue;
+    private MudForm? _form;
+    private PatientModel _model = new();
+    private DateTime? _dateOfBirth;
+    private DateTime? _coverageStartDate = DateTime.Today;
+    private DateTime? _coverageEndDate;
+
+    private async Task SavePatient()
+    {
+        await Task.Delay(500);
+        Snackbar.Add(_isEditMode ? "Patient updated successfully" : "Patient registered successfully", Severity.Success);
+        Navigation.NavigateTo("/insurance/patients");
+    }
+
+    private string GetProviderName(int? providerId) => providerId switch
+    {
+        1 => "Phoenix Health Insurance",
+        2 => "National Health Insurance Fund",
+        3 => "Private Health Plans",
+        _ => "Select provider"
+    };
+
+    private class PatientModel
+    {
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string Gender { get; set; } = "Male";
+        public string? Phone { get; set; }
+        public string? Email { get; set; }
+        public string? IdNumber { get; set; }
+        public string? Address { get; set; }
+        public int? ProviderId { get; set; }
+        public string MemberNumber { get; set; } = string.Empty;
+        public decimal? AnnualCoverageLimit { get; set; }
+        public decimal? CoveragePercentage { get; set; }
+        public string? Notes { get; set; }
+    }
+}

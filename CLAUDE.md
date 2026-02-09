@@ -1,4 +1,4 @@
-# DawaBes - Drugs Wholesale & Retail Management System
+﻿# DawaCloud - Drugs Wholesale & Retail Management System
 
 > **Version:** 1.0.0  
 > **Last Updated:** January 2026  
@@ -6,7 +6,7 @@
 
 ---
 
-## 📋 Table of Contents
+## ðŸ“‹ Table of Contents
 
 1. [Project Overview](#project-overview)
 2. [Technology Stack](#technology-stack)
@@ -27,7 +27,7 @@
 
 ### Background
 
-**DawaBes** (Dawa = Medicine in Swahili) is a comprehensive pharmaceutical management system designed to streamline drug inventory, procurement, wholesale and retail operations for pharmacies and drug distribution businesses in South Sudan and East Africa. This instance is currently configured for **Revo Pharma & Medical Ltd**.
+**DawaCloud** (Dawa = Medicine in Swahili) is a comprehensive pharmaceutical management system designed to streamline drug inventory, procurement, wholesale and retail operations for pharmacies and drug distribution businesses in South Sudan and East Africa. This instance is currently configured for **Revo Pharma & Medical Ltd**.
 
 ### Vision
 
@@ -60,29 +60,29 @@ Create an intelligent, compliance-first pharmaceutical platform that automates t
 ### Core Framework
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    DawaBes.Web                         │
-│         Single Blazor Server Application                │
-├─────────────────────────────────────────────────────────┤
-│  UI Layer          │  MudBlazor Components              │
-│  State Management  │  Fluxor (Redux pattern)            │
-│  Real-time         │  SignalR                           │
-├─────────────────────────────────────────────────────────┤
-│  API Layer         │  Minimal APIs / Carter             │
-│  Validation        │  FluentValidation                  │
-│  Mapping           │  Mapster                           │
-├─────────────────────────────────────────────────────────┤
-│  Business Layer    │  MediatR (CQRS)                    │
-│  Background Jobs   │  IHostedService / BackgroundService│
-├─────────────────────────────────────────────────────────┤
-│  Data Layer        │  Entity Framework Core 10          │
-│  Database          │  SQL Server 2022                   │
-│  Caching           │  Redis                             │
-├─────────────────────────────────────────────────────────┤
-│  Security          │  ASP.NET Core Identity             │
-│  Authentication    │  JWT + Cookie Auth                 │
-│  Authorization     │  Policy-based + Resource-based     │
-└─────────────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                    DawaCloud.Web                         â”‚
+â”‚         Single Blazor Server Application                â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚  UI Layer          â”‚  MudBlazor Components              â”‚
+â”‚  State Management  â”‚  Fluxor (Redux pattern)            â”‚
+â”‚  Real-time         â”‚  SignalR                           â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚  API Layer         â”‚  Minimal APIs / Carter             â”‚
+â”‚  Validation        â”‚  FluentValidation                  â”‚
+â”‚  Mapping           â”‚  Mapster                           â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚  Business Layer    â”‚  MediatR (CQRS)                    â”‚
+â”‚  Background Jobs   â”‚  IHostedService / BackgroundServiceâ”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚  Data Layer        â”‚  Entity Framework Core 10          â”‚
+â”‚  Database          â”‚  SQL Server 2022                   â”‚
+â”‚  Caching           â”‚  Redis                             â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚  Security          â”‚  ASP.NET Core Identity             â”‚
+â”‚  Authentication    â”‚  JWT + Cookie Auth                 â”‚
+â”‚  Authorization     â”‚  Policy-based + Resource-based     â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ### Package Dependencies
@@ -127,193 +127,193 @@ Create an intelligent, compliance-first pharmaceutical platform that automates t
 ### Feature-Based (Vertical Slice) Architecture
 
 ```
-DawaBes/
-├── src/
-│   └── DawaBes.Web/
-│       ├── Features/
-│       │   ├── Auth/
-│       │   │   ├── Pages/
-│       │   │   │   ├── Login.razor
-│       │   │   │   ├── Register.razor
-│       │   │   │   └── ForgotPassword.razor
-│       │   │   ├── Components/
-│       │   │   │   └── LoginForm.razor
-│       │   │   ├── Commands/
-│       │   │   │   ├── LoginCommand.cs
-│       │   │   │   └── RegisterCommand.cs
-│       │   │   ├── Queries/
-│       │   │   │   └── GetUserProfileQuery.cs
-│       │   │   ├── Services/
-│       │   │   │   └── AuthService.cs
-│       │   │   ├── Validators/
-│       │   │   │   └── LoginValidator.cs
-│       │   │   └── _Imports.razor
-│       │   │
-│       │   ├── Dashboard/
-│       │   │   ├── Pages/
-│       │   │   │   └── Index.razor
-│       │   │   ├── Components/
-│       │   │   │   ├── StockAlertCard.razor
-│       │   │   │   ├── ExpiryAlertCard.razor
-│       │   │   │   ├── SalesChart.razor
-│       │   │   │   └── QuickActions.razor
-│       │   │   ├── Queries/
-│       │   │   │   └── GetDashboardDataQuery.cs
-│       │   │   └── Services/
-│       │   │       └── DashboardService.cs
-│       │   │
-│       │   ├── Drugs/
-│       │   │   ├── Pages/
-│       │   │   │   ├── DrugList.razor
-│       │   │   │   ├── DrugDetails.razor
-│       │   │   │   └── DrugForm.razor
-│       │   │   ├── Components/
-│       │   │   │   ├── DrugCard.razor
-│       │   │   │   ├── BatchTable.razor
-│       │   │   │   └── PricingTierEditor.razor
-│       │   │   ├── Commands/
-│       │   │   │   ├── CreateDrugCommand.cs
-│       │   │   │   ├── UpdateDrugCommand.cs
-│       │   │   │   └── ImportDrugsCommand.cs
-│       │   │   ├── Queries/
-│       │   │   │   ├── GetDrugsQuery.cs
-│       │   │   │   ├── GetDrugByIdQuery.cs
-│       │   │   │   └── SearchDrugsQuery.cs
-│       │   │   ├── Validators/
-│       │   │   │   └── DrugValidator.cs
-│       │   │   └── Services/
-│       │   │       └── DrugService.cs
-│       │   │
-│       │   ├── Inventory/
-│       │   │   ├── Pages/
-│       │   │   ├── Components/
-│       │   │   ├── Commands/
-│       │   │   ├── Queries/
-│       │   │   └── Services/
-│       │   │
-│       │   ├── Procurement/
-│       │   │   ├── Pages/
-│       │   │   ├── Components/
-│       │   │   ├── Commands/
-│       │   │   ├── Queries/
-│       │   │   └── Services/
-│       │   │
-│       │   ├── Suppliers/
-│       │   │   ├── Pages/
-│       │   │   ├── Components/
-│       │   │   ├── Commands/
-│       │   │   ├── Queries/
-│       │   │   └── Services/
-│       │   │
-│       │   ├── SupplierPortal/
-│       │   │   ├── Pages/
-│       │   │   ├── Components/
-│       │   │   ├── Commands/
-│       │   │   ├── Queries/
-│       │   │   └── Services/
-│       │   │
-│       │   ├── Wholesale/
-│       │   │   ├── Pages/
-│       │   │   ├── Components/
-│       │   │   ├── Commands/
-│       │   │   ├── Queries/
-│       │   │   └── Services/
-│       │   │
-│       │   ├── Retail/
-│       │   │   ├── Pages/
-│       │   │   │   └── POS.razor
-│       │   │   ├── Components/
-│       │   │   │   ├── ProductSearch.razor
-│       │   │   │   ├── CartPanel.razor
-│       │   │   │   ├── PaymentModal.razor
-│       │   │   │   └── ReceiptPreview.razor
-│       │   │   ├── Commands/
-│       │   │   ├── Queries/
-│       │   │   └── Services/
-│       │   │
-│       │   ├── Reports/
-│       │   │   ├── Pages/
-│       │   │   ├── Components/
-│       │   │   ├── Queries/
-│       │   │   └── Services/
-│       │   │
-│       │   ├── Notifications/
-│       │   │   ├── Components/
-│       │   │   ├── Services/
-│       │   │   │   ├── EmailService.cs
-│       │   │   │   ├── WhatsAppService.cs
-│       │   │   │   └── NotificationHub.cs
-│       │   │   └── Templates/
-│       │   │
-│       │   ├── Settings/
-│       │   │   ├── Pages/
-│       │   │   ├── Components/
-│       │   │   ├── Commands/
-│       │   │   └── Services/
-│       │   │
-│       │   └── Users/
-│       │       ├── Pages/
-│       │       ├── Components/
-│       │       ├── Commands/
-│       │       ├── Queries/
-│       │       └── Services/
-│       │
-│       ├── Shared/
-│       │   ├── Layout/
-│       │   │   ├── MainLayout.razor
-│       │   │   ├── AppShell.razor
-│       │   │   ├── NavigationRail.razor
-│       │   │   ├── BottomNavigation.razor
-│       │   │   ├── CommandPalette.razor
-│       │   │   └── NotificationDrawer.razor
-│       │   ├── Components/
-│       │   │   ├── DataGrid.razor
-│       │   │   ├── SearchInput.razor
-│       │   │   ├── LoadingOverlay.razor
-│       │   │   ├── ConfirmDialog.razor
-│       │   │   └── FileUploader.razor
-│       │   └── Extensions/
-│       │
-│       ├── Data/
-│       │   ├── AppDbContext.cs
-│       │   ├── Entities/
-│       │   │   ├── Drug.cs
-│       │   │   ├── Batch.cs
-│       │   │   ├── Supplier.cs
-│       │   │   ├── DrugRequest.cs
-│       │   │   ├── Sale.cs
-│       │   │   └── ...
-│       │   ├── Configurations/
-│       │   │   └── [EntityConfigurations].cs
-│       │   └── Migrations/
-│       │
-│       ├── Infrastructure/
-│       │   ├── Identity/
-│       │   ├── Middleware/
-│       │   ├── Filters/
-│       │   └── Extensions/
-│       │
-│       ├── wwwroot/
-│       │   ├── css/
-│       │   │   └── app.css
-│       │   ├── js/
-│       │   │   └── app.js
-│       │   └── images/
-│       │
-│       ├── Program.cs
-│       ├── appsettings.json
-│       └── appsettings.Development.json
-│
-├── tests/
-│   ├── DawaBes.UnitTests/
-│   └── DawaBes.IntegrationTests/
-│
-├── docs/
-│   └── ...
-│
-├── CLAUDE.md
-├── README.md
-└── DawaBes.sln
+DawaCloud/
+â”œâ”€â”€ src/
+â”‚   â””â”€â”€ DawaCloud.Web/
+â”‚       â”œâ”€â”€ Features/
+â”‚       â”‚   â”œâ”€â”€ Auth/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Pages/
+â”‚       â”‚   â”‚   â”‚   â”œâ”€â”€ Login.razor
+â”‚       â”‚   â”‚   â”‚   â”œâ”€â”€ Register.razor
+â”‚       â”‚   â”‚   â”‚   â””â”€â”€ ForgotPassword.razor
+â”‚       â”‚   â”‚   â”œâ”€â”€ Components/
+â”‚       â”‚   â”‚   â”‚   â””â”€â”€ LoginForm.razor
+â”‚       â”‚   â”‚   â”œâ”€â”€ Commands/
+â”‚       â”‚   â”‚   â”‚   â”œâ”€â”€ LoginCommand.cs
+â”‚       â”‚   â”‚   â”‚   â””â”€â”€ RegisterCommand.cs
+â”‚       â”‚   â”‚   â”œâ”€â”€ Queries/
+â”‚       â”‚   â”‚   â”‚   â””â”€â”€ GetUserProfileQuery.cs
+â”‚       â”‚   â”‚   â”œâ”€â”€ Services/
+â”‚       â”‚   â”‚   â”‚   â””â”€â”€ AuthService.cs
+â”‚       â”‚   â”‚   â”œâ”€â”€ Validators/
+â”‚       â”‚   â”‚   â”‚   â””â”€â”€ LoginValidator.cs
+â”‚       â”‚   â”‚   â””â”€â”€ _Imports.razor
+â”‚       â”‚   â”‚
+â”‚       â”‚   â”œâ”€â”€ Dashboard/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Pages/
+â”‚       â”‚   â”‚   â”‚   â””â”€â”€ Index.razor
+â”‚       â”‚   â”‚   â”œâ”€â”€ Components/
+â”‚       â”‚   â”‚   â”‚   â”œâ”€â”€ StockAlertCard.razor
+â”‚       â”‚   â”‚   â”‚   â”œâ”€â”€ ExpiryAlertCard.razor
+â”‚       â”‚   â”‚   â”‚   â”œâ”€â”€ SalesChart.razor
+â”‚       â”‚   â”‚   â”‚   â””â”€â”€ QuickActions.razor
+â”‚       â”‚   â”‚   â”œâ”€â”€ Queries/
+â”‚       â”‚   â”‚   â”‚   â””â”€â”€ GetDashboardDataQuery.cs
+â”‚       â”‚   â”‚   â””â”€â”€ Services/
+â”‚       â”‚   â”‚       â””â”€â”€ DashboardService.cs
+â”‚       â”‚   â”‚
+â”‚       â”‚   â”œâ”€â”€ Drugs/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Pages/
+â”‚       â”‚   â”‚   â”‚   â”œâ”€â”€ DrugList.razor
+â”‚       â”‚   â”‚   â”‚   â”œâ”€â”€ DrugDetails.razor
+â”‚       â”‚   â”‚   â”‚   â””â”€â”€ DrugForm.razor
+â”‚       â”‚   â”‚   â”œâ”€â”€ Components/
+â”‚       â”‚   â”‚   â”‚   â”œâ”€â”€ DrugCard.razor
+â”‚       â”‚   â”‚   â”‚   â”œâ”€â”€ BatchTable.razor
+â”‚       â”‚   â”‚   â”‚   â””â”€â”€ PricingTierEditor.razor
+â”‚       â”‚   â”‚   â”œâ”€â”€ Commands/
+â”‚       â”‚   â”‚   â”‚   â”œâ”€â”€ CreateDrugCommand.cs
+â”‚       â”‚   â”‚   â”‚   â”œâ”€â”€ UpdateDrugCommand.cs
+â”‚       â”‚   â”‚   â”‚   â””â”€â”€ ImportDrugsCommand.cs
+â”‚       â”‚   â”‚   â”œâ”€â”€ Queries/
+â”‚       â”‚   â”‚   â”‚   â”œâ”€â”€ GetDrugsQuery.cs
+â”‚       â”‚   â”‚   â”‚   â”œâ”€â”€ GetDrugByIdQuery.cs
+â”‚       â”‚   â”‚   â”‚   â””â”€â”€ SearchDrugsQuery.cs
+â”‚       â”‚   â”‚   â”œâ”€â”€ Validators/
+â”‚       â”‚   â”‚   â”‚   â””â”€â”€ DrugValidator.cs
+â”‚       â”‚   â”‚   â””â”€â”€ Services/
+â”‚       â”‚   â”‚       â””â”€â”€ DrugService.cs
+â”‚       â”‚   â”‚
+â”‚       â”‚   â”œâ”€â”€ Inventory/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Pages/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Components/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Commands/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Queries/
+â”‚       â”‚   â”‚   â””â”€â”€ Services/
+â”‚       â”‚   â”‚
+â”‚       â”‚   â”œâ”€â”€ Procurement/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Pages/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Components/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Commands/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Queries/
+â”‚       â”‚   â”‚   â””â”€â”€ Services/
+â”‚       â”‚   â”‚
+â”‚       â”‚   â”œâ”€â”€ Suppliers/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Pages/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Components/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Commands/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Queries/
+â”‚       â”‚   â”‚   â””â”€â”€ Services/
+â”‚       â”‚   â”‚
+â”‚       â”‚   â”œâ”€â”€ SupplierPortal/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Pages/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Components/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Commands/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Queries/
+â”‚       â”‚   â”‚   â””â”€â”€ Services/
+â”‚       â”‚   â”‚
+â”‚       â”‚   â”œâ”€â”€ Wholesale/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Pages/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Components/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Commands/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Queries/
+â”‚       â”‚   â”‚   â””â”€â”€ Services/
+â”‚       â”‚   â”‚
+â”‚       â”‚   â”œâ”€â”€ Retail/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Pages/
+â”‚       â”‚   â”‚   â”‚   â””â”€â”€ POS.razor
+â”‚       â”‚   â”‚   â”œâ”€â”€ Components/
+â”‚       â”‚   â”‚   â”‚   â”œâ”€â”€ ProductSearch.razor
+â”‚       â”‚   â”‚   â”‚   â”œâ”€â”€ CartPanel.razor
+â”‚       â”‚   â”‚   â”‚   â”œâ”€â”€ PaymentModal.razor
+â”‚       â”‚   â”‚   â”‚   â””â”€â”€ ReceiptPreview.razor
+â”‚       â”‚   â”‚   â”œâ”€â”€ Commands/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Queries/
+â”‚       â”‚   â”‚   â””â”€â”€ Services/
+â”‚       â”‚   â”‚
+â”‚       â”‚   â”œâ”€â”€ Reports/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Pages/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Components/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Queries/
+â”‚       â”‚   â”‚   â””â”€â”€ Services/
+â”‚       â”‚   â”‚
+â”‚       â”‚   â”œâ”€â”€ Notifications/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Components/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Services/
+â”‚       â”‚   â”‚   â”‚   â”œâ”€â”€ EmailService.cs
+â”‚       â”‚   â”‚   â”‚   â”œâ”€â”€ WhatsAppService.cs
+â”‚       â”‚   â”‚   â”‚   â””â”€â”€ NotificationHub.cs
+â”‚       â”‚   â”‚   â””â”€â”€ Templates/
+â”‚       â”‚   â”‚
+â”‚       â”‚   â”œâ”€â”€ Settings/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Pages/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Components/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Commands/
+â”‚       â”‚   â”‚   â””â”€â”€ Services/
+â”‚       â”‚   â”‚
+â”‚       â”‚   â””â”€â”€ Users/
+â”‚       â”‚       â”œâ”€â”€ Pages/
+â”‚       â”‚       â”œâ”€â”€ Components/
+â”‚       â”‚       â”œâ”€â”€ Commands/
+â”‚       â”‚       â”œâ”€â”€ Queries/
+â”‚       â”‚       â””â”€â”€ Services/
+â”‚       â”‚
+â”‚       â”œâ”€â”€ Shared/
+â”‚       â”‚   â”œâ”€â”€ Layout/
+â”‚       â”‚   â”‚   â”œâ”€â”€ MainLayout.razor
+â”‚       â”‚   â”‚   â”œâ”€â”€ AppShell.razor
+â”‚       â”‚   â”‚   â”œâ”€â”€ NavigationRail.razor
+â”‚       â”‚   â”‚   â”œâ”€â”€ BottomNavigation.razor
+â”‚       â”‚   â”‚   â”œâ”€â”€ CommandPalette.razor
+â”‚       â”‚   â”‚   â””â”€â”€ NotificationDrawer.razor
+â”‚       â”‚   â”œâ”€â”€ Components/
+â”‚       â”‚   â”‚   â”œâ”€â”€ DataGrid.razor
+â”‚       â”‚   â”‚   â”œâ”€â”€ SearchInput.razor
+â”‚       â”‚   â”‚   â”œâ”€â”€ LoadingOverlay.razor
+â”‚       â”‚   â”‚   â”œâ”€â”€ ConfirmDialog.razor
+â”‚       â”‚   â”‚   â””â”€â”€ FileUploader.razor
+â”‚       â”‚   â””â”€â”€ Extensions/
+â”‚       â”‚
+â”‚       â”œâ”€â”€ Data/
+â”‚       â”‚   â”œâ”€â”€ AppDbContext.cs
+â”‚       â”‚   â”œâ”€â”€ Entities/
+â”‚       â”‚   â”‚   â”œâ”€â”€ Drug.cs
+â”‚       â”‚   â”‚   â”œâ”€â”€ Batch.cs
+â”‚       â”‚   â”‚   â”œâ”€â”€ Supplier.cs
+â”‚       â”‚   â”‚   â”œâ”€â”€ DrugRequest.cs
+â”‚       â”‚   â”‚   â”œâ”€â”€ Sale.cs
+â”‚       â”‚   â”‚   â””â”€â”€ ...
+â”‚       â”‚   â”œâ”€â”€ Configurations/
+â”‚       â”‚   â”‚   â””â”€â”€ [EntityConfigurations].cs
+â”‚       â”‚   â””â”€â”€ Migrations/
+â”‚       â”‚
+â”‚       â”œâ”€â”€ Infrastructure/
+â”‚       â”‚   â”œâ”€â”€ Identity/
+â”‚       â”‚   â”œâ”€â”€ Middleware/
+â”‚       â”‚   â”œâ”€â”€ Filters/
+â”‚       â”‚   â””â”€â”€ Extensions/
+â”‚       â”‚
+â”‚       â”œâ”€â”€ wwwroot/
+â”‚       â”‚   â”œâ”€â”€ css/
+â”‚       â”‚   â”‚   â””â”€â”€ app.css
+â”‚       â”‚   â”œâ”€â”€ js/
+â”‚       â”‚   â”‚   â””â”€â”€ app.js
+â”‚       â”‚   â””â”€â”€ images/
+â”‚       â”‚
+â”‚       â”œâ”€â”€ Program.cs
+â”‚       â”œâ”€â”€ appsettings.json
+â”‚       â””â”€â”€ appsettings.Development.json
+â”‚
+â”œâ”€â”€ tests/
+â”‚   â”œâ”€â”€ DawaCloud.UnitTests/
+â”‚   â””â”€â”€ DawaCloud.IntegrationTests/
+â”‚
+â”œâ”€â”€ docs/
+â”‚   â””â”€â”€ ...
+â”‚
+â”œâ”€â”€ CLAUDE.md
+â”œâ”€â”€ README.md
+â””â”€â”€ DawaCloud.sln
 ```
 
 ### CQRS Pattern Implementation
@@ -354,7 +354,7 @@ public record GetDrugsQuery(
 
 ### Background Services Implementation
 
-DawaBes uses native .NET `IHostedService` and `BackgroundService` for scheduled and background tasks instead of external job schedulers.
+DawaCloud uses native .NET `IHostedService` and `BackgroundService` for scheduled and background tasks instead of external job schedulers.
 
 ```csharp
 // Expiry Alert Background Service
@@ -486,84 +486,84 @@ builder.Services.AddHostedService<ScheduledJobService>();
 
 ### Innovative Layout: "Adaptive Shell"
 
-Unlike traditional sidebar layouts, DawaBes uses an **Adaptive Shell** design:
+Unlike traditional sidebar layouts, DawaCloud uses an **Adaptive Shell** design:
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                    COMMAND BAR                           │   │
-│  │  [🔍 Search drugs, actions, reports...     ]  [⌘K]  👤  │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                 │
-│  ┌──────────┐  ┌────────────────────────────────────────────┐  │
-│  │          │  │                                            │  │
-│  │   NAV    │  │                                            │  │
-│  │   RAIL   │  │              MAIN CONTENT                  │  │
-│  │          │  │                                            │  │
-│  │  [🏠]    │  │   ┌────────┐  ┌────────┐  ┌────────┐      │  │
-│  │  [💊]    │  │   │ Card 1 │  │ Card 2 │  │ Card 3 │      │  │
-│  │  [📦]    │  │   └────────┘  └────────┘  └────────┘      │  │
-│  │  [🛒]    │  │                                            │  │
-│  │  [📊]    │  │                                            │  │
-│  │  [⚙️]    │  │                                            │  │
-│  │          │  │                                            │  │
-│  └──────────┘  └────────────────────────────────────────────┘  │
-│                                                                 │
-│              ┌─────────────────────────────────┐               │
-│              │     CONTEXTUAL ACTION BAR       │               │
-│              │  [+ New Drug]  [Import]  [Export]│               │
-│              └─────────────────────────────────┘               │
-└─────────────────────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   â”‚
+â”‚  â”‚                    COMMAND BAR                           â”‚   â”‚
+â”‚  â”‚  [ðŸ” Search drugs, actions, reports...     ]  [âŒ˜K]  ðŸ‘¤  â”‚   â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜   â”‚
+â”‚                                                                 â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”‚
+â”‚  â”‚          â”‚  â”‚                                            â”‚  â”‚
+â”‚  â”‚   NAV    â”‚  â”‚                                            â”‚  â”‚
+â”‚  â”‚   RAIL   â”‚  â”‚              MAIN CONTENT                  â”‚  â”‚
+â”‚  â”‚          â”‚  â”‚                                            â”‚  â”‚
+â”‚  â”‚  [ðŸ ]    â”‚  â”‚   â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”      â”‚  â”‚
+â”‚  â”‚  [ðŸ’Š]    â”‚  â”‚   â”‚ Card 1 â”‚  â”‚ Card 2 â”‚  â”‚ Card 3 â”‚      â”‚  â”‚
+â”‚  â”‚  [ðŸ“¦]    â”‚  â”‚   â””â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”˜      â”‚  â”‚
+â”‚  â”‚  [ðŸ›’]    â”‚  â”‚                                            â”‚  â”‚
+â”‚  â”‚  [ðŸ“Š]    â”‚  â”‚                                            â”‚  â”‚
+â”‚  â”‚  [âš™ï¸]    â”‚  â”‚                                            â”‚  â”‚
+â”‚  â”‚          â”‚  â”‚                                            â”‚  â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â”‚
+â”‚                                                                 â”‚
+â”‚              â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”               â”‚
+â”‚              â”‚     CONTEXTUAL ACTION BAR       â”‚               â”‚
+â”‚              â”‚  [+ New Drug]  [Import]  [Export]â”‚               â”‚
+â”‚              â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜               â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 
 MOBILE VIEW:
-┌─────────────────────────┐
-│  DawaBes    🔍  🔔  👤 │
-├─────────────────────────┤
-│                         │
-│                         │
-│     MAIN CONTENT        │
-│                         │
-│   ┌─────────────────┐   │
-│   │   Stock Alert   │   │
-│   │   12 items low  │   │
-│   └─────────────────┘   │
-│                         │
-│   ┌─────────────────┐   │
-│   │  Expiry Alert   │   │
-│   │   5 batches     │   │
-│   └─────────────────┘   │
-│                         │
-├─────────────────────────┤
-│  🏠   💊   ➕   📦   👤 │
-│ Home Drugs New  Stock Me│
-└─────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  DawaCloud    ðŸ”  ðŸ””  ðŸ‘¤ â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚                         â”‚
+â”‚                         â”‚
+â”‚     MAIN CONTENT        â”‚
+â”‚                         â”‚
+â”‚   â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   â”‚
+â”‚   â”‚   Stock Alert   â”‚   â”‚
+â”‚   â”‚   12 items low  â”‚   â”‚
+â”‚   â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜   â”‚
+â”‚                         â”‚
+â”‚   â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   â”‚
+â”‚   â”‚  Expiry Alert   â”‚   â”‚
+â”‚   â”‚   5 batches     â”‚   â”‚
+â”‚   â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜   â”‚
+â”‚                         â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚  ðŸ    ðŸ’Š   âž•   ðŸ“¦   ðŸ‘¤ â”‚
+â”‚ Home Drugs New  Stock Meâ”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ### Key UI Features
 
-#### 1. Command Palette (⌘K / Ctrl+K)
+#### 1. Command Palette (âŒ˜K / Ctrl+K)
 
 Quick access to all system actions:
 
 ```
-┌─────────────────────────────────────────────┐
-│  🔍 Type a command or search...             │
-├─────────────────────────────────────────────┤
-│  RECENT                                     │
-│  → Paracetamol 500mg                        │
-│  → Sales Report - January                   │
-│                                             │
-│  QUICK ACTIONS                              │
-│  ➕ New Drug                          ⌘N    │
-│  🛒 New Sale                          ⌘S    │
-│  📦 Receive Stock                     ⌘R    │
-│  📋 Generate Report                   ⌘G    │
-│                                             │
-│  NAVIGATION                                 │
-│  → Go to Dashboard                          │
-│  → Go to Inventory                          │
-│  → Go to POS                                │
-└─────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  ðŸ” Type a command or search...             â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚  RECENT                                     â”‚
+â”‚  â†’ Paracetamol 500mg                        â”‚
+â”‚  â†’ Sales Report - January                   â”‚
+â”‚                                             â”‚
+â”‚  QUICK ACTIONS                              â”‚
+â”‚  âž• New Drug                          âŒ˜N    â”‚
+â”‚  ðŸ›’ New Sale                          âŒ˜S    â”‚
+â”‚  ðŸ“¦ Receive Stock                     âŒ˜R    â”‚
+â”‚  ðŸ“‹ Generate Report                   âŒ˜G    â”‚
+â”‚                                             â”‚
+â”‚  NAVIGATION                                 â”‚
+â”‚  â†’ Go to Dashboard                          â”‚
+â”‚  â†’ Go to Inventory                          â”‚
+â”‚  â†’ Go to POS                                â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 #### 2. Smart Notification Center
@@ -594,29 +594,29 @@ Floating action bar that adapts to current context:
 Optimized for speed and ease of use:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  🔍 Scan barcode or search...                    [F1 Help]  │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌───────────────────────────┐  ┌─────────────────────────┐│
-│  │                           │  │  CART                   ││
-│  │    PRODUCT QUICK GRID     │  │                         ││
-│  │                           │  │  Paracetamol 500mg  x2  ││
-│  │  [Parac.] [Amoxi.] [Ibu.] │  │           KES 40.00     ││
-│  │  [Omep.]  [Metr.]  [Cet.] │  │  Amoxicillin 250mg  x1  ││
-│  │  [Dolo.]  [Cipr.]  [Pana] │  │           KES 120.00    ││
-│  │                           │  │                         ││
-│  │  [View All Products →]    │  │  ─────────────────────  ││
-│  │                           │  │  Subtotal:   KES 160.00 ││
-│  └───────────────────────────┘  │  Tax (16%):   KES 25.60 ││
-│                                 │  ─────────────────────  ││
-│                                 │  TOTAL:      KES 185.60 ││
-│                                 │                         ││
-│                                 │  ┌─────────────────────┐││
-│                                 │  │     💳 PAY NOW     │││
-│                                 │  └─────────────────────┘││
-│                                 └─────────────────────────┘│
-└─────────────────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  ðŸ” Scan barcode or search...                    [F1 Help]  â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚                                                             â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”â”‚
+â”‚  â”‚                           â”‚  â”‚  CART                   â”‚â”‚
+â”‚  â”‚    PRODUCT QUICK GRID     â”‚  â”‚                         â”‚â”‚
+â”‚  â”‚                           â”‚  â”‚  Paracetamol 500mg  x2  â”‚â”‚
+â”‚  â”‚  [Parac.] [Amoxi.] [Ibu.] â”‚  â”‚           KES 40.00     â”‚â”‚
+â”‚  â”‚  [Omep.]  [Metr.]  [Cet.] â”‚  â”‚  Amoxicillin 250mg  x1  â”‚â”‚
+â”‚  â”‚  [Dolo.]  [Cipr.]  [Pana] â”‚  â”‚           KES 120.00    â”‚â”‚
+â”‚  â”‚                           â”‚  â”‚                         â”‚â”‚
+â”‚  â”‚  [View All Products â†’]    â”‚  â”‚  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€  â”‚â”‚
+â”‚  â”‚                           â”‚  â”‚  Subtotal:   KES 160.00 â”‚â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â”‚  Tax (16%):   KES 25.60 â”‚â”‚
+â”‚                                 â”‚  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€  â”‚â”‚
+â”‚                                 â”‚  TOTAL:      KES 185.60 â”‚â”‚
+â”‚                                 â”‚                         â”‚â”‚
+â”‚                                 â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”â”‚â”‚
+â”‚                                 â”‚  â”‚     ðŸ’³ PAY NOW     â”‚â”‚â”‚
+â”‚                                 â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜â”‚â”‚
+â”‚                                 â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ### Color Theme & Branding
@@ -654,7 +654,7 @@ Optimized for speed and ease of use:
 ### MudBlazor Theme Configuration
 
 ```csharp
-var DawaBesTheme = new MudTheme()
+var DawaCloudTheme = new MudTheme()
 {
     PaletteLight = new PaletteLight()
     {
@@ -1035,15 +1035,15 @@ public enum MovementType
 **Workflow:**
 
 ```
-┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
-│ Low Stock│───▶│ Create   │───▶│ Approve  │───▶│ Send to  │───▶│ Supplier │
-│ Detected │    │ Request  │    │ Request  │    │ Supplier │    │ Responds │
-└──────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘
-                                                                      │
-┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐         │
-│ Update   │◀───│ Post to  │◀───│ Verify   │◀───│ Receive  │◀────────┘
-│ Stock    │    │ Inventory│    │ Delivery │    │ Goods    │
-└──────────┘    └──────────┘    └──────────┘    └──────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ Low Stockâ”‚â”€â”€â”€â–¶â”‚ Create   â”‚â”€â”€â”€â–¶â”‚ Approve  â”‚â”€â”€â”€â–¶â”‚ Send to  â”‚â”€â”€â”€â–¶â”‚ Supplier â”‚
+â”‚ Detected â”‚    â”‚ Request  â”‚    â”‚ Request  â”‚    â”‚ Supplier â”‚    â”‚ Responds â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜    â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜    â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜    â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜    â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                                                                      â”‚
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”         â”‚
+â”‚ Update   â”‚â—€â”€â”€â”€â”‚ Post to  â”‚â—€â”€â”€â”€â”‚ Verify   â”‚â—€â”€â”€â”€â”‚ Receive  â”‚â—€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+â”‚ Stock    â”‚    â”‚ Inventoryâ”‚    â”‚ Delivery â”‚    â”‚ Goods    â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜    â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜    â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜    â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ---
@@ -1336,50 +1336,50 @@ stateDiagram-v2
 ### Entity Relationship Diagram (Core Entities)
 
 ```
-┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
-│   DrugCategory  │       │      Drug       │       │     Batch       │
-├─────────────────┤       ├─────────────────┤       ├─────────────────┤
-│ Id              │       │ Id              │       │ Id              │
-│ Name            │◀──────│ CategoryId      │◀──────│ DrugId          │
-│ ParentId        │       │ Name            │       │ BatchNumber     │
-└─────────────────┘       │ GenericName     │       │ ExpiryDate      │
-                          │ RetailPrice     │       │ CurrentQuantity │
-                          │ WholesalePrice  │       │ Status          │
-                          └─────────────────┘       └─────────────────┘
-                                   │                        │
-                                   │                        │
-                          ┌────────┴────────┐      ┌────────┴────────┐
-                          ▼                 ▼      ▼                 ▼
-                   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐
-                   │ SaleItem    │   │ StockMove.  │   │ GRNItem     │
-                   ├─────────────┤   ├─────────────┤   ├─────────────┤
-                   │ Id          │   │ Id          │   │ Id          │
-                   │ SaleId      │   │ DrugId      │   │ GRNId       │
-                   │ DrugId      │   │ BatchId     │   │ DrugId      │
-                   │ BatchId     │   │ Quantity    │   │ BatchId     │
-                   │ Quantity    │   │ Type        │   │ Quantity    │
-                   └─────────────┘   └─────────────┘   └─────────────┘
-                          ▲                                   ▲
-                          │                                   │
-                   ┌─────────────┐                     ┌─────────────┐
-                   │    Sale     │                     │ GoodsReceipt│
-                   ├─────────────┤                     ├─────────────┤
-                   │ Id          │                     │ Id          │
-                   │ InvoiceNo   │                     │ GRNNumber   │
-                   │ CustomerId  │                     │ SupplierId  │
-                   │ TotalAmount │                     │ RequestId   │
-                   │ SaleType    │                     │ Status      │
-                   └─────────────┘                     └─────────────┘
-                                                              ▲
-                                                              │
-┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
-│    Supplier     │       │  DrugRequest    │       │ DrugRequestItem │
-├─────────────────┤       ├─────────────────┤       ├─────────────────┤
-│ Id              │◀──────│ SupplierId      │◀──────│ RequestId       │
-│ Name            │       │ RequestNumber   │       │ DrugId          │
-│ Email           │       │ Status          │       │ RequestedQty    │
-│ Phone           │       │ TotalAmount     │       │ SuppliedQty     │
-└─────────────────┘       └─────────────────┘       └─────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”       â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”       â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚   DrugCategory  â”‚       â”‚      Drug       â”‚       â”‚     Batch       â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤       â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤       â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚ Id              â”‚       â”‚ Id              â”‚       â”‚ Id              â”‚
+â”‚ Name            â”‚â—€â”€â”€â”€â”€â”€â”€â”‚ CategoryId      â”‚â—€â”€â”€â”€â”€â”€â”€â”‚ DrugId          â”‚
+â”‚ ParentId        â”‚       â”‚ Name            â”‚       â”‚ BatchNumber     â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜       â”‚ GenericName     â”‚       â”‚ ExpiryDate      â”‚
+                          â”‚ RetailPrice     â”‚       â”‚ CurrentQuantity â”‚
+                          â”‚ WholesalePrice  â”‚       â”‚ Status          â”‚
+                          â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜       â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                                   â”‚                        â”‚
+                                   â”‚                        â”‚
+                          â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”      â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”
+                          â–¼                 â–¼      â–¼                 â–¼
+                   â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+                   â”‚ SaleItem    â”‚   â”‚ StockMove.  â”‚   â”‚ GRNItem     â”‚
+                   â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤   â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤   â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+                   â”‚ Id          â”‚   â”‚ Id          â”‚   â”‚ Id          â”‚
+                   â”‚ SaleId      â”‚   â”‚ DrugId      â”‚   â”‚ GRNId       â”‚
+                   â”‚ DrugId      â”‚   â”‚ BatchId     â”‚   â”‚ DrugId      â”‚
+                   â”‚ BatchId     â”‚   â”‚ Quantity    â”‚   â”‚ BatchId     â”‚
+                   â”‚ Quantity    â”‚   â”‚ Type        â”‚   â”‚ Quantity    â”‚
+                   â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜   â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜   â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                          â–²                                   â–²
+                          â”‚                                   â”‚
+                   â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”                     â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+                   â”‚    Sale     â”‚                     â”‚ GoodsReceiptâ”‚
+                   â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤                     â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+                   â”‚ Id          â”‚                     â”‚ Id          â”‚
+                   â”‚ InvoiceNo   â”‚                     â”‚ GRNNumber   â”‚
+                   â”‚ CustomerId  â”‚                     â”‚ SupplierId  â”‚
+                   â”‚ TotalAmount â”‚                     â”‚ RequestId   â”‚
+                   â”‚ SaleType    â”‚                     â”‚ Status      â”‚
+                   â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜                     â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                                                              â–²
+                                                              â”‚
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”       â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”       â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚    Supplier     â”‚       â”‚  DrugRequest    â”‚       â”‚ DrugRequestItem â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤       â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤       â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚ Id              â”‚â—€â”€â”€â”€â”€â”€â”€â”‚ SupplierId      â”‚â—€â”€â”€â”€â”€â”€â”€â”‚ RequestId       â”‚
+â”‚ Name            â”‚       â”‚ RequestNumber   â”‚       â”‚ DrugId          â”‚
+â”‚ Email           â”‚       â”‚ Status          â”‚       â”‚ RequestedQty    â”‚
+â”‚ Phone           â”‚       â”‚ TotalAmount     â”‚       â”‚ SuppliedQty     â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜       â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜       â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ### Key Tables Summary
@@ -1470,131 +1470,131 @@ public class DrugsModule : ICarterModule
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 1.1 | Project setup & solution structure | ✅ Completed | Created solution with feature-based architecture |
-| 1.2 | Configure EF Core & database context | ✅ Completed | SQL Server with interceptors |
-| 1.3 | Implement base entities & configurations | ✅ Completed | BaseAuditableEntity, soft delete, Drug, Batch, Supplier |
-| 1.4 | Setup ASP.NET Core Identity | ✅ Completed | ApplicationUser, ApplicationRole configured |
-| 1.5 | Configure authentication & authorization | ✅ Completed | Cookie auth, role-based policies |
-| 1.6 | Setup MudBlazor & theme configuration | ✅ Completed | DawaBes theme with Medical Teal, custom CSS, Inter font |
-| 1.7 | Create adaptive shell layout | ✅ Completed | Adaptive Shell with expandable drawer (240px/72px), Command Bar, Nav Rail, toggle menu |
-| 1.8 | Implement audit logging interceptor | ✅ Completed | AuditSaveChangesInterceptor implemented |
-| 1.9 | Setup Serilog & Seq logging | ✅ Completed | Structured logging configured |
-| 1.10 | Configure Background Services | ✅ Completed | ExpiryAlertService, LowStockAlertService |
+| 1.1 | Project setup & solution structure | âœ… Completed | Created solution with feature-based architecture |
+| 1.2 | Configure EF Core & database context | âœ… Completed | SQL Server with interceptors |
+| 1.3 | Implement base entities & configurations | âœ… Completed | BaseAuditableEntity, soft delete, Drug, Batch, Supplier |
+| 1.4 | Setup ASP.NET Core Identity | âœ… Completed | ApplicationUser, ApplicationRole configured |
+| 1.5 | Configure authentication & authorization | âœ… Completed | Cookie auth, role-based policies |
+| 1.6 | Setup MudBlazor & theme configuration | âœ… Completed | DawaCloud theme with Medical Teal, custom CSS, Inter font |
+| 1.7 | Create adaptive shell layout | âœ… Completed | Adaptive Shell with expandable drawer (240px/72px), Command Bar, Nav Rail, toggle menu |
+| 1.8 | Implement audit logging interceptor | âœ… Completed | AuditSaveChangesInterceptor implemented |
+| 1.9 | Setup Serilog & Seq logging | âœ… Completed | Structured logging configured |
+| 1.10 | Configure Background Services | âœ… Completed | ExpiryAlertService, LowStockAlertService |
 
 ### Phase 2: Core Modules (Weeks 4-7)
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 2.1 | Auth module - Login page | ✅ Completed | Email/password login with demo credentials |
-| 2.2 | Auth module - Registration | ✅ Completed | With email verification UI & password strength |
-| 2.3 | Auth module - Password reset | ✅ Completed | Token-based reset flow |
-| 2.4 | Auth module - MFA setup | ⬜ Pending | TOTP implementation (deferred) |
-| 2.5 | Dashboard - KPI cards | ✅ Completed | Custom styled KPI cards with icons |
-| 2.6 | Dashboard - Alert widgets | ✅ Completed | Low stock & expiry alerts widgets |
-| 2.7 | Dashboard - Sales chart | ✅ Completed | Placeholder with trend visualization notes |
-| 2.8 | Drug module - CRUD operations | ✅ Completed | List with data table, create/edit form with validation |
-| 2.9 | Drug module - Search & filter | ✅ Completed | Real-time search, category & status filters |
-| 2.10 | Drug module - Pricing tiers | ✅ Completed | PricingTier entity added, multi-tier pricing support |
-| 2.11 | Drug module - Excel import | ⬜ Pending | Template, validation, import (deferred) |
-| 2.12 | Batch module - CRUD operations | ✅ Completed | Full batch list, create/edit forms with status tracking |
-| 2.13 | Batch module - Expiry tracking | ✅ Completed | Status colors, days to expiry, quarantine workflow |
-| 2.14 | Category module - Hierarchical CRUD | ✅ Completed | Category list with parent/child relationships |
+| 2.1 | Auth module - Login page | âœ… Completed | Email/password login with demo credentials |
+| 2.2 | Auth module - Registration | âœ… Completed | With email verification UI & password strength |
+| 2.3 | Auth module - Password reset | âœ… Completed | Token-based reset flow |
+| 2.4 | Auth module - MFA setup | â¬œ Pending | TOTP implementation (deferred) |
+| 2.5 | Dashboard - KPI cards | âœ… Completed | Custom styled KPI cards with icons |
+| 2.6 | Dashboard - Alert widgets | âœ… Completed | Low stock & expiry alerts widgets |
+| 2.7 | Dashboard - Sales chart | âœ… Completed | Placeholder with trend visualization notes |
+| 2.8 | Drug module - CRUD operations | âœ… Completed | List with data table, create/edit form with validation |
+| 2.9 | Drug module - Search & filter | âœ… Completed | Real-time search, category & status filters |
+| 2.10 | Drug module - Pricing tiers | âœ… Completed | PricingTier entity added, multi-tier pricing support |
+| 2.11 | Drug module - Excel import | â¬œ Pending | Template, validation, import (deferred) |
+| 2.12 | Batch module - CRUD operations | âœ… Completed | Full batch list, create/edit forms with status tracking |
+| 2.13 | Batch module - Expiry tracking | âœ… Completed | Status colors, days to expiry, quarantine workflow |
+| 2.14 | Category module - Hierarchical CRUD | âœ… Completed | Category list with parent/child relationships |
 
 ### Phase 3: Inventory & Procurement (Weeks 8-10)
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 3.1 | Inventory - Stock levels view | ✅ Completed | Real-time quantities from batches, MediatR query, filtering |
-| 3.2 | Inventory - Stock movements | ✅ Completed | Complete audit trail, pagination, filtering by type/date |
-| 3.3 | Inventory - Adjustments | ✅ Completed | Add/remove stock, validation, reason tracking, auto-depletion |
-| 3.4 | Inventory - Stock count | ✅ Completed | Physical count workflow, variance tracking, auto-adjustment |
-| 3.5 | Inventory - Reconciliation | ✅ Completed | Built into stock count - variance reports and reconciliation |
-| 3.6 | Supplier module - Registration | ✅ Completed | Supplier list, queries, create command with auto-generated codes |
-| 3.7 | Supplier module - Contact persons | ✅ Completed | Integrated in supplier entity with multiple contacts support |
-| 3.8 | Supplier module - Notification prefs | ✅ Completed | Email/WhatsApp toggles in supplier entity |
-| 3.9 | Request module - Create request | ✅ Completed | Drug request creation with items, auto-generated request numbers |
-| 3.10 | Request module - Approval workflow | ✅ Completed | Approve/Reject commands with approval tracking |
-| 3.11 | Request module - Status tracking | ✅ Completed | Full lifecycle status enum (10 states) with filtering |
+| 3.1 | Inventory - Stock levels view | âœ… Completed | Real-time quantities from batches, MediatR query, filtering |
+| 3.2 | Inventory - Stock movements | âœ… Completed | Complete audit trail, pagination, filtering by type/date |
+| 3.3 | Inventory - Adjustments | âœ… Completed | Add/remove stock, validation, reason tracking, auto-depletion |
+| 3.4 | Inventory - Stock count | âœ… Completed | Physical count workflow, variance tracking, auto-adjustment |
+| 3.5 | Inventory - Reconciliation | âœ… Completed | Built into stock count - variance reports and reconciliation |
+| 3.6 | Supplier module - Registration | âœ… Completed | Supplier list, queries, create command with auto-generated codes |
+| 3.7 | Supplier module - Contact persons | âœ… Completed | Integrated in supplier entity with multiple contacts support |
+| 3.8 | Supplier module - Notification prefs | âœ… Completed | Email/WhatsApp toggles in supplier entity |
+| 3.9 | Request module - Create request | âœ… Completed | Drug request creation with items, auto-generated request numbers |
+| 3.10 | Request module - Approval workflow | âœ… Completed | Approve/Reject commands with approval tracking |
+| 3.11 | Request module - Status tracking | âœ… Completed | Full lifecycle status enum (10 states) with filtering |
 
 ### Phase 4: Notifications & Supplier Portal (Weeks 11-12)
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 4.1 | Notification - Email service | ✅ Completed | SMTP with MailKit, configurable settings |
-| 4.2 | Notification - WhatsApp service | ✅ Completed | Twilio integration ready |
-| 4.3 | Notification - In-app alerts | ✅ Completed | Notification entity, service layer |
-| 4.4 | Notification - Template engine | ✅ Completed | NotificationTemplate entity, template management UI |
-| 4.5 | Notification - Delivery logging | ✅ Completed | Status tracking, retry count, error logging |
-| 4.6 | Supplier Portal - Login | ✅ Completed | Separate layout prepared |
-| 4.7 | Supplier Portal - Dashboard | ✅ Completed | KPIs, pending requests, activity feed |
-| 4.8 | Supplier Portal - View requests | ✅ Completed | Request list with status filtering |
-| 4.9 | Supplier Portal - Submit delivery | ✅ Completed | GoodsReceipt and GoodsReceiptItem entities |
-| 4.10 | Supplier Portal - Delivery note | ⬜ Pending | PDF generation with QuestPDF |
-| 4.11 | Goods receiving - Verification | ✅ Completed | GoodsReceipt workflow entities |
-| 4.12 | Goods receiving - Stock posting | ✅ Completed | Entity structure for auto batch creation |
+| 4.1 | Notification - Email service | âœ… Completed | SMTP with MailKit, configurable settings |
+| 4.2 | Notification - WhatsApp service | âœ… Completed | Twilio integration ready |
+| 4.3 | Notification - In-app alerts | âœ… Completed | Notification entity, service layer |
+| 4.4 | Notification - Template engine | âœ… Completed | NotificationTemplate entity, template management UI |
+| 4.5 | Notification - Delivery logging | âœ… Completed | Status tracking, retry count, error logging |
+| 4.6 | Supplier Portal - Login | âœ… Completed | Separate layout prepared |
+| 4.7 | Supplier Portal - Dashboard | âœ… Completed | KPIs, pending requests, activity feed |
+| 4.8 | Supplier Portal - View requests | âœ… Completed | Request list with status filtering |
+| 4.9 | Supplier Portal - Submit delivery | âœ… Completed | GoodsReceipt and GoodsReceiptItem entities |
+| 4.10 | Supplier Portal - Delivery note | â¬œ Pending | PDF generation with QuestPDF |
+| 4.11 | Goods receiving - Verification | âœ… Completed | GoodsReceipt workflow entities |
+| 4.12 | Goods receiving - Stock posting | âœ… Completed | Entity structure for auto batch creation |
 
 ### Phase 5: Sales Modules (Weeks 13-15)
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 5.1 | Wholesale - Customer management | ✅ Completed | Customer list, CRUD dialog, tier filtering |
-| 5.2 | Wholesale - Credit limits | ✅ Completed | Credit limit tracking, over-limit warnings |
-| 5.3 | Wholesale - Quotations | ✅ Completed | Quotation entity and status tracking |
-| 5.4 | Wholesale - Sales orders | ✅ Completed | WholesaleSale list with filtering, payment status |
-| 5.5 | Wholesale - Invoicing | ✅ Completed | Invoice number, payment recording dialog |
-| 5.6 | Wholesale - Payments | ✅ Completed | Payment entity, multi-payment support |
-| 5.7 | Retail POS - UI layout | ✅ Completed | Two-panel design: product grid + cart |
-| 5.8 | Retail POS - Barcode scanning | ✅ Completed | Search input with Enter key handling |
-| 5.9 | Retail POS - Cart management | ✅ Completed | Add/remove items, quantity controls |
-| 5.10 | Retail POS - FEFO selection | ✅ Completed | Batch selection support in cart items |
-| 5.11 | Retail POS - Payment processing | ✅ Completed | Cash, MoMo, Card payment methods |
-| 5.12 | Retail POS - Receipt printing | ✅ Completed | Receipt number generation, success dialog |
-| 5.13 | Retail POS - Hold & recall | ✅ Completed | HeldSale entity, UI placeholders |
-| 5.14 | Retail POS - End-of-day | ✅ Completed | CashierShift entity with reconciliation |
+| 5.1 | Wholesale - Customer management | âœ… Completed | Customer list, CRUD dialog, tier filtering |
+| 5.2 | Wholesale - Credit limits | âœ… Completed | Credit limit tracking, over-limit warnings |
+| 5.3 | Wholesale - Quotations | âœ… Completed | Quotation entity and status tracking |
+| 5.4 | Wholesale - Sales orders | âœ… Completed | WholesaleSale list with filtering, payment status |
+| 5.5 | Wholesale - Invoicing | âœ… Completed | Invoice number, payment recording dialog |
+| 5.6 | Wholesale - Payments | âœ… Completed | Payment entity, multi-payment support |
+| 5.7 | Retail POS - UI layout | âœ… Completed | Two-panel design: product grid + cart |
+| 5.8 | Retail POS - Barcode scanning | âœ… Completed | Search input with Enter key handling |
+| 5.9 | Retail POS - Cart management | âœ… Completed | Add/remove items, quantity controls |
+| 5.10 | Retail POS - FEFO selection | âœ… Completed | Batch selection support in cart items |
+| 5.11 | Retail POS - Payment processing | âœ… Completed | Cash, MoMo, Card payment methods |
+| 5.12 | Retail POS - Receipt printing | âœ… Completed | Receipt number generation, success dialog |
+| 5.13 | Retail POS - Hold & recall | âœ… Completed | HeldSale entity, UI placeholders |
+| 5.14 | Retail POS - End-of-day | âœ… Completed | CashierShift entity with reconciliation |
 
 ### Phase 6: Reporting & Administration (Weeks 16-17)
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 6.1 | Reports - Stock report | ✅ Completed | Report category UI, filter dialog |
-| 6.2 | Reports - Expiry report | ✅ Completed | Listed in report menu |
-| 6.3 | Reports - Sales report | ✅ Completed | Daily, monthly, by product/customer |
-| 6.4 | Reports - Supplier report | ✅ Completed | Purchase summary, supplier performance |
-| 6.5 | Reports - Financial report | ✅ Completed | P&L, outstanding payments, receivables aging |
-| 6.6 | Reports - Export Excel/PDF | ✅ Completed | Export buttons in report dialog |
-| 6.7 | User management - CRUD | ✅ Completed | User list, create/edit dialog |
-| 6.8 | User management - Roles | ✅ Completed | Role selection with permissions |
-| 6.9 | User management - Permissions | ✅ Completed | Granular permission checkboxes |
-| 6.10 | Settings - Company profile | ✅ Completed | Company info, logo upload |
-| 6.11 | Settings - Tax configuration | ✅ Completed | VAT rates, tax categories |
-| 6.12 | Settings - Alert thresholds | ✅ Completed | Low stock days, expiry alert days |
-| 6.13 | Settings - API keys | ✅ Completed | Email/WhatsApp configuration tabs |
-| 6.14 | Audit - Activity logs | ✅ Completed | Searchable logs with detail view |
+| 6.1 | Reports - Stock report | âœ… Completed | Report category UI, filter dialog |
+| 6.2 | Reports - Expiry report | âœ… Completed | Listed in report menu |
+| 6.3 | Reports - Sales report | âœ… Completed | Daily, monthly, by product/customer |
+| 6.4 | Reports - Supplier report | âœ… Completed | Purchase summary, supplier performance |
+| 6.5 | Reports - Financial report | âœ… Completed | P&L, outstanding payments, receivables aging |
+| 6.6 | Reports - Export Excel/PDF | âœ… Completed | Export buttons in report dialog |
+| 6.7 | User management - CRUD | âœ… Completed | User list, create/edit dialog |
+| 6.8 | User management - Roles | âœ… Completed | Role selection with permissions |
+| 6.9 | User management - Permissions | âœ… Completed | Granular permission checkboxes |
+| 6.10 | Settings - Company profile | âœ… Completed | Company info, logo upload |
+| 6.11 | Settings - Tax configuration | âœ… Completed | VAT rates, tax categories |
+| 6.12 | Settings - Alert thresholds | âœ… Completed | Low stock days, expiry alert days |
+| 6.13 | Settings - API keys | âœ… Completed | Email/WhatsApp configuration tabs |
+| 6.14 | Audit - Activity logs | âœ… Completed | Searchable logs with detail view |
 
 ### Phase 7: Testing & Deployment (Weeks 18-20)
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 7.1 | Unit tests - Business logic | ⬜ Pending | xUnit, NSubstitute |
-| 7.2 | Integration tests - API | ⬜ Pending | WebApplicationFactory |
-| 7.3 | E2E tests - Critical paths | ⬜ Pending | Playwright |
-| 7.4 | Performance testing | ⬜ Pending | Load testing |
-| 7.5 | Security testing | ⬜ Pending | OWASP ZAP |
-| 7.6 | Documentation | ⬜ Pending | User guide, API docs |
-| 7.7 | CI/CD pipeline | ⬜ Pending | GitHub Actions |
-| 7.8 | Docker containerization | ⬜ Pending | Dockerfile, compose |
-| 7.9 | Production deployment | ⬜ Pending | Azure/AWS |
-| 7.10 | Monitoring setup | ⬜ Pending | Health checks, alerts |
+| 7.1 | Unit tests - Business logic | â¬œ Pending | xUnit, NSubstitute |
+| 7.2 | Integration tests - API | â¬œ Pending | WebApplicationFactory |
+| 7.3 | E2E tests - Critical paths | â¬œ Pending | Playwright |
+| 7.4 | Performance testing | â¬œ Pending | Load testing |
+| 7.5 | Security testing | â¬œ Pending | OWASP ZAP |
+| 7.6 | Documentation | â¬œ Pending | User guide, API docs |
+| 7.7 | CI/CD pipeline | â¬œ Pending | GitHub Actions |
+| 7.8 | Docker containerization | â¬œ Pending | Dockerfile, compose |
+| 7.9 | Production deployment | â¬œ Pending | Azure/AWS |
+| 7.10 | Monitoring setup | â¬œ Pending | Health checks, alerts |
 
 ### Status Legend
 
 | Symbol | Meaning |
 |--------|---------|
-| ⬜ | Pending |
-| 🔄 | In Progress |
-| ✅ | Completed |
-| ⏸️ | On Hold |
-| ❌ | Cancelled |
+| â¬œ | Pending |
+| ðŸ”„ | In Progress |
+| âœ… | Completed |
+| â¸ï¸ | On Hold |
+| âŒ | Cancelled |
 
 ---
 
@@ -1604,7 +1604,7 @@ public class DrugsModule : ICarterModule
 
 ```csharp
 // Use file-scoped namespaces
-namespace DawaBes.Web.Features.Drugs;
+namespace DawaCloud.Web.Features.Drugs;
 
 // Use primary constructors for dependency injection
 public class DrugService(AppDbContext context, IMapper mapper)
@@ -1712,11 +1712,11 @@ docs(readme): update installation steps
 
 ```
 main                    # Production-ready
-├── develop             # Integration branch
-│   ├── feature/drugs-import
-│   ├── feature/pos-scanning
-│   ├── bugfix/batch-quantity
-│   └── hotfix/login-error
+â”œâ”€â”€ develop             # Integration branch
+â”‚   â”œâ”€â”€ feature/drugs-import
+â”‚   â”œâ”€â”€ feature/pos-scanning
+â”‚   â”œâ”€â”€ bugfix/batch-quantity
+â”‚   â””â”€â”€ hotfix/login-error
 ```
 
 ---
@@ -1734,10 +1734,10 @@ EXPOSE 8081
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
-COPY ["src/DawaBes.Web/DawaBes.Web.csproj", "DawaBes.Web/"]
-RUN dotnet restore "DawaBes.Web/DawaBes.Web.csproj"
+COPY ["src/DawaCloud.Web/DawaCloud.Web.csproj", "DawaCloud.Web/"]
+RUN dotnet restore "DawaCloud.Web/DawaCloud.Web.csproj"
 COPY src/ .
-WORKDIR "/src/DawaBes.Web"
+WORKDIR "/src/DawaCloud.Web"
 RUN dotnet build -c Release -o /app/build
 
 FROM build AS publish
@@ -1746,7 +1746,7 @@ RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "DawaBes.Web.dll"]
+ENTRYPOINT ["dotnet", "DawaCloud.Web.dll"]
 ```
 
 ```yaml
@@ -1759,7 +1759,7 @@ services:
       - "5000:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Server=db;Database=DawaBes;User=sa;Password=${DB_PASSWORD};TrustServerCertificate=true
+      - ConnectionStrings__DefaultConnection=Server=db;Database=DawaCloud;User=sa;Password=${DB_PASSWORD};TrustServerCertificate=true
     depends_on:
       - db
       - redis
@@ -1829,7 +1829,7 @@ jobs:
 // appsettings.json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Database=DawaBes;Trusted_Connection=True;TrustServerCertificate=True"
+    "DefaultConnection": "Server=localhost;Database=DawaCloud;Trusted_Connection=True;TrustServerCertificate=True"
   },
   "Logging": {
     "LogLevel": {
@@ -1870,19 +1870,19 @@ jobs:
 
 ```bash
 # Create new migration
-dotnet ef migrations add <MigrationName> -p src/DawaBes.Web
+dotnet ef migrations add <MigrationName> -p src/DawaCloud.Web
 
 # Update database
-dotnet ef database update -p src/DawaBes.Web
+dotnet ef database update -p src/DawaCloud.Web
 
 # Run application
-dotnet run --project src/DawaBes.Web
+dotnet run --project src/DawaCloud.Web
 
 # Run tests
 dotnet test
 
 # Build Docker image
-docker build -t DawaBes:latest .
+docker build -t DawaCloud:latest .
 
 # Run with Docker Compose
 docker-compose up -d
@@ -1898,8 +1898,8 @@ docker-compose logs -f web
 - **Company**: Revo Pharma & Medical Ltd
 - **Email**: info@revopharma.com
 - **Website**: www.revopharma.com
-- **Repository**: https://github.com/your-org/DawaBes
+- **Repository**: https://github.com/your-org/DawaCloud
 
 ---
 
-*This document is maintained as the single source of truth for the DawaBes project. Update this file as the project evolves.*
+*This document is maintained as the single source of truth for the DawaCloud project. Update this file as the project evolves.*

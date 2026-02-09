@@ -1,0 +1,252 @@
+@page "/drugs/{id:int}"
+@using MudBlazor
+@inject NavigationManager Navigation
+
+<PageTitle>Drug Details - DawaCloud</PageTitle>
+
+<div class="mb-4">
+    <MudBreadcrumbs Items="_breadcrumbItems" Class="mb-4" />
+
+    <div class="d-flex justify-space-between align-center mb-4">
+        <div>
+            <MudText Typo="Typo.h4" Class="mb-1">@_drug.Name</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">@_drug.Code</MudText>
+        </div>
+        <div class="d-flex gap-2">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       Href="/drugs">
+                Back to List
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Edit"
+                       Href="@($"/drugs/{Id}/edit")">
+                Edit Drug
+            </MudButton>
+        </div>
+    </div>
+
+    <MudGrid>
+        <!-- Basic Information -->
+        <MudItem xs="12" md="8">
+            <MudPaper Elevation="2" Class="pa-6">
+                <MudText Typo="Typo.h6" Class="mb-4">Basic Information</MudText>
+                <MudGrid>
+                    <MudItem xs="12" md="6">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Drug Name</MudText>
+                        <MudText Typo="Typo.body1" Class="mb-4">@_drug.Name</MudText>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Generic Name</MudText>
+                        <MudText Typo="Typo.body1" Class="mb-4">@_drug.GenericName</MudText>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Category</MudText>
+                        <MudChip T="string" Size="Size.Small" Color="Color.Info">@_drug.Category</MudChip>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Manufacturer</MudText>
+                        <MudText Typo="Typo.body1" Class="mb-4">@_drug.Manufacturer</MudText>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Description</MudText>
+                        <MudText Typo="Typo.body1" Class="mb-4">@(_drug.Description ?? "No description available")</MudText>
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Dosage Form</MudText>
+                        <MudText Typo="Typo.body1" Class="mb-4">@_drug.DosageForm</MudText>
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Strength</MudText>
+                        <MudText Typo="Typo.body1" Class="mb-4">@_drug.Strength</MudText>
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Pack Size</MudText>
+                        <MudText Typo="Typo.body1" Class="mb-4">@_drug.PackSize</MudText>
+                    </MudItem>
+                </MudGrid>
+
+                <MudDivider Class="my-4" />
+
+                <MudText Typo="Typo.h6" Class="mb-4">Pricing</MudText>
+                <MudGrid>
+                    <MudItem xs="12" md="4">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Retail Price</MudText>
+                        <MudText Typo="Typo.h6" Color="Color.Primary">SSP @_drug.RetailPrice.ToString("N2")</MudText>
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Wholesale Price</MudText>
+                        <MudText Typo="Typo.h6" Color="Color.Info">SSP @_drug.WholesalePrice.ToString("N2")</MudText>
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Cost Price</MudText>
+                        <MudText Typo="Typo.h6">SSP @_drug.CostPrice.ToString("N2")</MudText>
+                    </MudItem>
+                </MudGrid>
+
+                <MudDivider Class="my-4" />
+
+                <MudText Typo="Typo.h6" Class="mb-4">Stock Settings</MudText>
+                <MudGrid>
+                    <MudItem xs="12" md="6">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Reorder Level</MudText>
+                        <MudText Typo="Typo.body1" Class="mb-4">@_drug.ReorderLevel units</MudText>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Max Stock Level</MudText>
+                        <MudText Typo="Typo.body1" Class="mb-4">@_drug.MaxStockLevel units</MudText>
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+        </MudItem>
+
+        <!-- Side Panel -->
+        <MudItem xs="12" md="4">
+            <!-- Status Card -->
+            <MudPaper Elevation="2" Class="pa-4 mb-4">
+                <MudText Typo="Typo.h6" Class="mb-3">Status</MudText>
+                <div class="d-flex flex-column gap-2">
+                    <div class="d-flex justify-space-between">
+                        <MudText Typo="Typo.body2">Active</MudText>
+                        <MudChip T="string" Size="Size.Small" Color="@(_drug.IsActive ? Color.Success : Color.Default)">
+                            @(_drug.IsActive ? "Yes" : "No")
+                        </MudChip>
+                    </div>
+                    <div class="d-flex justify-space-between">
+                        <MudText Typo="Typo.body2">Requires Prescription</MudText>
+                        <MudChip T="string" Size="Size.Small" Color="@(_drug.RequiresPrescription ? Color.Warning : Color.Default)">
+                            @(_drug.RequiresPrescription ? "Yes" : "No")
+                        </MudChip>
+                    </div>
+                    <div class="d-flex justify-space-between">
+                        <MudText Typo="Typo.body2">Controlled Substance</MudText>
+                        <MudChip T="string" Size="Size.Small" Color="@(_drug.IsControlled ? Color.Error : Color.Default)">
+                            @(_drug.IsControlled ? "Yes" : "No")
+                        </MudChip>
+                    </div>
+                </div>
+            </MudPaper>
+
+            <!-- Stock Summary Card -->
+            <MudPaper Elevation="2" Class="pa-4 mb-4">
+                <MudText Typo="Typo.h6" Class="mb-3">Current Stock</MudText>
+                <div class="text-center pa-4">
+                    <MudText Typo="Typo.h3" Color="@GetStockColor()">@_currentStock</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">units in stock</MudText>
+                </div>
+                @if (_currentStock <= _drug.ReorderLevel)
+                {
+                    <MudAlert Severity="Severity.Warning" Class="mt-2">
+                        Stock below reorder level
+                    </MudAlert>
+                }
+            </MudPaper>
+
+            <!-- Quick Actions -->
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-3">Quick Actions</MudText>
+                <div class="d-flex flex-column gap-2">
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               FullWidth="true"
+                               StartIcon="@Icons.Material.Filled.Inventory"
+                               Href="@($"/batches?drugId={Id}")">
+                        View Batches
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Info"
+                               FullWidth="true"
+                               StartIcon="@Icons.Material.Filled.History"
+                               Href="@($"/inventory/movements?drugId={Id}")">
+                        View Stock History
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Default"
+                               FullWidth="true"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               Href="@($"/inventory/adjustments/new?drugId={Id}")">
+                        Adjust Stock
+                    </MudButton>
+                </div>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private DrugDetailsDto _drug = new();
+    private int _currentStock = 0;
+    private List<BreadcrumbItem> _breadcrumbItems = new();
+
+    protected override void OnInitialized()
+    {
+        LoadDrug();
+        _breadcrumbItems = new List<BreadcrumbItem>
+        {
+            new("Home", href: "/"),
+            new("Drugs", href: "/drugs"),
+            new(_drug.Name, href: null, disabled: true)
+        };
+    }
+
+    private void LoadDrug()
+    {
+        // Sample data - would come from database in real app
+        _drug = new DrugDetailsDto
+        {
+            Id = Id,
+            Code = "PARA500",
+            Name = "Paracetamol 500mg",
+            GenericName = "Paracetamol",
+            Description = "Pain reliever and fever reducer",
+            Category = "Analgesics",
+            Manufacturer = "GSK",
+            DosageForm = "Tablet",
+            Strength = "500mg",
+            PackSize = "Pack of 10",
+            RetailPrice = 5.00m,
+            WholesalePrice = 3.50m,
+            CostPrice = 2.50m,
+            ReorderLevel = 100,
+            MaxStockLevel = 1000,
+            RequiresPrescription = false,
+            IsControlled = false,
+            IsActive = true
+        };
+        _currentStock = 450;
+    }
+
+    private Color GetStockColor()
+    {
+        if (_currentStock == 0) return Color.Error;
+        if (_currentStock <= _drug.ReorderLevel) return Color.Warning;
+        return Color.Success;
+    }
+
+    private class DrugDetailsDto
+    {
+        public int Id { get; set; }
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string? GenericName { get; set; }
+        public string? Description { get; set; }
+        public string Category { get; set; } = string.Empty;
+        public string? Manufacturer { get; set; }
+        public string? DosageForm { get; set; }
+        public string? Strength { get; set; }
+        public string? PackSize { get; set; }
+        public decimal RetailPrice { get; set; }
+        public decimal WholesalePrice { get; set; }
+        public decimal CostPrice { get; set; }
+        public int ReorderLevel { get; set; }
+        public int MaxStockLevel { get; set; }
+        public bool RequiresPrescription { get; set; }
+        public bool IsControlled { get; set; }
+        public bool IsActive { get; set; }
+    }
+}

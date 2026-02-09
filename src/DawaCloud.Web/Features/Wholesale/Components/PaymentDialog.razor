@@ -1,0 +1,177 @@
+@using MudBlazor
+@using MediatR
+@using DawaCloud.Web.Features.Wholesale.Commands
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <div class="mb-4">
+            <MudText Typo="Typo.h6" Color="Color.Primary">Invoice: @InvoiceNumber</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Total: SSP @TotalAmount.ToString("N2")</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Paid: SSP @PaidAmount.ToString("N2")</MudText>
+            <MudText Typo="Typo.body1" Class="fw-bold">Balance: SSP @_balance.ToString("N2")</MudText>
+        </div>
+
+        <MudDivider Class="my-4" />
+
+        <MudGrid>
+            <MudItem xs="12">
+                <MudNumericField @bind-Value="_model.Amount"
+                                 Label="Payment Amount (SSP)"
+                                 Variant="Variant.Outlined"
+                                 Required="true"
+                                 Min="0m"
+                                 Max="@_balance"
+                                 Format="N2" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect @bind-Value="_model.PaymentMethod"
+                           Label="Payment Method"
+                           Variant="Variant.Outlined"
+                           Required="true">
+                    <MudSelectItem Value="@("Cash")">Cash</MudSelectItem>
+                    <MudSelectItem Value="@("Bank Transfer")">Bank Transfer</MudSelectItem>
+                    <MudSelectItem Value="@("Cheque")">Cheque</MudSelectItem>
+                    <MudSelectItem Value="@("MoMo")">Mobile Money</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudDatePicker @bind-Date="_paymentDate"
+                               Label="Payment Date"
+                               Variant="Variant.Outlined"
+                               Required="true" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="_model.Reference"
+                              Label="Reference Number"
+                              Variant="Variant.Outlined"
+                              Placeholder="Transaction/Cheque number" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="_model.Notes"
+                              Label="Notes"
+                              Variant="Variant.Outlined"
+                              Lines="3" />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit" Disabled="_isProcessing">
+            @if (_isProcessing)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                <MudText Class="ms-2">Processing...</MudText>
+            }
+            else
+            {
+                <MudText>Record Payment</MudText>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance? MudDialog { get; set; }
+
+    [Parameter, EditorRequired]
+    public int SaleId { get; set; }
+
+    [Parameter, EditorRequired]
+    public string InvoiceNumber { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public decimal TotalAmount { get; set; }
+
+    [Parameter, EditorRequired]
+    public decimal PaidAmount { get; set; }
+
+    private PaymentFormModel _model = new();
+    private DateTime? _paymentDate = DateTime.Now;
+    private bool _isProcessing = false;
+    private decimal _balance => TotalAmount - PaidAmount;
+
+    protected override void OnInitialized()
+    {
+        _model.Amount = _balance;
+        _model.PaymentMethod = "Cash";
+    }
+
+    private async Task Submit()
+    {
+        if (_model.Amount <= 0)
+        {
+            Snackbar.Add("Payment amount must be greater than zero", Severity.Error);
+            return;
+        }
+
+        if (_model.Amount > _balance)
+        {
+            Snackbar.Add($"Payment amount cannot exceed balance of SSP {_balance:N2}", Severity.Error);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_model.PaymentMethod))
+        {
+            Snackbar.Add("Payment method is required", Severity.Error);
+            return;
+        }
+
+        if (!_paymentDate.HasValue)
+        {
+            Snackbar.Add("Payment date is required", Severity.Error);
+            return;
+        }
+
+        _isProcessing = true;
+
+        try
+        {
+            // Parse payment method string to enum
+            if (!Enum.TryParse<DawaCloud.Web.Data.Entities.PaymentMethod>(_model.PaymentMethod.Replace(" ", ""), out var paymentMethod))
+            {
+                paymentMethod = DawaCloud.Web.Data.Entities.PaymentMethod.Cash;
+            }
+
+            var command = new RecordPaymentCommand(
+                SaleId,
+                _model.Amount,
+                paymentMethod,
+                _model.Reference,
+                _paymentDate.Value,
+                _model.Notes
+            );
+
+            var result = await Mediator.Send(command);
+
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Payment recorded successfully", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                Snackbar.Add(result.Error ?? "Failed to record payment", Severity.Error);
+            }
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private class PaymentFormModel
+    {
+        public decimal Amount { get; set; }
+        public string PaymentMethod { get; set; } = "Cash";
+        public string? Reference { get; set; }
+        public string? Notes { get; set; }
+    }
+}
