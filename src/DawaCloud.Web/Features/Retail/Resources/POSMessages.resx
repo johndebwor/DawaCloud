@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- Page Title -->
+  <data name="PageTitle" xml:space="preserve">
+    <value>Point of Sale - DawaCloud</value>
+  </data>
+
+  <!-- Search -->
+  <data name="SearchPlaceholder" xml:space="preserve">
+    <value>Scan barcode or search products... (F2)</value>
+  </data>
+
+  <!-- Categories -->
+  <data name="All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Analgesics" xml:space="preserve">
+    <value>Analgesics</value>
+  </data>
+  <data name="Antibiotics" xml:space="preserve">
+    <value>Antibiotics</value>
+  </data>
+  <data name="Antacids" xml:space="preserve">
+    <value>Antacids</value>
+  </data>
+  <data name="Vitamins" xml:space="preserve">
+    <value>Vitamins</value>
+  </data>
+
+  <!-- Product -->
+  <data name="Stock" xml:space="preserve">
+    <value>Stock</value>
+  </data>
+  <data name="Left" xml:space="preserve">
+    <value>left</value>
+  </data>
+  <data name="OutOfStock" xml:space="preserve">
+    <value>Out of Stock</value>
+  </data>
+  <data name="RequiresPrescription" xml:space="preserve">
+    <value>Requires Prescription</value>
+  </data>
+
+  <!-- Cart -->
+  <data name="CurrentCart" xml:space="preserve">
+    <value>Current Cart</value>
+  </data>
+  <data name="EmptyCart" xml:space="preserve">
+    <value>Your cart is empty</value>
+  </data>
+  <data name="AddProductsToStart" xml:space="preserve">
+    <value>Add products to start a sale</value>
+  </data>
+  <data name="Item" xml:space="preserve">
+    <value>Item</value>
+  </data>
+  <data name="Quantity" xml:space="preserve">
+    <value>Quantity</value>
+  </data>
+  <data name="Price" xml:space="preserve">
+    <value>Price</value>
+  </data>
+  <data name="Total" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+
+  <!-- Summary -->
+  <data name="Subtotal" xml:space="preserve">
+    <value>Subtotal</value>
+  </data>
+  <data name="Discount" xml:space="preserve">
+    <value>Discount</value>
+  </data>
+  <data name="Tax" xml:space="preserve">
+    <value>Tax</value>
+  </data>
+  <data name="GrandTotal" xml:space="preserve">
+    <value>Grand Total</value>
+  </data>
+
+  <!-- Payment -->
+  <data name="AmountPaid" xml:space="preserve">
+    <value>Amount Paid</value>
+  </data>
+  <data name="Change" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="PaymentMethod" xml:space="preserve">
+    <value>Payment Method</value>
+  </data>
+  <data name="Cash" xml:space="preserve">
+    <value>Cash</value>
+  </data>
+  <data name="Card" xml:space="preserve">
+    <value>Card</value>
+  </data>
+  <data name="MobileMoney" xml:space="preserve">
+    <value>Mobile Money</value>
+  </data>
+
+  <!-- Actions -->
+  <data name="ClearCart" xml:space="preserve">
+    <value>Clear Cart</value>
+  </data>
+  <data name="CompleteSale" xml:space="preserve">
+    <value>Complete Sale</value>
+  </data>
+  <data name="PrintReceipt" xml:space="preserve">
+    <value>Print Receipt</value>
+  </data>
+  <data name="NewSale" xml:space="preserve">
+    <value>New Sale</value>
+  </data>
+
+  <!-- Messages -->
+  <data name="SaleCompleted" xml:space="preserve">
+    <value>Sale completed successfully</value>
+  </data>
+  <data name="SaleFailed" xml:space="preserve">
+    <value>Failed to complete sale</value>
+  </data>
+  <data name="InsufficientStock" xml:space="preserve">
+    <value>Insufficient stock for this product</value>
+  </data>
+  <data name="ProductAdded" xml:space="preserve">
+    <value>Product added to cart</value>
+  </data>
+  <data name="ProductRemoved" xml:space="preserve">
+    <value>Product removed from cart</value>
+  </data>
+  <data name="CartCleared" xml:space="preserve">
+    <value>Cart cleared</value>
+  </data>
+  <data name="InvalidPaymentAmount" xml:space="preserve">
+    <value>Payment amount must be greater than or equal to total</value>
+  </data>
+  <data name="EnterAmountPaid" xml:space="preserve">
+    <value>Enter amount paid</value>
+  </data>
+</root>

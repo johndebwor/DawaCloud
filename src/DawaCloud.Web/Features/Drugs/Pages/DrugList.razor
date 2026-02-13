@@ -3,30 +3,35 @@
 @using MediatR
 @using Microsoft.JSInterop
 @using ClosedXML.Excel
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.Extensions.Localization
+@using DawaCloud.Web.Features.Drugs.Resources
+@attribute [Authorize(Policy = "RequireInventoryAccess")]
 @using DawaCloud.Web.Features.Drugs.Queries
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject IJSRuntime JSRuntime
+@inject IStringLocalizer<DrugMessages> Localizer
 
-<PageTitle>Drugs - DawaCloud</PageTitle>
+<PageTitle>@Localizer["PageTitle"]</PageTitle>
 
 <!-- Hero Section -->
 <div class="df-hero animate-fade-in-up">
     <div class="df-hero-content">
         <div class="df-hero-text">
-            <h1>Drug Inventory</h1>
-            <p>Manage your pharmaceutical products</p>
+            <h1>@Localizer["DrugInventory"]</h1>
+            <p>@Localizer["ManagePharmaceuticalProducts"]</p>
         </div>
         <div class="d-flex gap-2">
             <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.FileDownload" OnClick="ExportToExcel">
-                Export
+                @Localizer["Export"]
             </MudButton>
             <MudButton Variant="Variant.Filled"
                        Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.Add"
                        Href="/drugs/new">
-                Add New Drug
+                @Localizer["AddNewDrug"]
             </MudButton>
         </div>
     </div>
@@ -41,7 +46,7 @@
             </div>
         </div>
         <div class="df-kpi-body">
-            <div class="df-kpi-label">Total Drugs</div>
+            <div class="df-kpi-label">@Localizer["TotalDrugs"]</div>
             <div class="df-kpi-value">@_totalCount</div>
         </div>
     </div>
@@ -52,7 +57,7 @@
             </div>
         </div>
         <div class="df-kpi-body">
-            <div class="df-kpi-label">In Stock</div>
+            <div class="df-kpi-label">@Localizer["InStock"]</div>
             <div class="df-kpi-value">@_drugs.Count(d => d.CurrentStock > d.ReorderLevel)</div>
         </div>
     </div>
@@ -63,7 +68,7 @@
             </div>
         </div>
         <div class="df-kpi-body">
-            <div class="df-kpi-label">Low Stock</div>
+            <div class="df-kpi-label">@Localizer["LowStock"]</div>
             <div class="df-kpi-value">@_drugs.Count(d => d.CurrentStock <= d.ReorderLevel && d.CurrentStock > 0)</div>
         </div>
     </div>
@@ -74,7 +79,7 @@
             </div>
         </div>
         <div class="df-kpi-body">
-            <div class="df-kpi-label">Out of Stock</div>
+            <div class="df-kpi-label">@Localizer["OutOfStock"]</div>
             <div class="df-kpi-value">@_drugs.Count(d => d.CurrentStock == 0)</div>
         </div>
     </div>
@@ -84,7 +89,7 @@
 <div class="df-alert-card animate-fade-in-up animate-delay-2 mt-4">
     <div class="df-alert-header">
         <MudTextField @bind-Value="_searchString"
-                      Placeholder="Search by name, code, or manufacturer..."
+                      Placeholder="@Localizer["SearchPlaceholder"]"
                       Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       Immediate="true"
@@ -93,25 +98,25 @@
                       Style="max-width: 400px;" />
         <div class="d-flex gap-2">
             <MudSelect T="string" @bind-Value="_selectedCategory"
-                       Label="Category"
+                       Label="@Localizer["Category"]"
                        Variant="Variant.Outlined"
                        Dense="true"
                        Style="min-width: 150px;">
-                <MudSelectItem Value="@("All")">All Categories</MudSelectItem>
+                <MudSelectItem Value="@("All")">@Localizer["AllCategories"]</MudSelectItem>
                 <MudSelectItem Value="@("Analgesics")">Analgesics</MudSelectItem>
                 <MudSelectItem Value="@("Antibiotics")">Antibiotics</MudSelectItem>
                 <MudSelectItem Value="@("Antihistamines")">Antihistamines</MudSelectItem>
             </MudSelect>
             <MudSelect T="string" Value="_selectedStatus"
-                       Label="Status"
+                       Label="@Localizer["Status"]"
                        Variant="Variant.Outlined"
                        Dense="true"
                        ValueChanged="@((string value) => OnStatusChanged(value))"
                        Style="min-width: 150px;">
-                <MudSelectItem Value="@("All")">All Status</MudSelectItem>
-                <MudSelectItem Value="@("In Stock")">In Stock</MudSelectItem>
-                <MudSelectItem Value="@("Low Stock")">Low Stock</MudSelectItem>
-                <MudSelectItem Value="@("Out of Stock")">Out of Stock</MudSelectItem>
+                <MudSelectItem Value="@("All")">@Localizer["AllStatus"]</MudSelectItem>
+                <MudSelectItem Value="@("In Stock")">@Localizer["InStock"]</MudSelectItem>
+                <MudSelectItem Value="@("Low Stock")">@Localizer["LowStock"]</MudSelectItem>
+                <MudSelectItem Value="@("Out of Stock")">@Localizer["OutOfStock"]</MudSelectItem>
             </MudSelect>
         </div>
     </div>
@@ -125,28 +130,28 @@
               Dense="true"
               Class="mt-4">
         <HeaderContent>
-            <MudTh>Code</MudTh>
-            <MudTh>Drug Name</MudTh>
-            <MudTh>Category</MudTh>
-            <MudTh>Stock</MudTh>
-            <MudTh>Retail Price</MudTh>
-            <MudTh>Status</MudTh>
-            <MudTh Style="text-align: right;">Actions</MudTh>
+            <MudTh>@Localizer["Code"]</MudTh>
+            <MudTh>@Localizer["Drug"]</MudTh>
+            <MudTh>@Localizer["Category"]</MudTh>
+            <MudTh>@Localizer["Stock"]</MudTh>
+            <MudTh>@Localizer["RetailPrice"]</MudTh>
+            <MudTh>@Localizer["Status"]</MudTh>
+            <MudTh Style="text-align: right;">@Localizer["Actions"]</MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd DataLabel="Code">
+            <MudTd DataLabel="@Localizer["Code"]">
                 <MudText Typo="Typo.body2" Class="font-weight-medium">@context.Code</MudText>
             </MudTd>
-            <MudTd DataLabel="Drug Name">
+            <MudTd DataLabel="@Localizer["Drug"]">
                 <div>
                     <MudText Typo="Typo.body2" Class="font-weight-medium">@context.Name</MudText>
                     <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Manufacturer</MudText>
                 </div>
             </MudTd>
-            <MudTd DataLabel="Category">
+            <MudTd DataLabel="@Localizer["Category"]">
                 <MudChip T="string" Size="Size.Small" Color="Color.Info">@(context.Category ?? "Uncategorized")</MudChip>
             </MudTd>
-            <MudTd DataLabel="Stock">
+            <MudTd DataLabel="@Localizer["Stock"]">
                 <div>
                     <MudText Typo="Typo.body2">@context.CurrentStock units</MudText>
                     @if (context.CurrentStock <= context.ReorderLevel)
@@ -155,40 +160,43 @@
                     }
                 </div>
             </MudTd>
-            <MudTd DataLabel="Retail Price">
+            <MudTd DataLabel="@Localizer["RetailPrice"]">
                 <MudText Typo="Typo.body2">SSP @context.RetailPrice.ToString("N2")</MudText>
             </MudTd>
-            <MudTd DataLabel="Status">
+            <MudTd DataLabel="@Localizer["Status"]">
                 @if (context.CurrentStock == 0)
                 {
-                    <MudChip T="string" Size="Size.Small" Color="Color.Error">Out of Stock</MudChip>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Error">@Localizer["OutOfStock"]</MudChip>
                 }
                 else if (context.CurrentStock <= context.ReorderLevel)
                 {
-                    <MudChip T="string" Size="Size.Small" Color="Color.Warning">Low Stock</MudChip>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Warning">@Localizer["LowStock"]</MudChip>
                 }
                 else
                 {
-                    <MudChip T="string" Size="Size.Small" Color="Color.Success">In Stock</MudChip>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Success">@Localizer["InStock"]</MudChip>
                 }
             </MudTd>
-            <MudTd DataLabel="Actions" Style="text-align: right;">
+            <MudTd DataLabel="@Localizer["Actions"]" Style="text-align: right;">
                 <MudIconButton Icon="@Icons.Material.Filled.Visibility"
                                Color="Color.Primary"
                                Size="Size.Small"
-                               Href="@($"/drugs/{context.Id}")" />
+                               Href="@($"/drugs/{context.Id}")"
+                               Title="@Localizer["View"]" />
                 <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                Color="Color.Info"
                                Size="Size.Small"
-                               Href="@($"/drugs/{context.Id}/edit")" />
+                               Href="@($"/drugs/{context.Id}/edit")"
+                               Title="@Localizer["Edit"]" />
                 <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                Color="Color.Error"
                                Size="Size.Small"
-                               OnClick="@(() => DeleteDrug(context))" />
+                               OnClick="@(() => DeleteDrug(context))"
+                               Title="@Localizer["Delete"]" />
             </MudTd>
         </RowTemplate>
         <NoRecordsContent>
-            <MudText>No drugs found. Click "Add New Drug" to create one.</MudText>
+            <MudText>No drugs found. Click "@Localizer["AddNewDrug"]" to create one.</MudText>
         </NoRecordsContent>
         <PagerContent>
             <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
@@ -235,12 +243,12 @@
             }
             else
             {
-                Snackbar.Add(result.ErrorMessage ?? "Failed to load drugs", Severity.Error);
+                Snackbar.Add(result.ErrorMessage ?? Localizer["DeleteFailed"], Severity.Error);
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error loading drugs: {ex.Message}", Severity.Error);
+            Snackbar.Add($"{Localizer["ExportFailed"]}: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -271,10 +279,10 @@
     private async Task DeleteDrug(DrugListDto drug)
     {
         var result = await DialogService.ShowMessageBox(
-            "Delete Drug",
-            $"Are you sure you want to delete '{drug.Name}'? This action will deactivate the drug.",
-            yesText: "Delete",
-            cancelText: "Cancel");
+            Localizer["ConfirmDelete"],
+            Localizer["ConfirmDeleteMessage"],
+            yesText: Localizer["Delete"],
+            cancelText: Localizer["Cancel"]);
 
         if (result == true)
         {
@@ -284,7 +292,7 @@
 
                 if (deleteResult.Success)
                 {
-                    Snackbar.Add(deleteResult.Message, Severity.Success);
+                    Snackbar.Add(Localizer["DrugDeleted"], Severity.Success);
                     await LoadDrugs();
                 }
                 else
@@ -294,7 +302,7 @@
             }
             catch (Exception ex)
             {
-                Snackbar.Add($"Error deleting drug: {ex.Message}", Severity.Error);
+                Snackbar.Add($"{Localizer["DeleteFailed"]}: {ex.Message}", Severity.Error);
             }
         }
     }
@@ -306,16 +314,16 @@
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Drugs");
 
-            // Add headers
-            worksheet.Cell(1, 1).Value = "Code";
-            worksheet.Cell(1, 2).Value = "Name";
-            worksheet.Cell(1, 3).Value = "Generic Name";
-            worksheet.Cell(1, 4).Value = "Category";
-            worksheet.Cell(1, 5).Value = "Retail Price";
-            worksheet.Cell(1, 6).Value = "Wholesale Price";
-            worksheet.Cell(1, 7).Value = "Current Stock";
-            worksheet.Cell(1, 8).Value = "Reorder Level";
-            worksheet.Cell(1, 9).Value = "Status";
+            // Add headers (localized)
+            worksheet.Cell(1, 1).Value = Localizer["Code"].Value;
+            worksheet.Cell(1, 2).Value = Localizer["DrugName"].Value;
+            worksheet.Cell(1, 3).Value = Localizer["GenericName"].Value;
+            worksheet.Cell(1, 4).Value = Localizer["Category"].Value;
+            worksheet.Cell(1, 5).Value = Localizer["RetailPrice"].Value;
+            worksheet.Cell(1, 6).Value = Localizer["WholesalePrice"].Value;
+            worksheet.Cell(1, 7).Value = Localizer["Stock"].Value;
+            worksheet.Cell(1, 8).Value = Localizer["ReorderLevel"].Value;
+            worksheet.Cell(1, 9).Value = Localizer["Status"].Value;
 
             // Style headers
             var headerRange = worksheet.Range(1, 1, 1, 9);
@@ -349,15 +357,15 @@
 
             // Download via JavaScript
             await JSRuntime.InvokeVoidAsync("downloadFile",
-                $"drugs-export-{DateTime.Now:yyyyMMdd-HHmmss}.xlsx",
+                $"drugs-export-{DateTime.UtcNow:yyyyMMdd-HHmmss}.xlsx",
                 base64,
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
-            Snackbar.Add($"Exported {FilteredDrugs.Count()} drugs successfully", Severity.Success);
+            Snackbar.Add(Localizer["ExportSuccess"], Severity.Success);
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error exporting: {ex.Message}", Severity.Error);
+            Snackbar.Add($"{Localizer["ExportFailed"]}: {ex.Message}", Severity.Error);
         }
     }
 }

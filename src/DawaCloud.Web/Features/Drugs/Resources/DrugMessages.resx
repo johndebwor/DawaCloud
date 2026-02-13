@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- Page Title -->
+  <data name="PageTitle" xml:space="preserve">
+    <value>Drugs - DawaCloud</value>
+  </data>
+
+  <!-- Hero Section -->
+  <data name="DrugInventory" xml:space="preserve">
+    <value>Drug Inventory</value>
+  </data>
+  <data name="ManagePharmaceuticalProducts" xml:space="preserve">
+    <value>Manage your pharmaceutical products</value>
+  </data>
+  <data name="AddNewDrug" xml:space="preserve">
+    <value>Add New Drug</value>
+  </data>
+
+  <!-- KPIs -->
+  <data name="TotalDrugs" xml:space="preserve">
+    <value>Total Drugs</value>
+  </data>
+  <data name="InStock" xml:space="preserve">
+    <value>In Stock</value>
+  </data>
+  <data name="LowStock" xml:space="preserve">
+    <value>Low Stock</value>
+  </data>
+  <data name="OutOfStock" xml:space="preserve">
+    <value>Out of Stock</value>
+  </data>
+
+  <!-- Search and Filters -->
+  <data name="SearchPlaceholder" xml:space="preserve">
+    <value>Search by name, code, or manufacturer...</value>
+  </data>
+  <data name="Category" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="AllCategories" xml:space="preserve">
+    <value>All Categories</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="AllStatus" xml:space="preserve">
+    <value>All Status</value>
+  </data>
+  <data name="Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Inactive" xml:space="preserve">
+    <value>Inactive</value>
+  </data>
+
+  <!-- Table Headers -->
+  <data name="Code" xml:space="preserve">
+    <value>Code</value>
+  </data>
+  <data name="Drug" xml:space="preserve">
+    <value>Drug</value>
+  </data>
+  <data name="Manufacturer" xml:space="preserve">
+    <value>Manufacturer</value>
+  </data>
+  <data name="Stock" xml:space="preserve">
+    <value>Stock</value>
+  </data>
+  <data name="RetailPrice" xml:space="preserve">
+    <value>Retail Price</value>
+  </data>
+  <data name="Actions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+
+  <!-- Actions -->
+  <data name="View" xml:space="preserve">
+    <value>View</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Export" xml:space="preserve">
+    <value>Export</value>
+  </data>
+
+  <!-- Messages -->
+  <data name="DrugDeleted" xml:space="preserve">
+    <value>Drug deleted successfully</value>
+  </data>
+  <data name="DeleteFailed" xml:space="preserve">
+    <value>Failed to delete drug</value>
+  </data>
+  <data name="ExportSuccess" xml:space="preserve">
+    <value>Drugs exported successfully</value>
+  </data>
+  <data name="ExportFailed" xml:space="preserve">
+    <value>Export failed</value>
+  </data>
+  <data name="ConfirmDelete" xml:space="preserve">
+    <value>Confirm Delete</value>
+  </data>
+  <data name="ConfirmDeleteMessage" xml:space="preserve">
+    <value>Are you sure you want to delete this drug?</value>
+  </data>
+
+  <!-- Drug Form -->
+  <data name="DrugName" xml:space="preserve">
+    <value>Drug Name</value>
+  </data>
+  <data name="DrugCode" xml:space="preserve">
+    <value>Drug Code</value>
+  </data>
+  <data name="GenericName" xml:space="preserve">
+    <value>Generic Name</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="ReorderLevel" xml:space="preserve">
+    <value>Reorder Level</value>
+  </data>
+  <data name="WholesalePrice" xml:space="preserve">
+    <value>Wholesale Price</value>
+  </data>
+  <data name="RequiresPrescription" xml:space="preserve">
+    <value>Requires Prescription</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+
+  <!-- Validation Messages -->
+  <data name="DrugNameRequired" xml:space="preserve">
+    <value>Drug name is required</value>
+  </data>
+  <data name="DrugCodeRequired" xml:space="preserve">
+    <value>Drug code is required</value>
+  </data>
+  <data name="CategoryRequired" xml:space="preserve">
+    <value>Category is required</value>
+  </data>
+  <data name="RetailPriceRequired" xml:space="preserve">
+    <value>Retail price is required</value>
+  </data>
+  <data name="PriceMustBePositive" xml:space="preserve">
+    <value>Price must be greater than zero</value>
+  </data>
+  <data name="DrugCodeAlreadyExists" xml:space="preserve">
+    <value>Drug code already exists</value>
+  </data>
+  <data name="DrugCreatedSuccessfully" xml:space="preserve">
+    <value>Drug created successfully</value>
+  </data>
+  <data name="DrugUpdatedSuccessfully" xml:space="preserve">
+    <value>Drug updated successfully</value>
+  </data>
+</root>
