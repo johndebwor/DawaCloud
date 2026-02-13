@@ -52,6 +52,11 @@
     <value>Scan barcode or search products... (F2)</value>
   </data>
 
+  <!-- Customer -->
+  <data name="CustomerName" xml:space="preserve">
+    <value>Customer Name (Optional)</value>
+  </data>
+
   <!-- Categories -->
   <data name="All" xml:space="preserve">
     <value>All</value>
@@ -86,6 +91,12 @@
   <!-- Cart -->
   <data name="CurrentCart" xml:space="preserve">
     <value>Current Cart</value>
+  </data>
+  <data name="CartIsEmpty" xml:space="preserve">
+    <value>Cart is empty</value>
+  </data>
+  <data name="ScanOrSearch" xml:space="preserve">
+    <value>Scan or search to add items</value>
   </data>
   <data name="EmptyCart" xml:space="preserve">
     <value>Your cart is empty</value>
@@ -124,8 +135,20 @@
   </data>
 
   <!-- Payment -->
+  <data name="CompletePayment" xml:space="preserve">
+    <value>Complete Payment</value>
+  </data>
+  <data name="AmountDue" xml:space="preserve">
+    <value>Amount Due</value>
+  </data>
+  <data name="SelectPaymentMethod" xml:space="preserve">
+    <value>Select Payment Method</value>
+  </data>
   <data name="AmountPaid" xml:space="preserve">
     <value>Amount Paid</value>
+  </data>
+  <data name="AmountTendered" xml:space="preserve">
+    <value>Amount Tendered (SSP)</value>
   </data>
   <data name="Change" xml:space="preserve">
     <value>Change</value>
@@ -139,11 +162,44 @@
   <data name="Card" xml:space="preserve">
     <value>Card</value>
   </data>
+  <data name="MoMo" xml:space="preserve">
+    <value>MoMo</value>
+  </data>
   <data name="MobileMoney" xml:space="preserve">
     <value>Mobile Money</value>
   </data>
+  <data name="MomoTransactionCode" xml:space="preserve">
+    <value>MoMo Transaction Code</value>
+  </data>
+  <data name="BeforeRounding" xml:space="preserve">
+    <value>Before Rounding</value>
+  </data>
+  <data name="PaymentSuccessful" xml:space="preserve">
+    <value>Payment Successful!</value>
+  </data>
+  <data name="Receipt" xml:space="preserve">
+    <value>Receipt #</value>
+  </data>
+  <data name="RecallHeldSale" xml:space="preserve">
+    <value>Recall Held Sale</value>
+  </data>
 
   <!-- Actions -->
+  <data name="Hold" xml:space="preserve">
+    <value>Hold (F4)</value>
+  </data>
+  <data name="Recall" xml:space="preserve">
+    <value>Recall (F5)</value>
+  </data>
+  <data name="LastReceipt" xml:space="preserve">
+    <value>Last Receipt</value>
+  </data>
+  <data name="Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="Pay" xml:space="preserve">
+    <value>PAY</value>
+  </data>
   <data name="ClearCart" xml:space="preserve">
     <value>Clear Cart</value>
   </data>
@@ -155,6 +211,12 @@
   </data>
   <data name="NewSale" xml:space="preserve">
     <value>New Sale</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Close</value>
   </data>
 
   <!-- Messages -->

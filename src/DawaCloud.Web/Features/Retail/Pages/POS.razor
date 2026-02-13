@@ -2,12 +2,16 @@
 @using MudBlazor
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "RequireSalesAccess")]
 @using Microsoft.EntityFrameworkCore
 @using MediatR
 @using System.Security.Claims
 @using System.Text.Json
+@using Microsoft.Extensions.Localization
 @using DawaCloud.Web.Features.Retail.Commands
 @using DawaCloud.Web.Features.Retail.Queries
+@using DawaCloud.Web.Features.Retail.Resources
 @using DawaCloud.Web.Features.Currency.Services
 @using DawaCloud.Web.Data.Enums
 @inject IJSRuntime JSRuntime
@@ -16,8 +20,9 @@
 @inject ISnackbar Snackbar
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IServiceScopeFactory ScopeFactory
+@inject IStringLocalizer<POSMessages> Localizer
 
-<PageTitle>Point of Sale - DawaCloud</PageTitle>
+<PageTitle>@Localizer["PageTitle"]</PageTitle>
 
 <div class="pos-container">
     <!-- Left Panel - Product Search & Grid -->
@@ -25,7 +30,7 @@
         <!-- Search Bar -->
         <div class="pos-search-bar">
             <MudTextField @bind-Value="_searchQuery"
-                          Placeholder="Scan barcode or search products... (F2)"
+                          Placeholder="@Localizer["SearchPlaceholder"]"
                           Adornment="Adornment.Start"
                           AdornmentIcon="@Icons.Material.Filled.Search"
                           Variant="Variant.Outlined"
@@ -37,11 +42,11 @@
         <!-- Category Tabs -->
         <div class="pos-categories">
             <MudChipSet T="string" @bind-SelectedValue="_selectedCategory" SelectionMode="SelectionMode.SingleSelection" Class="pos-category-chips">
-                <MudChip Value="@("All")" Color="Color.Primary" Variant="Variant.Text">All</MudChip>
-                <MudChip Value="@("Analgesics")" Color="Color.Default" Variant="Variant.Text">Analgesics</MudChip>
-                <MudChip Value="@("Antibiotics")" Color="Color.Default" Variant="Variant.Text">Antibiotics</MudChip>
-                <MudChip Value="@("Antacids")" Color="Color.Default" Variant="Variant.Text">Antacids</MudChip>
-                <MudChip Value="@("Vitamins")" Color="Color.Default" Variant="Variant.Text">Vitamins</MudChip>
+                <MudChip Value="@("All")" Color="Color.Primary" Variant="Variant.Text">@Localizer["All"]</MudChip>
+                <MudChip Value="@("Analgesics")" Color="Color.Default" Variant="Variant.Text">@Localizer["Analgesics"]</MudChip>
+                <MudChip Value="@("Antibiotics")" Color="Color.Default" Variant="Variant.Text">@Localizer["Antibiotics"]</MudChip>
+                <MudChip Value="@("Antacids")" Color="Color.Default" Variant="Variant.Text">@Localizer["Antacids"]</MudChip>
+                <MudChip Value="@("Vitamins")" Color="Color.Default" Variant="Variant.Text">@Localizer["Vitamins"]</MudChip>
             </MudChipSet>
         </div>
 
@@ -69,7 +74,7 @@
                         <div class="pos-product-list-details">
                             <div class="pos-product-list-price">SSP @product.Price.ToString("N0")</div>
                             <div class="pos-product-list-stock @(product.Stock <= 10 ? "warning" : "")">
-                                Stock: @product.Stock
+                                @Localizer["Stock"]: @product.Stock
                             </div>
                         </div>
                     </div>
@@ -90,7 +95,7 @@
                         <div class="pos-product-price">SSP @product.Price.ToString("N0")</div>
                         @if (product.Stock <= 10)
                         {
-                            <div class="pos-product-stock warning">@product.Stock left</div>
+                            <div class="pos-product-stock warning">@product.Stock @Localizer["Left"]</div>
                         }
                         @if (product.RequiresPrescription)
                         {
@@ -106,13 +111,13 @@
         <!-- Quick Actions -->
         <div class="pos-quick-actions">
             <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.Pause" OnClick="HoldSale">
-                Hold (F4)
+                @Localizer["Hold"]
             </MudButton>
             <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.Replay" OnClick="RecallSale">
-                Recall (F5)
+                @Localizer["Recall"]
             </MudButton>
             <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.History" OnClick="ShowLastReceipt">
-                Last Receipt
+                @Localizer["LastReceipt"]
             </MudButton>
         </div>
     </div>
@@ -122,7 +127,7 @@
         <!-- Customer Info -->
         <div class="pos-customer-bar">
             <MudTextField @bind-Value="_customerName"
-                          Placeholder="Customer Name (Optional)"
+                          Placeholder="@Localizer["CustomerName"]"
                           Variant="Variant.Text"
                           Adornment="Adornment.Start"
                           AdornmentIcon="@Icons.Material.Filled.Person"
@@ -135,8 +140,8 @@
             {
                 <div class="pos-cart-empty">
                     <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Size="Size.Large" Color="Color.Secondary" />
-                    <MudText Color="Color.Secondary">Cart is empty</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">Scan or search to add items</MudText>
+                    <MudText Color="Color.Secondary">@Localizer["CartIsEmpty"]</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@Localizer["ScanOrSearch"]</MudText>
                 </div>
             }
             else
@@ -165,29 +170,29 @@
         <!-- Cart Totals -->
         <div class="pos-totals">
             <div class="pos-total-row">
-                <span>Subtotal</span>
+                <span>@Localizer["Subtotal"]</span>
                 <span>SSP @_subtotal.ToString("N2")</span>
             </div>
             <div class="pos-total-row">
-                <span>Tax (16%)</span>
+                <span>@Localizer["Tax"] (@_taxRate%)</span>
                 <span>SSP @_taxAmount.ToString("N2")</span>
             </div>
             @if (_discountAmount > 0)
             {
                 <div class="pos-total-row discount">
-                    <span>Discount</span>
+                    <span>@Localizer["Discount"]</span>
                     <span>- SSP @_discountAmount.ToString("N2")</span>
                 </div>
             }
             @if (_isRoundingEnabled && _grandTotal != _grandTotalBeforeRounding)
             {
                 <div class="pos-total-row" style="color: var(--df-text-secondary); font-size: 0.8em;">
-                    <span>Before Rounding</span>
+                    <span>@Localizer["BeforeRounding"]</span>
                     <span>SSP @_grandTotalBeforeRounding.ToString("N2")</span>
                 </div>
             }
             <div class="pos-total-row grand-total">
-                <span>TOTAL</span>
+                <span>@Localizer["GrandTotal"].Value.ToUpper()</span>
                 <span>SSP @_grandTotal.ToString("N2")</span>
             </div>
         </div>
@@ -196,16 +201,16 @@
         <div class="pos-payment-buttons">
             <div class="pos-payment-row">
                 <MudButton Variant="Variant.Outlined" Color="Color.Default" FullWidth="true" StartIcon="@Icons.Material.Filled.Percent" OnClick="ApplyDiscount">
-                    Discount
+                    @Localizer["Discount"]
                 </MudButton>
                 <MudButton Variant="Variant.Outlined" Color="Color.Error" FullWidth="true" StartIcon="@Icons.Material.Filled.Clear" OnClick="ClearCart">
-                    Clear
+                    @Localizer["Clear"]
                 </MudButton>
             </div>
             <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Large"
                        StartIcon="@Icons.Material.Filled.Payment" OnClick="ProcessPayment"
                        Disabled="@(_cartItems.Count == 0)">
-                PAY SSP @_grandTotal.ToString("N0") (F12)
+                @Localizer["Pay"] SSP @_grandTotal.ToString("N0") (F12)
             </MudButton>
         </div>
     </div>
@@ -216,54 +221,54 @@
     <TitleContent>
         <div class="d-flex align-center gap-2">
             <MudIcon Icon="@Icons.Material.Filled.Payment" />
-            <MudText Typo="Typo.h6">Complete Payment</MudText>
+            <MudText Typo="Typo.h6">@Localizer["CompletePayment"]</MudText>
         </div>
     </TitleContent>
     <DialogContent>
         <div class="payment-dialog-total">
             <MudText Typo="Typo.h4" Color="Color.Primary">SSP @_grandTotal.ToString("N2")</MudText>
-            <MudText Typo="Typo.caption" Color="Color.Secondary">Amount Due</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@Localizer["AmountDue"]</MudText>
         </div>
 
         <MudDivider Class="my-4" />
 
-        <MudText Typo="Typo.subtitle2" Class="mb-2">Select Payment Method</MudText>
+        <MudText Typo="Typo.subtitle2" Class="mb-2">@Localizer["SelectPaymentMethod"]</MudText>
         <div class="payment-methods">
             <div class="payment-method @(_selectedPaymentMethod == "Cash" ? "selected" : "")" @onclick="@(() => _selectedPaymentMethod = "Cash")">
                 <MudIcon Icon="@Icons.Material.Filled.Money" />
-                <span>Cash</span>
+                <span>@Localizer["Cash"]</span>
             </div>
             <div class="payment-method @(_selectedPaymentMethod == "MoMo" ? "selected" : "")" @onclick="@(() => _selectedPaymentMethod = "MoMo")">
                 <MudIcon Icon="@Icons.Material.Filled.PhoneAndroid" />
-                <span>MoMo</span>
+                <span>@Localizer["MoMo"]</span>
             </div>
             <div class="payment-method @(_selectedPaymentMethod == "Card" ? "selected" : "")" @onclick="@(() => _selectedPaymentMethod = "Card")">
                 <MudIcon Icon="@Icons.Material.Filled.CreditCard" />
-                <span>Card</span>
+                <span>@Localizer["Card"]</span>
             </div>
         </div>
 
         @if (_selectedPaymentMethod == "Cash")
         {
-            <MudNumericField @bind-Value="_amountTendered" Label="Amount Tendered (SSP)" Variant="Variant.Outlined"
+            <MudNumericField @bind-Value="_amountTendered" Label="@Localizer["AmountTendered"]" Variant="Variant.Outlined"
                             Class="mt-4" Min="0m" />
             @if (_amountTendered >= _grandTotal)
             {
                 <MudAlert Severity="Severity.Success" Class="mt-2">
-                    Change: <strong>SSP @((_amountTendered - _grandTotal).ToString("N2"))</strong>
+                    @Localizer["Change"]: <strong>SSP @((_amountTendered - _grandTotal).ToString("N2"))</strong>
                 </MudAlert>
             }
         }
         else if (_selectedPaymentMethod == "MoMo")
         {
-            <MudTextField @bind-Value="_momoRef" Label="MoMo Transaction Code" Variant="Variant.Outlined" Class="mt-4" />
+            <MudTextField @bind-Value="_momoRef" Label="@Localizer["MomoTransactionCode"]" Variant="Variant.Outlined" Class="mt-4" />
         }
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@(() => _showPaymentDialog = false)">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="CompleteSale" 
+        <MudButton OnClick="@(() => _showPaymentDialog = false)">@Localizer["Cancel"]</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="CompleteSale"
                    Disabled="@(!CanCompleteSale)">
-            Complete Sale
+            @Localizer["CompleteSale"]
         </MudButton>
     </DialogActions>
 </MudDialog>
@@ -273,18 +278,18 @@
     <DialogContent>
         <div class="text-center py-4">
             <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" Class="mb-3" />
-            <MudText Typo="Typo.h5" Color="Color.Success">Payment Successful!</MudText>
-            <MudText Typo="Typo.body1" Class="mt-2">Receipt #: @_lastReceiptNumber</MudText>
+            <MudText Typo="Typo.h5" Color="Color.Success">@Localizer["PaymentSuccessful"]</MudText>
+            <MudText Typo="Typo.body1" Class="mt-2">@Localizer["Receipt"] @_lastReceiptNumber</MudText>
             @if (_changeAmount > 0)
             {
-                <MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-2">Change: SSP @_changeAmount.ToString("N2")</MudText>
+                <MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-2">@Localizer["Change"]: SSP @_changeAmount.ToString("N2")</MudText>
             }
         </div>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@(() => _showSuccessDialog = false)">Close</MudButton>
+        <MudButton OnClick="@(() => _showSuccessDialog = false)">@Localizer["Close"]</MudButton>
         <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Print" OnClick="PrintReceipt">
-            Print Receipt
+            @Localizer["PrintReceipt"]
         </MudButton>
     </DialogActions>
 </MudDialog>
@@ -294,7 +299,7 @@
     <TitleContent>
         <div class="d-flex align-center gap-2">
             <MudIcon Icon="@Icons.Material.Filled.Replay" />
-            <MudText Typo="Typo.h6">Recall Held Sale</MudText>
+            <MudText Typo="Typo.h6">@Localizer["RecallHeldSale"]</MudText>
         </div>
     </TitleContent>
     <DialogContent>
@@ -416,7 +421,7 @@
                     <MudText>SSP @_lastReceipt.SubTotal.ToString("N2")</MudText>
                 </div>
                 <div class="d-flex justify-space-between">
-                    <MudText>Tax (16%):</MudText>
+                    <MudText>Tax (@_taxRate%):</MudText>
                     <MudText>SSP @_lastReceipt.TaxAmount.ToString("N2")</MudText>
                 </div>
                 @if (_lastReceipt.DiscountAmount > 0)
@@ -810,7 +815,8 @@
     private List<ProductDto> _products = new();
     
     private decimal _subtotal => _cartItems.Sum(i => i.LineTotal);
-    private decimal _taxAmount => _subtotal * 0.16m;
+    private decimal _taxRate = 16m;
+    private decimal _taxAmount => _subtotal * (_taxRate / 100m);
     private decimal _discountAmount = 0;
     private decimal _grandTotalBeforeRounding => _subtotal + _taxAmount - _discountAmount;
     private decimal _grandTotal => _isRoundingEnabled
@@ -893,6 +899,8 @@
             if (settings != null)
             {
                 _displayStyle = settings.PosProductDisplayStyle;
+                if (settings.DefaultTaxRate > 0)
+                    _taxRate = settings.DefaultTaxRate;
             }
         }
         catch { /* use default grid style */ }
@@ -992,7 +1000,7 @@
     private async Task CompleteSale()
     {
         _changeAmount = _amountTendered - _grandTotal;
-        _lastReceiptNumber = $"RCP-{DateTime.Now:yyyyMMddHHmmss}";
+        _lastReceiptNumber = $"RCP-{DateTime.UtcNow:yyyyMMddHHmmss}";
 
         // TODO: Save sale to database
         await Task.Delay(500);
@@ -1033,7 +1041,7 @@
             </div>
             <div class='receipt-divider'></div>
             <p><strong>Receipt: {_lastReceiptNumber}</strong></p>
-            <p>Date: {DateTime.Now:dd/MM/yyyy HH:mm}</p>
+            <p>Date: {DateTime.UtcNow:dd/MM/yyyy HH:mm}</p>
             <p>Cashier: {cashierName}</p>
             {(!string.IsNullOrEmpty(_customerName) ? $"<p>Customer: {_customerName}</p>" : "")}
             <div class='receipt-divider'></div>";
@@ -1067,7 +1075,7 @@
 
         receiptHtml += @"
             <div class='receipt-item'>
-                <span>Tax (16%):</span>
+                <span>Tax (" + _taxRate + @"%):</span>
                 <span>SSP " + _taxAmount.ToString("N2") + @"</span>
             </div>
             <div class='receipt-divider'></div>
@@ -1204,12 +1212,24 @@
     {
         if (_lastReceipt == null) return;
 
+        // Load company settings
+        using var scope = ScopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<Data.AppDbContext>();
+        var companySettings = await dbContext.CompanySettings.FirstOrDefaultAsync();
+
+        var logoHtml = "";
+        if (!string.IsNullOrEmpty(companySettings?.LogoUrl))
+        {
+            logoHtml = $"<img src='{companySettings.LogoUrl}' alt='Logo' style='max-width: 120px; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;' />";
+        }
+
         var receiptHtml = $@"
             <div class='receipt-header'>
-                <h2>Revo Pharma & Medical Ltd</h2>
-                <p>Mobil, Hai Cinema</p>
-                <p>Juba, South Sudan</p>
-                <p>Tel: +211 920 123456</p>
+                {logoHtml}
+                <h2>{companySettings?.CompanyName ?? "Pharmacy"}</h2>
+                <p>{companySettings?.Address ?? "Address"}</p>
+                <p>{companySettings?.City}, {companySettings?.Country}</p>
+                <p>Tel: {companySettings?.Phone ?? "N/A"}</p>
             </div>
             <div class='receipt-divider'></div>
             <p><strong>Receipt: {_lastReceipt.ReceiptNumber}</strong></p>
@@ -1233,7 +1253,7 @@
                 <span>SSP {_lastReceipt.SubTotal:N2}</span>
             </div>
             <div class='receipt-item'>
-                <span>Tax (16%):</span>
+                <span>Tax ({_taxRate}%):</span>
                 <span>SSP {_lastReceipt.TaxAmount:N2}</span>
             </div>";
 
@@ -1266,11 +1286,11 @@
             </div>";
         }
 
-        receiptHtml += @"
+        receiptHtml += $@"
             <div class='receipt-divider'></div>
             <div class='receipt-header'>
                 <p>Thank you for your business!</p>
-                <p>www.revopharma.com</p>
+                <p>{companySettings?.Website ?? ""}</p>
             </div>";
 
         await JSRuntime.InvokeVoidAsync("printFunctions.printReceipt", receiptHtml);

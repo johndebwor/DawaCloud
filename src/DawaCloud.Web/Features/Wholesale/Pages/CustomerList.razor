@@ -2,29 +2,36 @@
 @page "/wholesale/customers"
 @using MudBlazor
 @using MediatR
+@using Microsoft.Extensions.Localization
 @using DawaCloud.Web.Features.Wholesale.Commands
 @using DawaCloud.Web.Features.Wholesale.Queries
 @using DawaCloud.Web.Features.Wholesale.Components
+@using DawaCloud.Web.Features.Wholesale.Resources
+@using Microsoft.JSInterop
+@using ClosedXML.Excel
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject IJSRuntime JSRuntime
+@inject IStringLocalizer<SalesMessages> Localizer
 
-<PageTitle>Wholesale Customers - DawaCloud</PageTitle>
+<PageTitle>@Localizer["PageTitle_Wholesale"]</PageTitle>
 
 <!-- Hero Section -->
 <div class="df-hero animate-fade-in-up">
     <div class="df-hero-content">
         <div class="df-hero-text">
-            <h1>Wholesale Customers</h1>
-            <p>Manage B2B customers, credit limits, and pricing tiers</p>
+            <h1>@Localizer["WholesaleCustomers"]</h1>
+            <p>@Localizer["ManageB2BCustomers"]</p>
         </div>
         <div class="d-flex gap-2">
-            <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.FileDownload">
-                Export
+            <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.FileDownload"
+                       OnClick="ExportCustomers">
+                @Localizer["Export"]
             </MudButton>
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
                        OnClick="CreateCustomer">
-                Add Customer
+                @Localizer["AddCustomer"]
             </MudButton>
         </div>
     </div>
@@ -39,7 +46,7 @@
             </div>
         </div>
         <div class="df-kpi-body">
-            <div class="df-kpi-label">Total Customers</div>
+            <div class="df-kpi-label">@Localizer["TotalCustomers"]</div>
             <div class="df-kpi-value">@_customers.Count</div>
         </div>
     </div>
@@ -50,7 +57,7 @@
             </div>
         </div>
         <div class="df-kpi-body">
-            <div class="df-kpi-label">Active Customers</div>
+            <div class="df-kpi-label">@Localizer["ActiveCustomers"]</div>
             <div class="df-kpi-value">@_customers.Count(c => c.IsActive)</div>
         </div>
     </div>
@@ -61,7 +68,7 @@
             </div>
         </div>
         <div class="df-kpi-body">
-            <div class="df-kpi-label">Total Outstanding</div>
+            <div class="df-kpi-label">@Localizer["TotalOutstanding"]</div>
             <div class="df-kpi-value">SSP @_customers.Sum(c => c.CurrentBalance).ToString("N0")</div>
         </div>
     </div>
@@ -72,7 +79,7 @@
             </div>
         </div>
         <div class="df-kpi-body">
-            <div class="df-kpi-label">Over Credit Limit</div>
+            <div class="df-kpi-label">@Localizer["OverCreditLimit"]</div>
             <div class="df-kpi-value">@_customers.Count(c => c.CurrentBalance > c.CreditLimit)</div>
         </div>
     </div>
@@ -82,7 +89,7 @@
 <div class="df-alert-card animate-fade-in-up animate-delay-2 mt-4">
     <div class="df-alert-header">
         <MudTextField @bind-Value="_searchString"
-                      Placeholder="Search customers..."
+                      Placeholder="@Localizer["SearchCustomers"]"
                       Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       IconSize="Size.Medium"
@@ -91,26 +98,26 @@
                       DebounceInterval="300"
                       Style="max-width: 400px;" />
         <div class="d-flex gap-2">
-            <MudSelect T="string" Value="_selectedTier" ValueChanged="OnFilterChanged" Label="Pricing Tier" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
-                <MudSelectItem Value="@("All")">All Tiers</MudSelectItem>
-                <MudSelectItem Value="@("Retail")">Retail</MudSelectItem>
-                <MudSelectItem Value="@("Wholesale")">Wholesale</MudSelectItem>
-                <MudSelectItem Value="@("Bulk")">Bulk</MudSelectItem>
-                <MudSelectItem Value="@("VIP")">VIP</MudSelectItem>
+            <MudSelect T="string" Value="_selectedTier" ValueChanged="OnFilterChanged" Label="@Localizer["PricingTier"]" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
+                <MudSelectItem Value="@("All")">@Localizer["AllTiers"]</MudSelectItem>
+                <MudSelectItem Value="@("Retail")">@Localizer["Retail"]</MudSelectItem>
+                <MudSelectItem Value="@("Wholesale")">@Localizer["Wholesale"]</MudSelectItem>
+                <MudSelectItem Value="@("Bulk")">@Localizer["Bulk"]</MudSelectItem>
+                <MudSelectItem Value="@("VIP")">@Localizer["VIP"]</MudSelectItem>
             </MudSelect>
         </div>
     </div>
 
     <MudTable T="CustomerDto" Items="@FilteredCustomers" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Class="mt-4">
         <HeaderContent>
-            <MudTh>Code</MudTh>
-            <MudTh>Customer</MudTh>
-            <MudTh>Contact</MudTh>
-            <MudTh>Tier</MudTh>
-            <MudTh>Credit Limit</MudTh>
-            <MudTh>Balance</MudTh>
-            <MudTh>Status</MudTh>
-            <MudTh>Actions</MudTh>
+            <MudTh>@Localizer["Code"]</MudTh>
+            <MudTh>@Localizer["Customer"]</MudTh>
+            <MudTh>@Localizer["Contact"]</MudTh>
+            <MudTh>@Localizer["Tier"]</MudTh>
+            <MudTh>@Localizer["CreditLimit"]</MudTh>
+            <MudTh>@Localizer["Balance"]</MudTh>
+            <MudTh>@Localizer["Status"]</MudTh>
+            <MudTh>@Localizer["Actions"]</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Code">
@@ -143,15 +150,15 @@
                     SSP @context.CurrentBalance.ToString("N0")
                 </MudText>
             </MudTd>
-            <MudTd DataLabel="Status">
+            <MudTd DataLabel="@Localizer["Status"]">
                 <MudChip T="string" Size="Size.Small" Color="@(context.IsActive ? Color.Success : Color.Default)">
-                    @(context.IsActive ? "Active" : "Inactive")
+                    @(context.IsActive ? Localizer["Active"] : Localizer["Inactive"])
                 </MudChip>
             </MudTd>
-            <MudTd DataLabel="Actions">
-                <MudTooltip Text="Edit"><MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Default" OnClick="@(() => EditCustomer(context.Id))" /></MudTooltip>
-                <MudTooltip Text="View Sales"><MudIconButton Icon="@Icons.Material.Filled.Receipt" Size="Size.Small" Color="Color.Primary" Href="@($"/wholesale/sales?customerId={context.Id}")" /></MudTooltip>
-                <MudTooltip Text="Delete"><MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteCustomer(context.Id))" /></MudTooltip>
+            <MudTd DataLabel="@Localizer["Actions"]">
+                <MudTooltip Text="@Localizer["Edit"]"><MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Default" OnClick="@(() => EditCustomer(context.Id))" /></MudTooltip>
+                <MudTooltip Text="@Localizer["ViewSales"]"><MudIconButton Icon="@Icons.Material.Filled.Receipt" Size="Size.Small" Color="Color.Primary" Href="@($"/wholesale/sales?customerId={context.Id}")" /></MudTooltip>
+                <MudTooltip Text="@Localizer["Delete"]"><MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteCustomer(context.Id))" /></MudTooltip>
             </MudTd>
         </RowTemplate>
     </MudTable>
@@ -195,7 +202,7 @@
         var parameters = new DialogParameters();
         var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
 
-        var dialog = await DialogService.ShowAsync<CustomerDialog>("Add New Customer", parameters, options);
+        var dialog = await DialogService.ShowAsync<CustomerDialog>(Localizer["AddCustomer"], parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled)
@@ -212,7 +219,7 @@
         };
         var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
 
-        var dialog = await DialogService.ShowAsync<CustomerDialog>("Edit Customer", parameters, options);
+        var dialog = await DialogService.ShowAsync<CustomerDialog>(Localizer["Edit"], parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled)
@@ -224,10 +231,10 @@
     private async Task DeleteCustomer(int customerId)
     {
         bool? confirm = await DialogService.ShowMessageBox(
-            "Confirm Delete",
-            "Are you sure you want to delete this customer?",
-            yesText: "Delete",
-            cancelText: "Cancel"
+            Localizer["ConfirmDeleteCustomer"],
+            Localizer["ConfirmDeleteCustomerMessage"],
+            yesText: Localizer["Delete"],
+            cancelText: Localizer["Cancel"]
         );
 
         if (confirm == true)
@@ -237,13 +244,70 @@
 
             if (result.IsSuccess)
             {
-                Snackbar.Add("Customer deleted successfully", Severity.Success);
+                Snackbar.Add(Localizer["CustomerDeleted"], Severity.Success);
                 await LoadCustomersAsync();
             }
             else
             {
-                Snackbar.Add(result.Error ?? "Failed to delete customer", Severity.Error);
+                Snackbar.Add(result.Error ?? Localizer["DeleteFailed"], Severity.Error);
             }
+        }
+    }
+
+    private async Task ExportCustomers()
+    {
+        try
+        {
+            using var workbook = new XLWorkbook();
+            var ws = workbook.Worksheets.Add("Customers");
+
+            // Header
+            ws.Cell(1, 1).Value = Localizer["Code"].Value;
+            ws.Cell(1, 2).Value = Localizer["Customer"].Value;
+            ws.Cell(1, 3).Value = "City";
+            ws.Cell(1, 4).Value = Localizer["Contact"].Value;
+            ws.Cell(1, 5).Value = "Phone";
+            ws.Cell(1, 6).Value = Localizer["Tier"].Value;
+            ws.Cell(1, 7).Value = Localizer["CreditLimit"].Value;
+            ws.Cell(1, 8).Value = Localizer["Balance"].Value;
+            ws.Cell(1, 9).Value = Localizer["Status"].Value;
+
+            var headerRange = ws.Range(1, 1, 1, 9);
+            headerRange.Style.Font.Bold = true;
+            headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#1565C0");
+            headerRange.Style.Font.FontColor = XLColor.White;
+
+            int row = 2;
+            foreach (var c in _customers)
+            {
+                ws.Cell(row, 1).Value = c.Code;
+                ws.Cell(row, 2).Value = c.Name;
+                ws.Cell(row, 3).Value = c.City;
+                ws.Cell(row, 4).Value = c.Email;
+                ws.Cell(row, 5).Value = c.Phone;
+                ws.Cell(row, 6).Value = c.PricingTier;
+                ws.Cell(row, 7).Value = c.CreditLimit;
+                ws.Cell(row, 7).Style.NumberFormat.Format = "#,##0.00";
+                ws.Cell(row, 8).Value = c.CurrentBalance;
+                ws.Cell(row, 8).Style.NumberFormat.Format = "#,##0.00";
+                ws.Cell(row, 9).Value = c.IsActive ? Localizer["Active"].Value : Localizer["Inactive"].Value;
+                row++;
+            }
+
+            ws.Columns().AdjustToContents();
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            var bytes = stream.ToArray();
+            var base64 = Convert.ToBase64String(bytes);
+            var fileName = $"Customers_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx";
+
+            await JSRuntime.InvokeVoidAsync("downloadFile", fileName, base64, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            Snackbar.Add(Localizer["ExportSuccess"], Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(Localizer["ExportFailed"], Severity.Error);
         }
     }
 }
