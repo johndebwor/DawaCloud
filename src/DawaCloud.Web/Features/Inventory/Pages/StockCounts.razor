@@ -1,6 +1,8 @@
 @page "/inventory/stock-counts"
 @using MudBlazor
 @using DawaCloud.Web.Features.Inventory.Commands
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "RequireInventoryAccess")]
 @using DawaCloud.Web.Features.Inventory.Queries
 @using MediatR
 @inject IMediator Mediator
@@ -10,33 +12,34 @@
 <PageTitle>Stock Counts - DawaCloud</PageTitle>
 
 <!-- Hero Section -->
-<div class="df-hero animate-fade-in-up">
-    <div class="df-hero-content">
-        <div class="df-hero-text">
-            <h1>Stock Counts</h1>
-            <p>Physical inventory counting and reconciliation</p>
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">Stock Counts</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Physical inventory counting and reconciliation</p>
         </div>
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   StartIcon="@Icons.Material.Filled.Add"
-                   OnClick="StartNewCount"
-                   Disabled="@_processing">
-            Start New Count
-        </MudButton>
+        <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-3">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="StartNewCount"
+                       Disabled="@_processing">
+                Start New Count
+            </MudButton>
+        </div>
     </div>
 </div>
 
 <!-- Stock Counts Table -->
-<div class="df-alert-card animate-fade-in-up animate-delay-1 mt-4">
-    <div class="df-alert-header">
-        <div class="df-alert-title">
-            <div class="df-alert-title-icon primary">
-                <MudIcon Icon="@Icons.Material.Filled.Checklist" />
+<div class="dc-card animate-fade-in-up animate-delay-1 mt-4">
+    <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-primary-50">
+                <MudIcon Icon="@Icons.Material.Filled.Checklist" Style="color: var(--tw-color-primary-600);" />
             </div>
-            <span>Count History</span>
+            <span class="tw:text-lg tw:font-semibold tw:text-text tw:m-0 tw:font-display">Count History</span>
         </div>
     </div>
-    <div class="df-alert-body">
         <MudTable T="StockCountSummaryDto" Items="@_stockCounts" Dense="true" Hover="true" Loading="@_loading">
             <HeaderContent>
                 <MudTh>Reference</MudTh>
@@ -103,7 +106,6 @@
                 </MudTd>
             </RowTemplate>
         </MudTable>
-    </div>
 </div>
 
 @code {

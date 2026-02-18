@@ -1,6 +1,9 @@
+using DawaCloud.Web.Data;
+using DawaCloud.Web.Data.Entities;
 using DawaCloud.Web.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Web;
 
 namespace DawaCloud.Web.Features.Auth;
@@ -31,7 +34,8 @@ public static class AuthEndpoints
         var email = form["email"].ToString();
         var password = form["password"].ToString();
         var rememberMe = form["rememberMe"].ToString().ToLower() == "true";
-        var returnUrl = form["returnUrl"].ToString() ?? "/";
+        var returnUrl = form["returnUrl"].ToString();
+        if (string.IsNullOrEmpty(returnUrl)) returnUrl = "/dashboard";
 
         if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
         {
@@ -84,7 +88,8 @@ public static class AuthEndpoints
     private static async Task<IResult> RegisterForm(
         HttpContext context,
         UserManager<ApplicationUser> userManager,
-        SignInManager<ApplicationUser> signInManager)
+        SignInManager<ApplicationUser> signInManager,
+        AppDbContext dbContext)
     {
         var form = await context.Request.ReadFormAsync();
         var email = form["email"].ToString();
@@ -126,9 +131,35 @@ public static class AuthEndpoints
 
         if (result.Succeeded)
         {
-            await userManager.AddToRoleAsync(user, "Cashier");
+            await userManager.AddToRoleAsync(user, "SuperAdmin");
+
+            // Create tenant for the new user
+            var freePlan = await dbContext.SubscriptionPlans
+                .FirstOrDefaultAsync(p => p.PriceMonthly == 0 && p.Name != "Enterprise");
+            var tenant = new Tenant
+            {
+                Name = $"{user.FirstName}'s Pharmacy",
+                SubscriptionPlanId = freePlan?.Id,
+                SubscriptionStatus = SubscriptionStatus.Trialing,
+                TrialEndsAt = DateTime.UtcNow.AddDays(14),
+                MaxUsers = freePlan?.MaxUsers ?? 2,
+                MaxDrugs = freePlan?.MaxDrugs ?? 100,
+                StorageLimitMb = freePlan?.StorageLimitMb ?? 500,
+                IsActive = true
+            };
+            dbContext.Tenants.Add(tenant);
+            await dbContext.SaveChangesAsync();
+
+            user.TenantId = tenant.Id;
+            await userManager.UpdateAsync(user);
+
             await signInManager.SignInAsync(user, isPersistent: false);
-            return Results.Redirect("/");
+
+            var plan = context.Request.Form["plan"].ToString();
+            if (!string.IsNullOrEmpty(plan) && plan != "free-trial")
+                return Results.Redirect($"/subscription/select-plan?plan={HttpUtility.UrlEncode(plan)}");
+
+            return Results.Redirect("/dashboard");
         }
 
         var errors = string.Join(", ", result.Errors.Select(e => e.Description));
@@ -191,7 +222,7 @@ public static class AuthEndpoints
             user.LastLoginAt = DateTime.UtcNow;
             await userManager.UpdateAsync(user);
 
-            return Results.Ok(new AuthResponse(true, "Login successful", "/"));
+            return Results.Ok(new AuthResponse(true, "Login successful", "/dashboard"));
         }
 
         if (result.IsLockedOut)
@@ -216,7 +247,8 @@ public static class AuthEndpoints
     private static async Task<IResult> Register(
         [FromBody] RegisterRequest request,
         UserManager<ApplicationUser> userManager,
-        SignInManager<ApplicationUser> signInManager)
+        SignInManager<ApplicationUser> signInManager,
+        AppDbContext dbContext)
     {
         if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
         {
@@ -250,13 +282,31 @@ public static class AuthEndpoints
 
         if (result.Succeeded)
         {
-            // Assign default role
-            await userManager.AddToRoleAsync(user, "Cashier");
+            await userManager.AddToRoleAsync(user, "SuperAdmin");
 
-            // Auto sign-in after registration (for demo)
+            // Create tenant for the new user
+            var freePlan = await dbContext.SubscriptionPlans
+                .FirstOrDefaultAsync(p => p.PriceMonthly == 0 && p.Name != "Enterprise");
+            var tenant = new Tenant
+            {
+                Name = $"{user.FirstName}'s Pharmacy",
+                SubscriptionPlanId = freePlan?.Id,
+                SubscriptionStatus = SubscriptionStatus.Trialing,
+                TrialEndsAt = DateTime.UtcNow.AddDays(14),
+                MaxUsers = freePlan?.MaxUsers ?? 2,
+                MaxDrugs = freePlan?.MaxDrugs ?? 100,
+                StorageLimitMb = freePlan?.StorageLimitMb ?? 500,
+                IsActive = true
+            };
+            dbContext.Tenants.Add(tenant);
+            await dbContext.SaveChangesAsync();
+
+            user.TenantId = tenant.Id;
+            await userManager.UpdateAsync(user);
+
             await signInManager.SignInAsync(user, isPersistent: false);
 
-            return Results.Ok(new AuthResponse(true, "Registration successful", "/"));
+            return Results.Ok(new AuthResponse(true, "Registration successful", "/dashboard"));
         }
 
         var errors = string.Join(", ", result.Errors.Select(e => e.Description));

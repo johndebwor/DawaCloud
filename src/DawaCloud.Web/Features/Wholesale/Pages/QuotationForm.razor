@@ -1,0 +1,713 @@
+@page "/wholesale/quotations/new"
+@page "/wholesale/quotations/{Id:int}/edit"
+@using MudBlazor
+@using MediatR
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "RequireSalesAccess")]
+@using Microsoft.EntityFrameworkCore
+@using DawaCloud.Web.Features.Wholesale.Commands
+@using DawaCloud.Web.Features.Wholesale.Queries
+@using DawaCloud.Web.Features.Drugs.Queries
+@using DawaCloud.Web.Data
+@using DawaCloud.Web.Data.Entities
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "RequireSalesAccess")]
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
+@inject IServiceScopeFactory ScopeFactory
+
+<PageTitle>@(_isEditMode ? "Edit Quotation" : "New Quotation") - DawaCloud</PageTitle>
+
+<!-- Hero Section -->
+<div class="dc-hero tw:mb-6">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">@(_isEditMode ? "Edit Quotation" : "New Quotation")</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">@(_isEditMode ? "Update quotation details and line items" : "Create a new price quotation for a wholesale customer")</p>
+        </div>
+        <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-3">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       Href="/wholesale/quotations">
+                Back to List
+            </MudButton>
+        </div>
+    </div>
+</div>
+
+@if (_isLoading)
+{
+    <div class="text-center pa-8">
+        <MudProgressCircular Indeterminate="true" />
+        <MudText Typo="Typo.body1" Class="mt-4">Loading...</MudText>
+    </div>
+}
+else
+{
+    <MudGrid Class="mt-4">
+        <!-- Left Column: Form & Items -->
+        <MudItem xs="12" md="8">
+            <!-- Customer & Details Card -->
+            <div class="dc-card animate-fade-in-up animate-delay-1 tw:mb-4">
+                <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                    <MudText Typo="Typo.h6">Customer & Details</MudText>
+                </div>
+                <div class="pa-4">
+                    <MudForm @ref="_form" @bind-IsValid="_formIsValid">
+                        <MudGrid>
+                            <MudItem xs="12" md="6">
+                                <MudSelect T="int?"
+                                           @bind-Value="_selectedCustomerId"
+                                           Label="Customer"
+                                           Variant="Variant.Outlined"
+                                           Required="true"
+                                           RequiredError="Customer is required"
+                                           AnchorOrigin="Origin.BottomCenter"
+                                           Dense="true"
+                                           ToStringFunc="@(id => id.HasValue ? _customers.FirstOrDefault(c => c.Id == id.Value)?.Name + " (" + _customers.FirstOrDefault(c => c.Id == id.Value)?.Code + ")" ?? id.ToString() : "")">
+                                    <MudSelectItem T="int?" Value="@((int?)null)" Disabled="true">-- Select Customer --</MudSelectItem>
+                                    @foreach (var customer in _customers)
+                                    {
+                                        <MudSelectItem T="int?" Value="@customer.Id">@customer.Name (@customer.Code)</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudSelect T="int?"
+                                           @bind-Value="_selectedCurrencyId"
+                                           Label="Currency"
+                                           Variant="Variant.Outlined"
+                                           Dense="true"
+                                           ToStringFunc="@(id => id.HasValue ? _currencies.FirstOrDefault(c => c.Id == id.Value)?.Code + " - " + _currencies.FirstOrDefault(c => c.Id == id.Value)?.Name ?? id.ToString() : "")">
+                                    @foreach (var currency in _currencies)
+                                    {
+                                        <MudSelectItem T="int?" Value="@currency.Id">@currency.Code - @currency.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudDatePicker @bind-Date="_quotationDate"
+                                               Label="Quotation Date"
+                                               Variant="Variant.Outlined"
+                                               Required="true"
+                                               RequiredError="Quotation date is required"
+                                               DateFormat="dd MMM yyyy" />
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudDatePicker @bind-Date="_expiryDate"
+                                               Label="Valid Until (Expiry Date)"
+                                               Variant="Variant.Outlined"
+                                               Required="true"
+                                               RequiredError="Expiry date is required"
+                                               MinDate="@(DateTime.Today.AddDays(1))"
+                                               DateFormat="dd MMM yyyy" />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField @bind-Value="_notes"
+                                              Label="Notes"
+                                              Variant="Variant.Outlined"
+                                              Lines="3"
+                                              Placeholder="Enter any additional notes or terms..." />
+                            </MudItem>
+                        </MudGrid>
+                    </MudForm>
+                </div>
+            </div>
+
+            <!-- Line Items Card -->
+            <div class="dc-card animate-fade-in-up animate-delay-2">
+                <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                    <MudText Typo="Typo.h6">Line Items</MudText>
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="AddNewItemRow"
+                               Size="Size.Small">
+                        Add Item
+                    </MudButton>
+                </div>
+                <div class="pa-4">
+                    @if (_items.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-4">
+                            No items added yet. Click "Add Item" to start adding drugs to the quotation.
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudTable T="QuotationLineItem" Items="_items" Dense="true" Hover="true" Elevation="0">
+                            <HeaderContent>
+                                <MudTh Style="min-width: 250px;">Drug</MudTh>
+                                <MudTh>Qty</MudTh>
+                                <MudTh>Unit Price</MudTh>
+                                <MudTh>Discount %</MudTh>
+                                <MudTh>Tax %</MudTh>
+                                <MudTh>Line Total</MudTh>
+                                <MudTh>Actions</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Drug">
+                                    <MudAutocomplete T="DrugListDto"
+                                                     Value="@context.SelectedDrug"
+                                                     ValueChanged="@((drug) => OnDrugSelected(context, drug))"
+                                                     SearchFunc="@SearchDrugs"
+                                                     ToStringFunc="@(d => d == null ? string.Empty : $"{d.Name} ({d.Code})")"
+                                                     Placeholder="Search drug..."
+                                                     Variant="Variant.Outlined"
+                                                     Dense="true"
+                                                     ShowProgressIndicator="true"
+                                                     MinCharacters="1"
+                                                     MaxItems="20"
+                                                     ResetValueOnEmptyText="true" />
+                                </MudTd>
+                                <MudTd DataLabel="Qty">
+                                    <MudNumericField T="int"
+                                                     Value="context.Quantity"
+                                                     Variant="Variant.Outlined"
+                                                     Dense="true"
+                                                     Min="1"
+                                                     Style="max-width: 100px;"
+                                                     ValueChanged="@((int val) => { context.Quantity = val; RecalculateTotals(); })" />
+                                </MudTd>
+                                <MudTd DataLabel="Unit Price">
+                                    <MudNumericField T="decimal"
+                                                     Value="context.UnitPrice"
+                                                     Variant="Variant.Outlined"
+                                                     Dense="true"
+                                                     Min="0m"
+                                                     Format="N2"
+                                                     Style="max-width: 130px;"
+                                                     ValueChanged="@((decimal val) => { context.UnitPrice = val; RecalculateTotals(); })" />
+                                </MudTd>
+                                <MudTd DataLabel="Discount %">
+                                    <MudNumericField T="decimal"
+                                                     Value="context.DiscountPercent"
+                                                     Variant="Variant.Outlined"
+                                                     Dense="true"
+                                                     Min="0m"
+                                                     Max="100m"
+                                                     Format="N2"
+                                                     Style="max-width: 100px;"
+                                                     ValueChanged="@((decimal val) => { context.DiscountPercent = val; RecalculateTotals(); })" />
+                                </MudTd>
+                                <MudTd DataLabel="Tax %">
+                                    <MudNumericField T="decimal"
+                                                     Value="context.TaxPercent"
+                                                     Variant="Variant.Outlined"
+                                                     Dense="true"
+                                                     Min="0m"
+                                                     Max="100m"
+                                                     Format="N2"
+                                                     Style="max-width: 100px;"
+                                                     ValueChanged="@((decimal val) => { context.TaxPercent = val; RecalculateTotals(); })" />
+                                </MudTd>
+                                <MudTd DataLabel="Line Total">
+                                    <MudText Typo="Typo.body2" Class="fw-bold">
+                                        SSP @context.LineTotal.ToString("N2")
+                                    </MudText>
+                                </MudTd>
+                                <MudTd>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Color="Color.Error"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => RemoveItem(context))" />
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                </div>
+            </div>
+        </MudItem>
+
+        <!-- Right Column: Summary & Actions -->
+        <MudItem xs="12" md="4">
+            <!-- Summary Card -->
+            <div class="dc-card animate-fade-in-up animate-delay-3 tw:mb-4">
+                <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                    <MudText Typo="Typo.h6">Quotation Summary</MudText>
+                </div>
+                <div class="pa-4">
+                    <div class="d-flex flex-column gap-2">
+                        <div class="d-flex justify-space-between">
+                            <MudText Typo="Typo.body2">Subtotal</MudText>
+                            <MudText Typo="Typo.body2">SSP @_subtotal.ToString("N2")</MudText>
+                        </div>
+                        <div class="d-flex justify-space-between">
+                            <MudText Typo="Typo.body2">Total Discount</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Success">- SSP @_totalDiscount.ToString("N2")</MudText>
+                        </div>
+                        <div class="d-flex justify-space-between">
+                            <MudText Typo="Typo.body2">Total Tax</MudText>
+                            <MudText Typo="Typo.body2">SSP @_totalTax.ToString("N2")</MudText>
+                        </div>
+                        <MudDivider Class="my-2" />
+                        <div class="d-flex justify-space-between">
+                            <MudText Typo="Typo.subtitle1" Class="fw-bold">Grand Total</MudText>
+                            <MudText Typo="Typo.h6" Color="Color.Primary">SSP @_grandTotal.ToString("N2")</MudText>
+                        </div>
+                    </div>
+
+                    @if (_items.Count > 0)
+                    {
+                        <MudDivider Class="my-3" />
+                        <div class="d-flex justify-space-between">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Items</MudText>
+                            <MudText Typo="Typo.body2">@_items.Count item(s)</MudText>
+                        </div>
+                        <div class="d-flex justify-space-between">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Total Qty</MudText>
+                            <MudText Typo="Typo.body2">@_items.Sum(i => i.Quantity)</MudText>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Actions Card -->
+            <div class="dc-card animate-fade-in-up animate-delay-4">
+                <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                    <MudText Typo="Typo.h6">Actions</MudText>
+                </div>
+                <div class="pa-4">
+                    <div class="d-flex flex-column gap-2">
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   FullWidth="true"
+                                   StartIcon="@Icons.Material.Filled.Save"
+                                   OnClick="SaveAsDraft"
+                                   Disabled="@(_isSaving || _items.Count == 0)">
+                            @if (_isSaving)
+                            {
+                                <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2" />
+                                <span>Saving...</span>
+                            }
+                            else
+                            {
+                                <span>Save as Draft</span>
+                            }
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Default"
+                                   FullWidth="true"
+                                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                                   Href="/wholesale/quotations">
+                            Back to List
+                        </MudButton>
+                    </div>
+                </div>
+            </div>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+
+    private bool _isEditMode => Id.HasValue;
+    private bool _isLoading = true;
+    private bool _isSaving = false;
+    private bool _formIsValid = false;
+    private MudForm? _form;
+
+    // Form fields
+    private int? _selectedCustomerId;
+    private int? _selectedCurrencyId;
+    private DateTime? _quotationDate = DateTime.Today;
+    private DateTime? _expiryDate = DateTime.Today.AddDays(30);
+    private string _notes = string.Empty;
+
+    // Data sources
+    private List<Queries.CustomerDto> _customers = new();
+    private List<DrugListDto> _drugs = new();
+    private List<CurrencyOption> _currencies = new();
+
+    // Line items
+    private List<QuotationLineItem> _items = new();
+
+    // Computed totals
+    private decimal _subtotal;
+    private decimal _totalDiscount;
+    private decimal _totalTax;
+    private decimal _grandTotal;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            _isLoading = true;
+            StateHasChanged();
+
+            // Load customers via MediatR
+            var customersQuery = new GetCustomersQuery(null, null);
+            _customers = await Mediator.Send(customersQuery);
+
+            // Load drugs via MediatR
+            var drugsQuery = new GetDrugsQuery(null, null, "Active");
+            var drugsResult = await Mediator.Send(drugsQuery);
+            _drugs = drugsResult.Drugs;
+
+            // Load currencies using scoped DbContext
+            await LoadCurrenciesAsync();
+
+            // If editing, load existing quotation
+            if (_isEditMode)
+            {
+                await LoadQuotationForEditAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadCurrenciesAsync()
+    {
+        using var scope = ScopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        _currencies = await context.Currencies
+            .AsNoTracking()
+            .Where(c => c.IsActive)
+            .OrderBy(c => c.DisplayOrder)
+            .Select(c => new CurrencyOption
+            {
+                Id = c.Id,
+                Code = c.Code,
+                Name = c.Name,
+                Symbol = c.Symbol,
+                IsBaseCurrency = c.IsBaseCurrency,
+                IsDefaultSalesCurrency = c.IsDefaultSalesCurrency
+            })
+            .ToListAsync();
+
+        // Set default currency to the default sales currency (SSP)
+        if (!_selectedCurrencyId.HasValue)
+        {
+            var defaultCurrency = _currencies.FirstOrDefault(c => c.IsDefaultSalesCurrency)
+                                  ?? _currencies.FirstOrDefault(c => c.IsBaseCurrency)
+                                  ?? _currencies.FirstOrDefault();
+            _selectedCurrencyId = defaultCurrency?.Id;
+        }
+    }
+
+    private async Task LoadQuotationForEditAsync()
+    {
+        if (!Id.HasValue) return;
+
+        using var scope = ScopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var quotation = await context.Quotations
+            .AsNoTracking()
+            .Include(q => q.Items)
+                .ThenInclude(qi => qi.Drug)
+            .FirstOrDefaultAsync(q => q.Id == Id.Value && !q.IsDeleted);
+
+        if (quotation == null)
+        {
+            Snackbar.Add("Quotation not found", Severity.Error);
+            Navigation.NavigateTo("/wholesale/quotations");
+            return;
+        }
+
+        if (quotation.Status != QuotationStatus.Draft)
+        {
+            Snackbar.Add("Only draft quotations can be edited", Severity.Warning);
+            Navigation.NavigateTo("/wholesale/quotations");
+            return;
+        }
+
+        _selectedCustomerId = quotation.CustomerId;
+        _selectedCurrencyId = quotation.CurrencyId;
+        _quotationDate = quotation.QuotationDate;
+        _expiryDate = quotation.ValidUntil;
+        _notes = quotation.Notes ?? string.Empty;
+
+        _items = quotation.Items.Select(qi => new QuotationLineItem
+        {
+            SelectedDrug = _drugs.FirstOrDefault(d => d.Id == qi.DrugId),
+            DrugId = qi.DrugId,
+            DrugName = qi.Drug.Name,
+            DrugCode = qi.Drug.Code,
+            Quantity = qi.Quantity,
+            UnitPrice = qi.UnitPrice,
+            DiscountPercent = qi.DiscountPercent,
+            TaxPercent = qi.TaxRate
+        }).ToList();
+
+        RecalculateTotals();
+    }
+
+    private async Task<IEnumerable<DrugListDto>> SearchDrugs(string searchText, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(searchText))
+            return _drugs.Take(20);
+
+        var search = searchText.ToLower();
+        return _drugs
+            .Where(d => d.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                        d.Code.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                        (d.GenericName != null && d.GenericName.Contains(search, StringComparison.OrdinalIgnoreCase)))
+            .Take(20);
+    }
+
+    private void OnDrugSelected(QuotationLineItem item, DrugListDto? drug)
+    {
+        item.SelectedDrug = drug;
+        if (drug != null)
+        {
+            item.DrugId = drug.Id;
+            item.DrugName = drug.Name;
+            item.DrugCode = drug.Code;
+            item.UnitPrice = drug.WholesalePrice;
+        }
+        else
+        {
+            item.DrugId = 0;
+            item.DrugName = string.Empty;
+            item.DrugCode = string.Empty;
+            item.UnitPrice = 0;
+        }
+        RecalculateTotals();
+    }
+
+    private void AddNewItemRow()
+    {
+        _items.Add(new QuotationLineItem
+        {
+            Quantity = 1,
+            DiscountPercent = 0,
+            TaxPercent = 16 // Default 16% VAT
+        });
+        StateHasChanged();
+    }
+
+    private void RemoveItem(QuotationLineItem item)
+    {
+        _items.Remove(item);
+        RecalculateTotals();
+        StateHasChanged();
+    }
+
+    private void RecalculateTotals()
+    {
+        _subtotal = _items.Sum(i => i.Quantity * i.UnitPrice);
+        _totalDiscount = _items.Sum(i => i.Quantity * i.UnitPrice * i.DiscountPercent / 100);
+        var subtotalAfterDiscount = _subtotal - _totalDiscount;
+        _totalTax = _items.Sum(i =>
+        {
+            var lineSubtotal = i.Quantity * i.UnitPrice;
+            var lineDiscount = lineSubtotal * (i.DiscountPercent / 100);
+            return (lineSubtotal - lineDiscount) * (i.TaxPercent / 100);
+        });
+        _grandTotal = subtotalAfterDiscount + _totalTax;
+        StateHasChanged();
+    }
+
+    private async Task SaveAsDraft()
+    {
+        if (_form != null)
+        {
+            await _form.Validate();
+        }
+
+        if (!_selectedCustomerId.HasValue)
+        {
+            Snackbar.Add("Please select a customer", Severity.Warning);
+            return;
+        }
+
+        if (!_quotationDate.HasValue)
+        {
+            Snackbar.Add("Please select a quotation date", Severity.Warning);
+            return;
+        }
+
+        if (!_expiryDate.HasValue)
+        {
+            Snackbar.Add("Please select an expiry date", Severity.Warning);
+            return;
+        }
+
+        if (_expiryDate.Value <= DateTime.Today)
+        {
+            Snackbar.Add("Expiry date must be in the future", Severity.Warning);
+            return;
+        }
+
+        if (_items.Count == 0)
+        {
+            Snackbar.Add("Please add at least one item", Severity.Warning);
+            return;
+        }
+
+        // Validate all items have a drug selected
+        var invalidItems = _items.Where(i => i.DrugId == 0 || i.Quantity <= 0 || i.UnitPrice <= 0).ToList();
+        if (invalidItems.Any())
+        {
+            Snackbar.Add("Please ensure all items have a drug selected with valid quantity and unit price", Severity.Warning);
+            return;
+        }
+
+        _isSaving = true;
+        StateHasChanged();
+
+        try
+        {
+            if (_isEditMode)
+            {
+                await UpdateQuotationAsync();
+            }
+            else
+            {
+                await CreateQuotationAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving quotation: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task CreateQuotationAsync()
+    {
+        var commandItems = _items.Select(i => new Commands.QuotationItemDto(
+            i.DrugId,
+            i.Quantity,
+            i.UnitPrice,
+            i.DiscountPercent
+        )).ToList();
+
+        var command = new CreateQuotationCommand(
+            _selectedCustomerId!.Value,
+            _expiryDate!.Value,
+            commandItems,
+            string.IsNullOrWhiteSpace(_notes) ? null : _notes
+        );
+
+        var result = await Mediator.Send(command);
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Quotation saved as draft successfully", Severity.Success);
+            Navigation.NavigateTo("/wholesale/quotations");
+        }
+        else
+        {
+            Snackbar.Add(result.Error ?? "Failed to save quotation", Severity.Error);
+        }
+    }
+
+    private async Task UpdateQuotationAsync()
+    {
+        using var scope = ScopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var quotation = await context.Quotations
+            .Include(q => q.Items)
+            .FirstOrDefaultAsync(q => q.Id == Id!.Value && !q.IsDeleted);
+
+        if (quotation == null)
+        {
+            Snackbar.Add("Quotation not found", Severity.Error);
+            return;
+        }
+
+        // Update header fields
+        quotation.CustomerId = _selectedCustomerId!.Value;
+        quotation.CurrencyId = _selectedCurrencyId;
+        quotation.QuotationDate = _quotationDate!.Value;
+        quotation.ValidUntil = _expiryDate!.Value;
+        quotation.Notes = string.IsNullOrWhiteSpace(_notes) ? null : _notes;
+        quotation.UpdatedAt = DateTime.UtcNow;
+
+        // Remove existing items and add new ones
+        context.QuotationItems.RemoveRange(quotation.Items);
+
+        var newItems = _items.Select(i =>
+        {
+            var lineSubtotal = i.Quantity * i.UnitPrice;
+            var lineDiscount = lineSubtotal * (i.DiscountPercent / 100);
+            var lineAfterDiscount = lineSubtotal - lineDiscount;
+            var lineTax = lineAfterDiscount * (i.TaxPercent / 100);
+
+            return new QuotationItem
+            {
+                QuotationId = quotation.Id,
+                DrugId = i.DrugId,
+                Quantity = i.Quantity,
+                UnitPrice = i.UnitPrice,
+                DiscountPercent = i.DiscountPercent,
+                TaxRate = i.TaxPercent,
+                LineTotal = lineAfterDiscount + lineTax,
+                CreatedAt = DateTime.UtcNow
+            };
+        }).ToList();
+
+        context.QuotationItems.AddRange(newItems);
+
+        // Update totals
+        quotation.SubTotal = _subtotal;
+        quotation.DiscountAmount = _totalDiscount;
+        quotation.TaxAmount = _totalTax;
+        quotation.TotalAmount = _grandTotal;
+
+        await context.SaveChangesAsync();
+
+        Snackbar.Add("Quotation updated successfully", Severity.Success);
+        Navigation.NavigateTo("/wholesale/quotations");
+    }
+
+    // Inner class for line items
+    private class QuotationLineItem
+    {
+        public DrugListDto? SelectedDrug { get; set; }
+        public int DrugId { get; set; }
+        public string DrugName { get; set; } = string.Empty;
+        public string DrugCode { get; set; } = string.Empty;
+        public int Quantity { get; set; } = 1;
+        public decimal UnitPrice { get; set; }
+        public decimal DiscountPercent { get; set; }
+        public decimal TaxPercent { get; set; } = 16;
+
+        public decimal LineTotal
+        {
+            get
+            {
+                var subtotal = Quantity * UnitPrice;
+                var discount = subtotal * (DiscountPercent / 100);
+                var afterDiscount = subtotal - discount;
+                var tax = afterDiscount * (TaxPercent / 100);
+                return afterDiscount + tax;
+            }
+        }
+    }
+
+    // Inner class for currency dropdown
+    private class CurrencyOption
+    {
+        public int Id { get; set; }
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Symbol { get; set; } = string.Empty;
+        public bool IsBaseCurrency { get; set; }
+        public bool IsDefaultSalesCurrency { get; set; }
+    }
+}

@@ -1,0 +1,44 @@
+@page "/subscription/expired"
+@using MudBlazor
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject NavigationManager NavigationManager
+
+<PageTitle>DawaCloud | Subscription Expired</PageTitle>
+
+<div style="min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 2rem;">
+    <div style="max-width: 500px; text-align: center;">
+        <div style="width: 100px; height: 100px; border-radius: 50%; background: #FFF3E0; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem;">
+            <MudIcon Icon="@Icons.Material.Filled.Warning" Style="font-size: 48px; color: #E65100;" />
+        </div>
+
+        <MudText Typo="Typo.h4" Style="font-weight: 800; margin-bottom: 0.5rem;">Subscription Expired</MudText>
+        <MudText Typo="Typo.body1" Style="color: var(--df-text-secondary); margin-bottom: 2rem; line-height: 1.7;">
+            Your trial or subscription has ended. To continue using DawaCloud's features,
+            please upgrade your plan or contact support for assistance.
+        </MudText>
+
+        <div class="d-flex gap-3 justify-center flex-wrap">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large"
+                       StartIcon="@Icons.Material.Filled.Upgrade"
+                       OnClick="@(() => NavigationManager.NavigateTo("/subscription/select-plan"))">
+                Upgrade Plan
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Default" Size="Size.Large"
+                       StartIcon="@Icons.Material.Filled.Support"
+                       OnClick="@(() => NavigationManager.NavigateTo("/help"))">
+                Contact Support
+            </MudButton>
+        </div>
+
+        <MudDivider Class="my-6" />
+
+        <MudText Typo="Typo.body2" Style="color: var(--df-text-tertiary);">
+            Need to manage your account?
+        </MudText>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" Class="mt-1"
+                   OnClick="@(() => NavigationManager.NavigateTo("/api/auth/logout", true))">
+            Sign Out
+        </MudButton>
+    </div>
+</div>

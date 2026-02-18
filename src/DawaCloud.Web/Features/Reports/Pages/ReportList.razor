@@ -1,14 +1,24 @@
 @page "/reports"
 @using MudBlazor
+@using Microsoft.JSInterop
+@using DawaCloud.Web.Features.Reports.Models
+@using DawaCloud.Web.Features.Reports.Services
+@using DawaCloud.Web.Data
+@using Microsoft.EntityFrameworkCore
+@inject IReportService ReportService
+@inject IReportExportService ReportExportService
+@inject IServiceScopeFactory ScopeFactory
+@inject IJSRuntime JSRuntime
+@inject ISnackbar Snackbar
 
 <PageTitle>Reports - DawaCloud</PageTitle>
 
 <!-- Hero Section -->
-<div class="df-hero animate-fade-in-up">
-    <div class="df-hero-content">
-        <div class="df-hero-text">
-            <h1>Reports & Analytics</h1>
-            <p>Generate insights from your pharmacy operations</p>
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">Reports & Analytics</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Generate insights from your pharmacy operations</p>
         </div>
     </div>
 </div>
@@ -17,16 +27,16 @@
 <MudGrid Class="mt-4">
     <!-- Inventory Reports -->
     <MudItem xs="12" md="6" lg="4">
-        <div class="df-alert-card animate-fade-in-up animate-delay-1">
-            <div class="df-alert-header">
-                <div class="df-alert-title">
-                    <div class="df-alert-title-icon primary">
-                        <MudIcon Icon="@Icons.Material.Filled.Inventory" />
+        <div class="dc-card animate-fade-in-up animate-delay-1">
+            <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                <div class="tw:flex tw:items-center tw:gap-3">
+                    <div class="dc-icon-box tw:bg-primary-50">
+                        <MudIcon Icon="@Icons.Material.Filled.Inventory" Style="color: var(--tw-color-primary-600);" />
                     </div>
-                    <span>Inventory Reports</span>
+                    <span class="tw:text-lg tw:font-semibold tw:text-text tw:font-display">Inventory Reports</span>
                 </div>
             </div>
-            <div class="df-alert-body">
+            <div>
                 <MudList T="string" Dense="true" Class="report-list">
                     <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("stock-levels"))">
                         <div class="report-item">
@@ -65,16 +75,16 @@
 
     <!-- Sales Reports -->
     <MudItem xs="12" md="6" lg="4">
-        <div class="df-alert-card animate-fade-in-up animate-delay-2">
-            <div class="df-alert-header">
-                <div class="df-alert-title">
-                    <div class="df-alert-title-icon success">
-                        <MudIcon Icon="@Icons.Material.Filled.PointOfSale" />
+        <div class="dc-card animate-fade-in-up animate-delay-2">
+            <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                <div class="tw:flex tw:items-center tw:gap-3">
+                    <div class="dc-icon-box tw:bg-success-50">
+                        <MudIcon Icon="@Icons.Material.Filled.PointOfSale" Style="color: var(--tw-color-success);" />
                     </div>
-                    <span>Sales Reports</span>
+                    <span class="tw:text-lg tw:font-semibold tw:text-text tw:font-display">Sales Reports</span>
                 </div>
             </div>
-            <div class="df-alert-body">
+            <div>
                 <MudList T="string" Dense="true" Class="report-list">
                     <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("daily-sales"))">
                         <div class="report-item">
@@ -113,16 +123,16 @@
 
     <!-- Financial Reports -->
     <MudItem xs="12" md="6" lg="4">
-        <div class="df-alert-card animate-fade-in-up animate-delay-3">
-            <div class="df-alert-header">
-                <div class="df-alert-title">
-                    <div class="df-alert-title-icon warning">
-                        <MudIcon Icon="@Icons.Material.Filled.AccountBalance" />
+        <div class="dc-card animate-fade-in-up animate-delay-3">
+            <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                <div class="tw:flex tw:items-center tw:gap-3">
+                    <div class="dc-icon-box tw:bg-warning-50">
+                        <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Style="color: var(--tw-color-warning);" />
                     </div>
-                    <span>Financial Reports</span>
+                    <span class="tw:text-lg tw:font-semibold tw:text-text tw:font-display">Financial Reports</span>
                 </div>
             </div>
-            <div class="df-alert-body">
+            <div>
                 <MudList T="string" Dense="true" Class="report-list">
                     <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("profit-loss"))">
                         <div class="report-item">
@@ -159,18 +169,72 @@
         </div>
     </MudItem>
 
-    <!-- Supplier Reports -->
+    <!-- Expenses Reports -->
     <MudItem xs="12" md="6" lg="4">
-        <div class="df-alert-card animate-fade-in-up animate-delay-4">
-            <div class="df-alert-header">
-                <div class="df-alert-title">
-                    <div class="df-alert-title-icon info">
-                        <MudIcon Icon="@Icons.Material.Filled.LocalShipping" />
+        <div class="dc-card animate-fade-in-up animate-delay-4">
+            <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                <div class="tw:flex tw:items-center tw:gap-3">
+                    <div class="dc-icon-box tw:bg-danger-50">
+                        <MudIcon Icon="@Icons.Material.Filled.Receipt" Style="color: var(--tw-color-danger);" />
                     </div>
-                    <span>Supplier Reports</span>
+                    <span class="tw:text-lg tw:font-semibold tw:text-text tw:font-display">Expenses Reports</span>
                 </div>
             </div>
-            <div class="df-alert-body">
+            <div>
+                <MudList T="string" Dense="true" Class="report-list">
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("expenses-by-category"))">
+                        <div class="report-item">
+                            <span>Expenses by Category</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("expenses-by-payment-method"))">
+                        <div class="report-item">
+                            <span>Expenses by Payment Method</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("monthly-expenses-summary"))">
+                        <div class="report-item">
+                            <span>Monthly Expenses Summary</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("expenses-by-vendor"))">
+                        <div class="report-item">
+                            <span>Expenses by Vendor/Payee</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("recurring-expenses"))">
+                        <div class="report-item">
+                            <span>Recurring Expenses Report</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("budget-vs-actual"))">
+                        <div class="report-item">
+                            <span>Budget vs Actual Expenses</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                        </div>
+                    </MudListItem>
+                </MudList>
+            </div>
+        </div>
+    </MudItem>
+
+    <!-- Supplier Reports -->
+    <MudItem xs="12" md="6" lg="4">
+        <div class="dc-card animate-fade-in-up animate-delay-5">
+            <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                <div class="tw:flex tw:items-center tw:gap-3">
+                    <div class="dc-icon-box tw:bg-info-50">
+                        <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Style="color: var(--tw-color-info);" />
+                    </div>
+                    <span class="tw:text-lg tw:font-semibold tw:text-text tw:font-display">Supplier Reports</span>
+                </div>
+            </div>
+            <div>
                 <MudList T="string" Dense="true" Class="report-list">
                     <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("purchase-summary"))">
                         <div class="report-item">
@@ -203,16 +267,16 @@
 
     <!-- Compliance Reports -->
     <MudItem xs="12" md="6" lg="4">
-        <div class="df-alert-card animate-fade-in-up animate-delay-4">
-            <div class="df-alert-header">
-                <div class="df-alert-title">
-                    <div class="df-alert-title-icon danger">
-                        <MudIcon Icon="@Icons.Material.Filled.Gavel" />
+        <div class="dc-card animate-fade-in-up animate-delay-6">
+            <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                <div class="tw:flex tw:items-center tw:gap-3">
+                    <div class="dc-icon-box tw:bg-danger-50">
+                        <MudIcon Icon="@Icons.Material.Filled.Gavel" Style="color: var(--tw-color-danger);" />
                     </div>
-                    <span>Compliance Reports</span>
+                    <span class="tw:text-lg tw:font-semibold tw:text-text tw:font-display">Compliance Reports</span>
                 </div>
             </div>
-            <div class="df-alert-body">
+            <div>
                 <MudList T="string" Dense="true" Class="report-list">
                     <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("controlled-drugs"))">
                         <div class="report-item">
@@ -245,16 +309,16 @@
 
     <!-- Audit Reports -->
     <MudItem xs="12" md="6" lg="4">
-        <div class="df-alert-card animate-fade-in-up animate-delay-4">
-            <div class="df-alert-header">
-                <div class="df-alert-title">
-                    <div class="df-alert-title-icon default">
-                        <MudIcon Icon="@Icons.Material.Filled.Security" />
+        <div class="dc-card animate-fade-in-up animate-delay-7">
+            <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                <div class="tw:flex tw:items-center tw:gap-3">
+                    <div class="dc-icon-box tw:bg-gray-50">
+                        <MudIcon Icon="@Icons.Material.Filled.Security" Style="color: var(--tw-color-gray-600);" />
                     </div>
-                    <span>Audit Reports</span>
+                    <span class="tw:text-lg tw:font-semibold tw:text-text tw:font-display">Audit Reports</span>
                 </div>
             </div>
-            <div class="df-alert-body">
+            <div>
                 <MudList T="string" Dense="true" Class="report-list">
                     <MudListItem T="string" Icon="@Icons.Material.Filled.Assessment" OnClick="@(() => OpenReport("user-activity"))">
                         <div class="report-item">
@@ -302,39 +366,135 @@
             <MudItem xs="12" md="6">
                 <MudDatePicker @bind-Date="_endDate" Label="End Date" Variant="Variant.Outlined" />
             </MudItem>
-            @if (_showCategoryFilter)
-            {
-                <MudItem xs="12" md="6">
-                    <MudSelect T="string" @bind-Value="_selectedCategory" Label="Category" Variant="Variant.Outlined">
-                        <MudSelectItem Value="@("All")">All Categories</MudSelectItem>
-                        <MudSelectItem Value="@("Analgesics")">Analgesics</MudSelectItem>
-                        <MudSelectItem Value="@("Antibiotics")">Antibiotics</MudSelectItem>
-                    </MudSelect>
-                </MudItem>
-            }
-            @if (_showSupplierFilter)
-            {
-                <MudItem xs="12" md="6">
-                    <MudSelect T="string" @bind-Value="_selectedSupplier" Label="Supplier" Variant="Variant.Outlined">
-                        <MudSelectItem Value="@("All")">All Suppliers</MudSelectItem>
-                    </MudSelect>
-                </MudItem>
-            }
         </MudGrid>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@(() => _showReportDialog = false)">Cancel</MudButton>
-        <MudButton Color="Color.Default" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.PictureAsPdf" OnClick="ExportPdf">
-            Export PDF
-        </MudButton>
-        <MudButton Color="Color.Default" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.TableChart" OnClick="ExportExcel">
-            Export Excel
-        </MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.PlayArrow" OnClick="GenerateReport">
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.PlayArrow" OnClick="GenerateReport" Disabled="_isGenerating">
+            @if (_isGenerating)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+            }
             Generate
         </MudButton>
     </DialogActions>
 </MudDialog>
+
+<!-- Report Results Section -->
+@if (_reportResult != null)
+{
+    <div class="mt-6 animate-fade-in-up" id="report-results">
+        <!-- Company Profile Header -->
+        @if (_companySettings != null)
+        {
+            <MudPaper Elevation="0" Class="pa-4 mb-4" Style="border: 1px solid #e0e0e0; border-radius: 8px;">
+                <div class="d-flex align-center gap-4">
+                    @if (!string.IsNullOrEmpty(_companySettings.LogoUrl))
+                    {
+                        <MudImage Src="@_companySettings.LogoUrl" Alt="Logo" Height="60" ObjectFit="ObjectFit.Contain" />
+                    }
+                    <div>
+                        <MudText Typo="Typo.h5" Style="font-weight: 600;">@(_companySettings.CompanyName ?? "DawaCloud")</MudText>
+                        @if (!string.IsNullOrEmpty(_companySettings.Address))
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Default">@_companySettings.Address@(string.IsNullOrEmpty(_companySettings.City) ? "" : $", {_companySettings.City}")@(string.IsNullOrEmpty(_companySettings.Country) ? "" : $", {_companySettings.Country}")</MudText>
+                        }
+                        @if (!string.IsNullOrEmpty(_companySettings.Phone))
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Default">Tel: @_companySettings.Phone</MudText>
+                        }
+                    </div>
+                </div>
+            </MudPaper>
+        }
+
+        <!-- Report Header -->
+        <div class="dc-card">
+            <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                <div class="tw:flex tw:items-center tw:gap-3">
+                    <div class="dc-icon-box tw:bg-primary-50">
+                        <MudIcon Icon="@Icons.Material.Filled.Assessment" Style="color: var(--tw-color-primary-600);" />
+                    </div>
+                    <span class="tw:text-lg tw:font-semibold tw:text-text tw:font-display">@_reportResult.Title</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default"
+                               StartIcon="@Icons.Material.Filled.TableChart" OnClick="ExportExcel">
+                        Excel
+                    </MudButton>
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default"
+                               StartIcon="@Icons.Material.Filled.PictureAsPdf" OnClick="ExportPdf">
+                        PDF
+                    </MudButton>
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default"
+                               StartIcon="@Icons.Material.Filled.Close" OnClick="@(() => _reportResult = null)">
+                        Close
+                    </MudButton>
+                </div>
+            </div>
+            <div>
+                @if (!string.IsNullOrEmpty(_reportResult.SubTitle))
+                {
+                    <MudText Typo="Typo.body2" Class="mb-2" Color="Color.Default">@_reportResult.SubTitle</MudText>
+                }
+                <MudText Typo="Typo.caption" Color="Color.Default">
+                    @if (_reportResult.StartDate.HasValue && _reportResult.EndDate.HasValue)
+                    {
+                        <span>Period: @_reportResult.StartDate.Value.ToString("dd/MM/yyyy") - @_reportResult.EndDate.Value.ToString("dd/MM/yyyy") | </span>
+                    }
+                    Generated: @_reportResult.GeneratedAt.ToString("dd/MM/yyyy HH:mm") | @_reportResult.Rows.Count rows
+                </MudText>
+
+                <!-- Summary KPIs -->
+                @if (_reportResult.Summary.Count > 0)
+                {
+                    <MudGrid Class="mt-3 mb-3">
+                        @foreach (var kpi in _reportResult.Summary)
+                        {
+                            <MudItem xs="6" sm="4" md="3" lg="2">
+                                <MudPaper Class="pa-3" Elevation="0" Style="background: var(--mud-palette-background-grey); border-radius: 8px;">
+                                    <MudText Typo="Typo.caption" Color="Color.Default">@kpi.Key</MudText>
+                                    <MudText Typo="Typo.h6" Style="font-size: 1.1rem;">
+                                        @FormatSummaryValue(kpi.Value)
+                                    </MudText>
+                                </MudPaper>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                }
+
+                <!-- Data Table -->
+                @if (_reportResult.Rows.Count > 0)
+                {
+                    <MudTable T="Dictionary<string, object?>" Items="@_reportResult.Rows" Dense="true" Hover="true"
+                              Striped="true" Breakpoint="Breakpoint.Sm" FixedHeader="true" Height="500px">
+                        <HeaderContent>
+                            @foreach (var col in _reportResult.Columns)
+                            {
+                                <MudTh Style="@GetHeaderStyle(col)">@col.Label</MudTh>
+                            }
+                        </HeaderContent>
+                        <RowTemplate>
+                            @foreach (var col in _reportResult.Columns)
+                            {
+                                <MudTd DataLabel="@col.Label" Style="@GetCellStyle(col)">
+                                    @FormatCellValue(context.GetValueOrDefault(col.Key), col.Format)
+                                </MudTd>
+                            }
+                        </RowTemplate>
+                        <PagerContent>
+                            <MudTablePager PageSizeOptions="new int[] { 25, 50, 100, 500 }" />
+                        </PagerContent>
+                    </MudTable>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Info" Class="mt-3">No data found for the selected criteria.</MudAlert>
+                }
+            </div>
+        </div>
+    </div>
+}
 
 <style>
     .report-list .mud-list-item {
@@ -343,7 +503,7 @@
     }
 
     .report-list .mud-list-item:hover {
-        background: var(--df-primary-50);
+        background: var(--tw-color-primary-50);
     }
 
     .report-item {
@@ -356,23 +516,20 @@
 
 @code {
     private bool _showReportDialog = false;
+    private bool _isGenerating = false;
     private string _selectedReportTitle = string.Empty;
     private string _selectedReportType = string.Empty;
     private DateTime? _startDate = DateTime.Today.AddMonths(-1);
     private DateTime? _endDate = DateTime.Today;
-    private string _selectedCategory = "All";
-    private string _selectedSupplier = "All";
-    private bool _showCategoryFilter = false;
-    private bool _showSupplierFilter = false;
+    private ReportResult? _reportResult;
+    private Data.Entities.CompanySettings? _companySettings;
 
-    private DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+    private DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Small, FullWidth = true };
 
     private void OpenReport(string reportType)
     {
         _selectedReportType = reportType;
         _selectedReportTitle = GetReportTitle(reportType);
-        _showCategoryFilter = reportType.Contains("stock") || reportType.Contains("sales-by-product");
-        _showSupplierFilter = reportType.Contains("supplier") || reportType.Contains("purchase");
         _showReportDialog = true;
     }
 
@@ -393,6 +550,12 @@
         "receivables-aging" => "Receivables Aging Report",
         "payment-history" => "Payment History Report",
         "tax-summary" => "Tax Summary Report",
+        "expenses-by-category" => "Expenses by Category Report",
+        "expenses-by-payment-method" => "Expenses by Payment Method Report",
+        "expenses-monthly-summary" => "Monthly Expenses Summary Report",
+        "expenses-by-vendor" => "Expenses by Vendor/Payee Report",
+        "expenses-recurring" => "Recurring Expenses Report",
+        "expenses-budget-vs-actual" => "Budget vs Actual Expenses Report",
         "purchase-summary" => "Purchase Summary Report",
         "supplier-performance" => "Supplier Performance Report",
         "goods-received" => "Goods Received Notes Report",
@@ -410,20 +573,105 @@
 
     private async Task GenerateReport()
     {
-        // TODO: Generate and display report
-        await Task.Delay(500);
-        _showReportDialog = false;
-    }
+        try
+        {
+            _isGenerating = true;
+            StateHasChanged();
 
-    private async Task ExportPdf()
-    {
-        // TODO: Export report to PDF
-        await Task.Delay(500);
+            using var scope = ScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            _companySettings = await dbContext.CompanySettings.FirstOrDefaultAsync();
+
+            _reportResult = await ReportService.GenerateReportAsync(_selectedReportType, _startDate, _endDate);
+            _showReportDialog = false;
+
+            Snackbar.Add($"Report generated: {_reportResult.Rows.Count} rows", Severity.Success);
+
+            StateHasChanged();
+            await JSRuntime.InvokeVoidAsync("scrollToElement", "report-results");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating report: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isGenerating = false;
+        }
     }
 
     private async Task ExportExcel()
     {
-        // TODO: Export report to Excel
-        await Task.Delay(500);
+        if (_reportResult == null) return;
+        try
+        {
+            var bytes = ReportExportService.ExportToExcel(_reportResult);
+            var base64 = Convert.ToBase64String(bytes);
+            var fileName = $"{_selectedReportType}-{DateTime.UtcNow:yyyyMMdd-HHmmss}.xlsx";
+            await JSRuntime.InvokeVoidAsync("downloadFile", fileName, base64,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            Snackbar.Add("Excel file exported successfully", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error exporting Excel: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ExportPdf()
+    {
+        if (_reportResult == null) return;
+        try
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var companySettings = await dbContext.CompanySettings.FirstOrDefaultAsync();
+
+            var bytes = ReportExportService.ExportToPdf(_reportResult, companySettings);
+            var base64 = Convert.ToBase64String(bytes);
+            var fileName = $"{_selectedReportType}-{DateTime.UtcNow:yyyyMMdd-HHmmss}.pdf";
+            await JSRuntime.InvokeVoidAsync("downloadFile", fileName, base64, "application/pdf");
+            Snackbar.Add("PDF file exported successfully", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            var msg = ex.InnerException?.Message ?? ex.Message;
+            Snackbar.Add($"Error exporting PDF: {msg}", Severity.Error);
+        }
+    }
+
+    private static string FormatCellValue(object? value, ColumnFormat format)
+    {
+        if (value == null) return "";
+        return format switch
+        {
+            ColumnFormat.Currency => value is decimal d ? $"SSP {d:N2}" : value.ToString() ?? "",
+            ColumnFormat.Number => value is int i ? i.ToString("N0") : value is long l ? l.ToString("N0") : value is double db ? db.ToString("N1") : value.ToString() ?? "",
+            ColumnFormat.Percent => value is decimal p ? $"{p:N2}%" : value is double pd ? $"{pd:N1}%" : value.ToString() ?? "",
+            ColumnFormat.Date => value is DateTime dt ? dt.ToString("dd/MM/yyyy") : value.ToString() ?? "",
+            ColumnFormat.DateTime => value is DateTime dtm ? dtm.ToString("dd/MM/yyyy HH:mm") : value.ToString() ?? "",
+            _ => value.ToString() ?? ""
+        };
+    }
+
+    private static string FormatSummaryValue(object? value)
+    {
+        if (value == null) return "0";
+        if (value is decimal d) return $"SSP {d:N2}";
+        return value.ToString() ?? "0";
+    }
+
+    private static string GetHeaderStyle(ReportColumn col)
+    {
+        if (col.Format == ColumnFormat.Currency || col.Format == ColumnFormat.Number || col.Format == ColumnFormat.Percent)
+            return "text-align: right;";
+        return "";
+    }
+
+    private static string GetCellStyle(ReportColumn col)
+    {
+        if (col.Format == ColumnFormat.Currency || col.Format == ColumnFormat.Number || col.Format == ColumnFormat.Percent)
+            return "text-align: right;";
+        return "";
     }
 }

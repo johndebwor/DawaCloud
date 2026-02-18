@@ -17,77 +17,60 @@
 <PageTitle>@Localizer["PageTitle"]</PageTitle>
 
 <!-- Hero Section -->
-<div class="df-hero animate-fade-in-up">
-    <div class="df-hero-content">
-        <div class="df-hero-text">
-            <h1>@Localizer["DrugInventory"]</h1>
-            <p>@Localizer["ManagePharmaceuticalProducts"]</p>
+<div class="dc-hero tw:mb-6">
+    <div class="tw:flex tw:flex-wrap tw:items-start tw:justify-between tw:gap-4">
+        <div>
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:mb-1 tw:font-display">@Localizer["DrugInventory"]</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0">@Localizer["ManagePharmaceuticalProducts"]</p>
         </div>
-        <div class="d-flex gap-2">
-            <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.FileDownload" OnClick="ExportToExcel">
-                @Localizer["Export"]
-            </MudButton>
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       StartIcon="@Icons.Material.Filled.Add"
-                       Href="/drugs/new">
-                @Localizer["AddNewDrug"]
-            </MudButton>
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <button class="dc-btn-secondary" @onclick="ExportToExcel">
+                <MudIcon Icon="@Icons.Material.Filled.FileDownload" Size="Size.Small" />
+                <span>@Localizer["Export"]</span>
+            </button>
+            <a href="/drugs/new" class="dc-btn-primary">
+                <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                <span>@Localizer["AddNewDrug"]</span>
+            </a>
         </div>
     </div>
 </div>
 
 <!-- KPI Cards -->
-<div class="df-kpi-grid">
-    <div class="df-kpi-card animate-fade-in-up animate-delay-1">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon primary">
-                <MudIcon Icon="@Icons.Material.Filled.Medication" />
-            </div>
+<div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 lg:tw:grid-cols-4 tw:gap-4 tw:mb-6">
+    <div class="dc-kpi tw:animate-slide-up">
+        <div class="dc-icon-box tw:bg-primary-50 tw:text-primary-600">
+            <MudIcon Icon="@Icons.Material.Filled.Medication" Size="Size.Medium" />
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">@Localizer["TotalDrugs"]</div>
-            <div class="df-kpi-value">@_totalCount</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">@Localizer["TotalDrugs"]</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_totalCount</div>
     </div>
-    <div class="df-kpi-card animate-fade-in-up animate-delay-2">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon success">
-                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
-            </div>
+    <div class="dc-kpi tw:animate-slide-up" style="animation-delay: 0.05s;">
+        <div class="dc-icon-box tw:bg-accent-50 tw:text-accent-500">
+            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Medium" />
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">@Localizer["InStock"]</div>
-            <div class="df-kpi-value">@_drugs.Count(d => d.CurrentStock > d.ReorderLevel)</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">@Localizer["InStock"]</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_drugs.Count(d => d.CurrentStock > d.ReorderLevel)</div>
     </div>
-    <div class="df-kpi-card animate-fade-in-up animate-delay-3">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon warning">
-                <MudIcon Icon="@Icons.Material.Filled.Warning" />
-            </div>
+    <div class="dc-kpi tw:animate-slide-up" style="animation-delay: 0.1s;">
+        <div class="dc-icon-box tw:bg-warning/10 tw:text-warning">
+            <MudIcon Icon="@Icons.Material.Filled.Warning" Size="Size.Medium" />
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">@Localizer["LowStock"]</div>
-            <div class="df-kpi-value">@_drugs.Count(d => d.CurrentStock <= d.ReorderLevel && d.CurrentStock > 0)</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">@Localizer["LowStock"]</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_drugs.Count(d => d.CurrentStock <= d.ReorderLevel && d.CurrentStock > 0)</div>
     </div>
-    <div class="df-kpi-card animate-fade-in-up animate-delay-4">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon danger">
-                <MudIcon Icon="@Icons.Material.Filled.Error" />
-            </div>
+    <div class="dc-kpi tw:animate-slide-up" style="animation-delay: 0.15s;">
+        <div class="dc-icon-box tw:bg-danger/10 tw:text-danger">
+            <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Medium" />
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">@Localizer["OutOfStock"]</div>
-            <div class="df-kpi-value">@_drugs.Count(d => d.CurrentStock == 0)</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">@Localizer["OutOfStock"]</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_drugs.Count(d => d.CurrentStock == 0)</div>
     </div>
 </div>
 
-<!-- Search and Filters -->
-<div class="df-alert-card animate-fade-in-up animate-delay-2 mt-4">
-    <div class="df-alert-header">
+<!-- Search, Filters and Data Table -->
+<div class="dc-card">
+    <div class="tw:flex tw:flex-wrap tw:justify-between tw:items-center tw:gap-4 tw:mb-6">
         <MudTextField @bind-Value="_searchString"
                       Placeholder="@Localizer["SearchPlaceholder"]"
                       Adornment="Adornment.Start"
@@ -96,7 +79,7 @@
                       DebounceInterval="300"
                       OnDebounceIntervalElapsed="OnSearchChanged"
                       Style="max-width: 400px;" />
-        <div class="d-flex gap-2">
+        <div class="tw:flex tw:gap-2">
             <MudSelect T="string" @bind-Value="_selectedCategory"
                        Label="@Localizer["Category"]"
                        Variant="Variant.Outlined"
@@ -127,8 +110,7 @@
               Breakpoint="Breakpoint.Sm"
               Loading="@_loading"
               LoadingProgressColor="Color.Primary"
-              Dense="true"
-              Class="mt-4">
+              Dense="true">
         <HeaderContent>
             <MudTh>@Localizer["Code"]</MudTh>
             <MudTh>@Localizer["Drug"]</MudTh>
@@ -140,16 +122,16 @@
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="@Localizer["Code"]">
-                <MudText Typo="Typo.body2" Class="font-weight-medium">@context.Code</MudText>
+                <MudText Typo="Typo.body2" Class="tw:font-medium">@context.Code</MudText>
             </MudTd>
             <MudTd DataLabel="@Localizer["Drug"]">
                 <div>
-                    <MudText Typo="Typo.body2" Class="font-weight-medium">@context.Name</MudText>
+                    <MudText Typo="Typo.body2" Class="tw:font-medium">@context.Name</MudText>
                     <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Manufacturer</MudText>
                 </div>
             </MudTd>
             <MudTd DataLabel="@Localizer["Category"]">
-                <MudChip T="string" Size="Size.Small" Color="Color.Info">@(context.Category ?? "Uncategorized")</MudChip>
+                <span class="dc-badge tw:bg-info/10 tw:text-info">@(context.Category ?? "Uncategorized")</span>
             </MudTd>
             <MudTd DataLabel="@Localizer["Stock"]">
                 <div>
@@ -166,33 +148,30 @@
             <MudTd DataLabel="@Localizer["Status"]">
                 @if (context.CurrentStock == 0)
                 {
-                    <MudChip T="string" Size="Size.Small" Color="Color.Error">@Localizer["OutOfStock"]</MudChip>
+                    <span class="dc-badge tw:bg-danger/10 tw:text-danger">@Localizer["OutOfStock"]</span>
                 }
                 else if (context.CurrentStock <= context.ReorderLevel)
                 {
-                    <MudChip T="string" Size="Size.Small" Color="Color.Warning">@Localizer["LowStock"]</MudChip>
+                    <span class="dc-badge tw:bg-warning/10 tw:text-warning">@Localizer["LowStock"]</span>
                 }
                 else
                 {
-                    <MudChip T="string" Size="Size.Small" Color="Color.Success">@Localizer["InStock"]</MudChip>
+                    <span class="dc-badge tw:bg-success/10 tw:text-success">@Localizer["InStock"]</span>
                 }
             </MudTd>
             <MudTd DataLabel="@Localizer["Actions"]" Style="text-align: right;">
                 <MudIconButton Icon="@Icons.Material.Filled.Visibility"
                                Color="Color.Primary"
                                Size="Size.Small"
-                               Href="@($"/drugs/{context.Id}")"
-                               Title="@Localizer["View"]" />
+                               Href="@($"/drugs/{context.Id}")" />
                 <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                Color="Color.Info"
                                Size="Size.Small"
-                               Href="@($"/drugs/{context.Id}/edit")"
-                               Title="@Localizer["Edit"]" />
+                               Href="@($"/drugs/{context.Id}/edit")" />
                 <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                Color="Color.Error"
                                Size="Size.Small"
-                               OnClick="@(() => DeleteDrug(context))"
-                               Title="@Localizer["Delete"]" />
+                               OnClick="@(() => DeleteDrug(context))" />
             </MudTd>
         </RowTemplate>
         <NoRecordsContent>

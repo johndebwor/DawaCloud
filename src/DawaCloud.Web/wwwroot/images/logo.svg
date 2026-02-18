@@ -1,23 +1,93 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
-  <!-- Background circle -->
-  <circle cx="100" cy="100" r="95" fill="#00897b" opacity="0.1"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0D47A1"/>
+      <stop offset="100%" stop-color="#1565C0"/>
+    </linearGradient>
+    <linearGradient id="cloudGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#E3F2FD"/>
+    </linearGradient>
+    <linearGradient id="capsuleTop" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10B981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="capsuleBottom" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#E8F5E9"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#0D47A1" flood-opacity="0.25"/>
+    </filter>
+    <filter id="cloudShadow" x="-5%" y="-5%" width="115%" height="115%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.08"/>
+    </filter>
+  </defs>
 
-  <!-- Medical cross with modern design -->
-  <g transform="translate(100, 100)">
-    <!-- Vertical bar of cross -->
-    <rect x="-12" y="-45" width="24" height="90" rx="4" fill="#00897b"/>
-    <!-- Horizontal bar of cross -->
-    <rect x="-45" y="-12" width="90" height="24" rx="4" fill="#00897b"/>
+  <!-- Background rounded square -->
+  <rect x="16" y="16" width="480" height="480" rx="96" fill="url(#bgGrad)" filter="url(#shadow)"/>
 
-    <!-- Center circle highlight -->
-    <circle cx="0" cy="0" r="18" fill="#ffffff"/>
-    <circle cx="0" cy="0" r="14" fill="#00897b"/>
-
-    <!-- Pharmaceutical symbol (Rx) -->
-    <text x="-8" y="8" font-family="Georgia, serif" font-size="20" font-weight="bold" fill="#ffffff">Rx</text>
+  <!-- Subtle dot pattern -->
+  <g opacity="0.06">
+    <circle cx="80" cy="80" r="2" fill="#fff"/><circle cx="130" cy="80" r="2" fill="#fff"/>
+    <circle cx="180" cy="80" r="2" fill="#fff"/><circle cx="230" cy="80" r="2" fill="#fff"/>
+    <circle cx="280" cy="80" r="2" fill="#fff"/><circle cx="330" cy="80" r="2" fill="#fff"/>
+    <circle cx="380" cy="80" r="2" fill="#fff"/><circle cx="430" cy="80" r="2" fill="#fff"/>
+    <circle cx="80" cy="130" r="2" fill="#fff"/><circle cx="130" cy="130" r="2" fill="#fff"/>
+    <circle cx="180" cy="130" r="2" fill="#fff"/><circle cx="230" cy="130" r="2" fill="#fff"/>
+    <circle cx="280" cy="130" r="2" fill="#fff"/><circle cx="330" cy="130" r="2" fill="#fff"/>
+    <circle cx="380" cy="130" r="2" fill="#fff"/><circle cx="430" cy="130" r="2" fill="#fff"/>
+    <circle cx="80" cy="180" r="2" fill="#fff"/><circle cx="130" cy="180" r="2" fill="#fff"/>
+    <circle cx="380" cy="180" r="2" fill="#fff"/><circle cx="430" cy="180" r="2" fill="#fff"/>
+    <circle cx="80" cy="430" r="2" fill="#fff"/><circle cx="130" cy="430" r="2" fill="#fff"/>
+    <circle cx="380" cy="430" r="2" fill="#fff"/><circle cx="430" cy="430" r="2" fill="#fff"/>
   </g>
 
-  <!-- Company name circle -->
-  <text x="100" y="170" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#00897b">REVO</text>
-  <text x="100" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#00695c">PHARMA & MEDICAL</text>
+  <!-- Cloud shape -->
+  <g transform="translate(256, 200)" filter="url(#cloudShadow)">
+    <ellipse cx="0" cy="25" rx="130" ry="58" fill="url(#cloudGrad)" opacity="0.95"/>
+    <circle cx="-65" cy="-2" r="56" fill="url(#cloudGrad)" opacity="0.95"/>
+    <circle cx="18" cy="-32" r="68" fill="url(#cloudGrad)" opacity="0.95"/>
+    <circle cx="72" cy="-2" r="52" fill="url(#cloudGrad)" opacity="0.95"/>
+    <rect x="-130" y="8" width="260" height="75" rx="37" fill="url(#cloudGrad)" opacity="0.95"/>
+  </g>
+
+  <!-- Medical cross inside cloud -->
+  <g transform="translate(256, 218)">
+    <rect x="-10" y="-26" width="20" height="52" rx="4" fill="#1565C0" opacity="0.15"/>
+    <rect x="-26" y="-10" width="52" height="20" rx="4" fill="#1565C0" opacity="0.15"/>
+  </g>
+
+  <!-- Capsule on the cloud -->
+  <g transform="translate(256, 172) rotate(-30)">
+    <!-- Top half green -->
+    <path d="M-16,-52 a16,16 0 0,1 32,0 v30 h-32 z" fill="url(#capsuleTop)"/>
+    <!-- Bottom half white -->
+    <path d="M-16,-22 h32 v30 a16,16 0 0,1 -32,0 z" fill="url(#capsuleBottom)" stroke="#E0E0E0" stroke-width="0.5"/>
+    <!-- Divider -->
+    <line x1="-16" y1="-22" x2="16" y2="-22" stroke="#d1d5db" stroke-width="1.5"/>
+    <!-- Shine -->
+    <ellipse cx="-5" cy="-36" rx="4" ry="11" fill="#fff" opacity="0.45"/>
+  </g>
+
+  <!-- Small pill accent (left) -->
+  <g transform="translate(155, 210) rotate(15)">
+    <rect x="-6" y="-14" width="12" height="28" rx="6" fill="#fff" opacity="0.2"/>
+    <rect x="-6" y="-14" width="12" height="14" rx="6" fill="#42A5F5" opacity="0.35"/>
+  </g>
+
+  <!-- Small pill accent (right) -->
+  <g transform="translate(358, 215) rotate(-20)">
+    <rect x="-5" y="-12" width="10" height="24" rx="5" fill="#fff" opacity="0.2"/>
+    <rect x="-5" y="-12" width="10" height="12" rx="5" fill="#10B981" opacity="0.3"/>
+  </g>
+
+  <!-- "DC" monogram -->
+  <text x="256" y="365" text-anchor="middle" font-family="'Inter','Segoe UI',Arial,sans-serif" font-size="68" font-weight="800" fill="#ffffff" letter-spacing="-2" opacity="0.95">DC</text>
+
+  <!-- "DAWACLOUD" text -->
+  <text x="256" y="415" text-anchor="middle" font-family="'Inter','Segoe UI',Arial,sans-serif" font-size="30" font-weight="600" fill="#ffffff" letter-spacing="6" opacity="0.7">DAWACLOUD</text>
+
+  <!-- Tagline -->
+  <text x="256" y="448" text-anchor="middle" font-family="'Inter','Segoe UI',Arial,sans-serif" font-size="14" font-weight="400" fill="#90CAF9" letter-spacing="3" opacity="0.55">PHARMACEUTICAL</text>
 </svg>

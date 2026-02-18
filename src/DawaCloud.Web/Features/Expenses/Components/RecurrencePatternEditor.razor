@@ -1,0 +1,366 @@
+@using MudBlazor
+@using DawaCloud.Web.Data.Entities
+@using DawaCloud.Web.Features.Expenses.Services
+
+<MudPaper Elevation="0" Class="pa-4" Style="border: 1px solid var(--mud-palette-divider); border-radius: 8px;">
+    <MudText Typo="Typo.subtitle1" Class="mb-3">Recurrence Pattern</MudText>
+
+    <!-- Frequency Selector -->
+    <MudSelect T="RecurrenceFrequency"
+               Value="@Frequency"
+               ValueChanged="@OnFrequencyChanged"
+               Label="Repeats"
+               Variant="Variant.Outlined"
+               Class="mb-3">
+        <MudSelectItem Value="RecurrenceFrequency.None">Does not repeat</MudSelectItem>
+        <MudSelectItem Value="RecurrenceFrequency.Daily">Daily</MudSelectItem>
+        <MudSelectItem Value="RecurrenceFrequency.Weekly">Weekly</MudSelectItem>
+        <MudSelectItem Value="RecurrenceFrequency.Monthly">Monthly</MudSelectItem>
+        <MudSelectItem Value="RecurrenceFrequency.Yearly">Yearly</MudSelectItem>
+    </MudSelect>
+
+    @if (Frequency != RecurrenceFrequency.None)
+    {
+        <!-- Interval (Every X days/weeks/months) -->
+        <div class="d-flex align-center mb-3" style="gap: 8px;">
+            <MudText>Every</MudText>
+            <MudNumericField Value="@Interval"
+                             ValueChanged="@(async (int val) => await OnIntervalChanged(val))"
+                             Min="1"
+                             Max="99"
+                             Variant="Variant.Outlined"
+                             Adornment="Adornment.End"
+                             AdornmentText="@GetIntervalLabel()"
+                             Style="width: 140px;" />
+        </div>
+
+        <!-- Weekly: Day Selection -->
+        @if (Frequency == RecurrenceFrequency.Weekly)
+        {
+            <div class="mb-3">
+                <MudText Typo="Typo.body2" Class="mb-2">Repeat on:</MudText>
+                <div class="d-flex flex-wrap gap-2">
+                    <MudChip T="string"
+                             Color="@(IsDaySelected(System.DayOfWeek.Sunday) ? Color.Primary : Color.Default)"
+                             Variant="@(IsDaySelected(System.DayOfWeek.Sunday) ? Variant.Filled : Variant.Outlined)"
+                             OnClick="@(() => ToggleDay(System.DayOfWeek.Sunday))">
+                        Sun
+                    </MudChip>
+                    <MudChip T="string"
+                             Color="@(IsDaySelected(System.DayOfWeek.Monday) ? Color.Primary : Color.Default)"
+                             Variant="@(IsDaySelected(System.DayOfWeek.Monday) ? Variant.Filled : Variant.Outlined)"
+                             OnClick="@(() => ToggleDay(System.DayOfWeek.Monday))">
+                        Mon
+                    </MudChip>
+                    <MudChip T="string"
+                             Color="@(IsDaySelected(System.DayOfWeek.Tuesday) ? Color.Primary : Color.Default)"
+                             Variant="@(IsDaySelected(System.DayOfWeek.Tuesday) ? Variant.Filled : Variant.Outlined)"
+                             OnClick="@(() => ToggleDay(System.DayOfWeek.Tuesday))">
+                        Tue
+                    </MudChip>
+                    <MudChip T="string"
+                             Color="@(IsDaySelected(System.DayOfWeek.Wednesday) ? Color.Primary : Color.Default)"
+                             Variant="@(IsDaySelected(System.DayOfWeek.Wednesday) ? Variant.Filled : Variant.Outlined)"
+                             OnClick="@(() => ToggleDay(System.DayOfWeek.Wednesday))">
+                        Wed
+                    </MudChip>
+                    <MudChip T="string"
+                             Color="@(IsDaySelected(System.DayOfWeek.Thursday) ? Color.Primary : Color.Default)"
+                             Variant="@(IsDaySelected(System.DayOfWeek.Thursday) ? Variant.Filled : Variant.Outlined)"
+                             OnClick="@(() => ToggleDay(System.DayOfWeek.Thursday))">
+                        Thu
+                    </MudChip>
+                    <MudChip T="string"
+                             Color="@(IsDaySelected(System.DayOfWeek.Friday) ? Color.Primary : Color.Default)"
+                             Variant="@(IsDaySelected(System.DayOfWeek.Friday) ? Variant.Filled : Variant.Outlined)"
+                             OnClick="@(() => ToggleDay(System.DayOfWeek.Friday))">
+                        Fri
+                    </MudChip>
+                    <MudChip T="string"
+                             Color="@(IsDaySelected(System.DayOfWeek.Saturday) ? Color.Primary : Color.Default)"
+                             Variant="@(IsDaySelected(System.DayOfWeek.Saturday) ? Variant.Filled : Variant.Outlined)"
+                             OnClick="@(() => ToggleDay(System.DayOfWeek.Saturday))">
+                        Sat
+                    </MudChip>
+                </div>
+            </div>
+        }
+
+        <!-- Monthly: Day Options -->
+        @if (Frequency == RecurrenceFrequency.Monthly)
+        {
+            <MudRadioGroup T="MonthlyRecurrenceType?" Value="@MonthlyType" ValueChanged="@OnMonthlyTypeChanged" Class="mb-3">
+                <div class="d-flex align-center gap-2 mb-2">
+                    <MudRadio T="MonthlyRecurrenceType?" Value="MonthlyRecurrenceType.DayOfMonth" Color="Color.Primary" />
+                    <MudText>On day</MudText>
+                    <MudNumericField Value="@MonthlyDay"
+                                     ValueChanged="@(async (int? val) => await OnMonthlyDayChanged(val))"
+                                     Min="1"
+                                     Max="31"
+                                     Variant="Variant.Outlined"
+                                     Disabled="@(MonthlyType != MonthlyRecurrenceType.DayOfMonth)"
+                                     Style="width: 70px;" />
+                    <MudText>of the month</MudText>
+                </div>
+                <div class="d-flex align-center gap-2">
+                    <MudRadio T="MonthlyRecurrenceType?" Value="MonthlyRecurrenceType.DayOfWeek" Color="Color.Primary" />
+                    <MudText>On the</MudText>
+                    <MudSelect T="WeekPosition?"
+                               Value="@WeekPos"
+                               ValueChanged="@OnWeekPosChanged"
+                               Variant="Variant.Outlined"
+                               Disabled="@(MonthlyType != MonthlyRecurrenceType.DayOfWeek)"
+                               Style="width: 100px; display: inline-block;">
+                        <MudSelectItem Value="@((WeekPosition?)WeekPosition.First)">First</MudSelectItem>
+                        <MudSelectItem Value="@((WeekPosition?)WeekPosition.Second)">Second</MudSelectItem>
+                        <MudSelectItem Value="@((WeekPosition?)WeekPosition.Third)">Third</MudSelectItem>
+                        <MudSelectItem Value="@((WeekPosition?)WeekPosition.Fourth)">Fourth</MudSelectItem>
+                        <MudSelectItem Value="@((WeekPosition?)WeekPosition.Last)">Last</MudSelectItem>
+                    </MudSelect>
+                    <MudSelect T="System.DayOfWeek?"
+                               Value="@DayOfWeek"
+                               ValueChanged="@OnDayOfWeekChanged"
+                               Variant="Variant.Outlined"
+                               Disabled="@(MonthlyType != MonthlyRecurrenceType.DayOfWeek)"
+                               Style="width: 120px; display: inline-block;">
+                        <MudSelectItem Value="@((System.DayOfWeek?)System.DayOfWeek.Monday)">Monday</MudSelectItem>
+                        <MudSelectItem Value="@((System.DayOfWeek?)System.DayOfWeek.Tuesday)">Tuesday</MudSelectItem>
+                        <MudSelectItem Value="@((System.DayOfWeek?)System.DayOfWeek.Wednesday)">Wednesday</MudSelectItem>
+                        <MudSelectItem Value="@((System.DayOfWeek?)System.DayOfWeek.Thursday)">Thursday</MudSelectItem>
+                        <MudSelectItem Value="@((System.DayOfWeek?)System.DayOfWeek.Friday)">Friday</MudSelectItem>
+                        <MudSelectItem Value="@((System.DayOfWeek?)System.DayOfWeek.Saturday)">Saturday</MudSelectItem>
+                        <MudSelectItem Value="@((System.DayOfWeek?)System.DayOfWeek.Sunday)">Sunday</MudSelectItem>
+                    </MudSelect>
+                </div>
+            </MudRadioGroup>
+        }
+
+        <!-- End Condition -->
+        <MudDivider Class="my-4" />
+        <MudText Typo="Typo.subtitle2" Class="mb-2">Ends</MudText>
+
+        <MudRadioGroup T="RecurrenceEndType" Value="@EndType" ValueChanged="@OnEndTypeChanged">
+            <MudRadio T="RecurrenceEndType" Value="RecurrenceEndType.Never" Color="Color.Primary">
+                Never
+            </MudRadio>
+            <div class="d-flex align-center gap-2 my-2">
+                <MudRadio T="RecurrenceEndType" Value="RecurrenceEndType.OnDate" Color="Color.Primary" />
+                <MudText>On</MudText>
+                <MudDatePicker Date="@EndDate"
+                               DateChanged="@OnEndDateChanged"
+                               Variant="Variant.Outlined"
+                               Disabled="@(EndType != RecurrenceEndType.OnDate)"
+                               PickerVariant="PickerVariant.Inline"
+                               Style="width: 160px; max-width: 160px;" />
+            </div>
+            <div class="d-flex align-center gap-2">
+                <MudRadio T="RecurrenceEndType" Value="RecurrenceEndType.AfterCount" Color="Color.Primary" />
+                <MudText>After</MudText>
+                <MudNumericField Value="@EndAfterCount"
+                                 ValueChanged="@(async (int? val) => await OnEndAfterCountChanged(val))"
+                                 Min="1"
+                                 Variant="Variant.Outlined"
+                                 Disabled="@(EndType != RecurrenceEndType.AfterCount)"
+                                 Style="width: 80px;" />
+                <MudText>occurrences</MudText>
+            </div>
+        </MudRadioGroup>
+
+        <!-- Preview -->
+        <MudDivider Class="my-4" />
+        <MudText Typo="Typo.subtitle2" Class="mb-2">Preview (Next 5 occurrences)</MudText>
+        <MudList T="string" Dense="true" Class="pa-0">
+            @foreach (var occurrence in GetPreviewDates())
+            {
+                <MudListItem T="string" Icon="@Icons.Material.Filled.Event" IconSize="Size.Small">
+                    <MudText Typo="Typo.body2">@occurrence.ToString("dddd, MMMM d, yyyy")</MudText>
+                </MudListItem>
+            }
+        </MudList>
+
+        <!-- Summary Text -->
+        <MudAlert Severity="Severity.Info" Dense="true" Class="mt-3">
+            @GetRecurrenceSummary()
+        </MudAlert>
+    }
+</MudPaper>
+
+@code {
+    [Parameter] public RecurrenceFrequency Frequency { get; set; }
+    [Parameter] public EventCallback<RecurrenceFrequency> FrequencyChanged { get; set; }
+
+    [Parameter] public int Interval { get; set; } = 1;
+    [Parameter] public EventCallback<int> IntervalChanged { get; set; }
+
+    [Parameter] public int? WeeklyDays { get; set; }
+    [Parameter] public EventCallback<int?> WeeklyDaysChanged { get; set; }
+
+    [Parameter] public MonthlyRecurrenceType? MonthlyType { get; set; } = MonthlyRecurrenceType.DayOfMonth;
+    [Parameter] public EventCallback<MonthlyRecurrenceType?> MonthlyTypeChanged { get; set; }
+
+    [Parameter] public int? MonthlyDay { get; set; }
+    [Parameter] public EventCallback<int?> MonthlyDayChanged { get; set; }
+
+    [Parameter] public DayOfWeek? DayOfWeek { get; set; } = System.DayOfWeek.Monday;
+    [Parameter] public EventCallback<DayOfWeek?> DayOfWeekChanged { get; set; }
+
+    [Parameter] public WeekPosition? WeekPos { get; set; } = WeekPosition.First;
+    [Parameter] public EventCallback<WeekPosition?> WeekPosChanged { get; set; }
+
+    [Parameter] public RecurrenceEndType EndType { get; set; } = RecurrenceEndType.Never;
+    [Parameter] public EventCallback<RecurrenceEndType> EndTypeChanged { get; set; }
+
+    [Parameter] public DateTime? EndDate { get; set; }
+    [Parameter] public EventCallback<DateTime?> EndDateChanged { get; set; }
+
+    [Parameter] public int? EndAfterCount { get; set; }
+    [Parameter] public EventCallback<int?> EndAfterCountChanged { get; set; }
+
+    [Parameter] public DateTime BaseDate { get; set; } = DateTime.Today;
+
+    private RecurrenceCalculator _calculator = new();
+
+    protected override void OnParametersSet()
+    {
+        // Set default monthly day if not set
+        if (MonthlyDay == null && Frequency == RecurrenceFrequency.Monthly)
+        {
+            MonthlyDay = BaseDate.Day;
+        }
+    }
+
+    private async Task OnFrequencyChanged(RecurrenceFrequency newFrequency)
+    {
+        Frequency = newFrequency;
+        await FrequencyChanged.InvokeAsync(newFrequency);
+    }
+
+    private async Task OnIntervalChanged(int newInterval)
+    {
+        Interval = newInterval;
+        await IntervalChanged.InvokeAsync(newInterval);
+    }
+
+    private async Task OnMonthlyTypeChanged(MonthlyRecurrenceType? newType)
+    {
+        MonthlyType = newType;
+        await MonthlyTypeChanged.InvokeAsync(newType);
+    }
+
+    private async Task OnMonthlyDayChanged(int? newDay)
+    {
+        MonthlyDay = newDay;
+        await MonthlyDayChanged.InvokeAsync(newDay);
+    }
+
+    private async Task OnWeekPosChanged(WeekPosition? newPos)
+    {
+        WeekPos = newPos;
+        await WeekPosChanged.InvokeAsync(newPos);
+    }
+
+    private async Task OnDayOfWeekChanged(DayOfWeek? newDay)
+    {
+        DayOfWeek = newDay;
+        await DayOfWeekChanged.InvokeAsync(newDay);
+    }
+
+    private async Task OnEndTypeChanged(RecurrenceEndType newType)
+    {
+        EndType = newType;
+        await EndTypeChanged.InvokeAsync(newType);
+    }
+
+    private async Task OnEndDateChanged(DateTime? newDate)
+    {
+        EndDate = newDate;
+        await EndDateChanged.InvokeAsync(newDate);
+    }
+
+    private async Task OnEndAfterCountChanged(int? newCount)
+    {
+        EndAfterCount = newCount;
+        await EndAfterCountChanged.InvokeAsync(newCount);
+    }
+
+    private bool IsDaySelected(DayOfWeek day)
+    {
+        if (!WeeklyDays.HasValue) return false;
+        int dayIndex = (int)day;
+        return (WeeklyDays.Value & (1 << dayIndex)) != 0;
+    }
+
+    private async Task ToggleDay(DayOfWeek day)
+    {
+        int dayIndex = (int)day;
+        int currentValue = WeeklyDays ?? 0;
+        int newValue = currentValue ^ (1 << dayIndex);
+
+        WeeklyDays = newValue == 0 ? null : newValue;
+        await WeeklyDaysChanged.InvokeAsync(WeeklyDays);
+    }
+
+    private List<DateTime> GetPreviewDates()
+    {
+        try
+        {
+            var config = new RecurrenceConfiguration
+            {
+                Frequency = Frequency,
+                Interval = Interval,
+                WeeklyDays = WeeklyDays,
+                MonthlyType = MonthlyType,
+                MonthlyDayOfMonth = MonthlyDay,
+                MonthlyDayOfWeek = DayOfWeek,
+                MonthlyWeekPosition = WeekPos,
+                EndType = EndType,
+                EndDate = EndDate,
+                EndAfterCount = EndAfterCount
+            };
+
+            return _calculator.GetNextOccurrences(BaseDate, config, 5);
+        }
+        catch
+        {
+            return new List<DateTime>();
+        }
+    }
+
+    private string GetRecurrenceSummary()
+    {
+        try
+        {
+            var config = new RecurrenceConfiguration
+            {
+                Frequency = Frequency,
+                Interval = Interval,
+                WeeklyDays = WeeklyDays,
+                MonthlyType = MonthlyType,
+                MonthlyDayOfMonth = MonthlyDay,
+                MonthlyDayOfWeek = DayOfWeek,
+                MonthlyWeekPosition = WeekPos,
+                EndType = EndType,
+                EndDate = EndDate,
+                EndAfterCount = EndAfterCount
+            };
+
+            return _calculator.GetRecurrenceSummary(config);
+        }
+        catch
+        {
+            return "Invalid configuration";
+        }
+    }
+
+    private string GetIntervalLabel()
+    {
+        return Frequency switch
+        {
+            RecurrenceFrequency.Daily => Interval > 1 ? "days" : "day",
+            RecurrenceFrequency.Weekly => Interval > 1 ? "weeks" : "week",
+            RecurrenceFrequency.Monthly => Interval > 1 ? "months" : "month",
+            RecurrenceFrequency.Yearly => Interval > 1 ? "years" : "year",
+            _ => ""
+        };
+    }
+}

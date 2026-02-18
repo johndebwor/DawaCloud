@@ -82,6 +82,43 @@ public class CompanySettings : BaseAuditableEntity
     /// </summary>
     public string PosProductDisplayStyle { get; set; } = "grid";
 
+    // AI Chat Settings
+    /// <summary>
+    /// Whether AI Chat is enabled
+    /// </summary>
+    public bool AiChatEnabled { get; set; }
+
+    /// <summary>
+    /// Anthropic API Key for Claude AI
+    /// </summary>
+    public string? AiChatApiKey { get; set; }
+
+    /// <summary>
+    /// AI model to use (e.g., claude-sonnet-4-5-20250929)
+    /// </summary>
+    public string? AiChatModel { get; set; }
+
+    /// <summary>
+    /// Anthropic API endpoint URL
+    /// </summary>
+    public string? AiChatEndpoint { get; set; }
+
+    // Localization Settings
+    /// <summary>
+    /// Default system locale (e.g., en-US, ar-SA)
+    /// </summary>
+    public string DefaultLocale { get; set; } = "en-US";
+
+    /// <summary>
+    /// Supported locales for the system (comma-separated)
+    /// </summary>
+    public string SupportedLocales { get; set; } = "en-US,ar-SA,fr-FR,de-DE,pt-PT,es-ES";
+
+    /// <summary>
+    /// Whether to enable automatic translation for missing strings
+    /// </summary>
+    public bool EnableAutoTranslation { get; set; } = false;
+
     // Navigation properties
     public Currency? BaseCurrency { get; set; }
     public Currency? DefaultPurchaseCurrency { get; set; }

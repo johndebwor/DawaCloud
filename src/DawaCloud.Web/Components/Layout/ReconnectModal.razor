@@ -2,30 +2,47 @@
 
 <dialog id="components-reconnect-modal" data-nosnippet>
     <div class="components-reconnect-container">
-        <div class="components-rejoining-animation" aria-hidden="true">
-            <div></div>
-            <div></div>
+        <!-- Medical cross icon -->
+        <div class="reconnect-icon-wrap">
+            <svg viewBox="0 0 36 36" fill="none" class="reconnect-icon-cross">
+                <rect x="13" y="3" width="10" height="30" rx="3" fill="url(#reconnectCross)"/>
+                <rect x="3" y="13" width="30" height="10" rx="3" fill="url(#reconnectCross)"/>
+                <defs>
+                    <linearGradient id="reconnectCross" x1="0" y1="0" x2="36" y2="36">
+                        <stop offset="0%" stop-color="#0C8599"/>
+                        <stop offset="100%" stop-color="#10B981"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            <div class="components-rejoining-animation" aria-hidden="true">
+                <div></div>
+                <div></div>
+            </div>
         </div>
-        <p class="components-reconnect-first-attempt-visible">
-            Rejoining the server...
+
+        <p class="components-reconnect-first-attempt-visible reconnect-message">
+            Rejoining the server<span class="reconnect-dots"><span>.</span><span>.</span><span>.</span></span>
         </p>
-        <p class="components-reconnect-repeated-attempt-visible">
-            Rejoin failed... trying again in <span id="components-seconds-to-next-attempt"></span> seconds.
+        <p class="components-reconnect-repeated-attempt-visible reconnect-message">
+            Connection lost. Retrying in <strong id="components-seconds-to-next-attempt"></strong> seconds.
         </p>
-        <p class="components-reconnect-failed-visible">
-            Failed to rejoin.<br />Please retry or reload the page.
+        <p class="components-reconnect-failed-visible reconnect-message">
+            Unable to reconnect to the server.
         </p>
-        <button id="components-reconnect-button" class="components-reconnect-failed-visible">
-            Retry
+        <button id="components-reconnect-button" class="components-reconnect-failed-visible reconnect-btn">
+            Retry Connection
         </button>
-        <p class="components-pause-visible">
-            The session has been paused by the server.
+        <p class="components-pause-visible reconnect-message">
+            Session paused by the server.
         </p>
-        <button id="components-resume-button" class="components-pause-visible">
-            Resume
+        <button id="components-resume-button" class="components-pause-visible reconnect-btn">
+            Resume Session
         </button>
-        <p class="components-resume-failed-visible">
-            Failed to resume the session.<br />Please reload the page.
+        <p class="components-resume-failed-visible reconnect-message">
+            Session could not be resumed.
+        </p>
+        <p class="components-resume-failed-visible reconnect-hint">
+            Please reload the page to continue.
         </p>
     </div>
 </dialog>

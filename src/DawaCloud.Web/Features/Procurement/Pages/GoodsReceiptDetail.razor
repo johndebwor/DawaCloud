@@ -1,0 +1,295 @@
+@page "/procurement/goods-receipts/{Id:int}"
+@using MudBlazor
+@using DawaCloud.Web.Data
+@using DawaCloud.Web.Data.Entities
+@using Microsoft.EntityFrameworkCore
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "RequireInventoryAccess")]
+@inject IServiceScopeFactory ScopeFactory
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Goods Receipt Details - DawaCloud</PageTitle>
+
+@if (_loading)
+{
+    <div class="d-flex justify-center align-center" style="min-height: 400px;">
+        <MudProgressCircular Indeterminate="true" Size="Size.Large" Color="Color.Primary" />
+    </div>
+}
+else if (_receipt == null)
+{
+    <div class="dc-hero tw:mb-6 animate-fade-in-up">
+        <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+            <div class="tw:flex-1">
+                <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">Goods Receipt Not Found</h1>
+                <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">The requested goods receipt could not be found.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dc-card animate-fade-in-up animate-delay-1 tw:mt-4">
+        <MudAlert Severity="Severity.Error" Class="mb-4">
+            No goods receipt found with ID @Id. It may have been deleted or you may not have access.
+        </MudAlert>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Default"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Href="/procurement/goods-receipts">
+            Back to List
+        </MudButton>
+    </div>
+}
+else
+{
+    <div class="dc-hero tw:mb-6 animate-fade-in-up">
+        <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+            <div class="tw:flex-1">
+                <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">@_receipt.GRNNumber</h1>
+                <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Goods receipt details and received items</p>
+            </div>
+            <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-3">
+                @if (_receipt.Status == GoodsReceiptStatus.Draft)
+                {
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Edit"
+                               Href="@($"/procurement/goods-receipts/{Id}/edit")">
+                        Edit Receipt
+                    </MudButton>
+                }
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Default"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           Href="/procurement/goods-receipts">
+                    Back to List
+                </MudButton>
+            </div>
+        </div>
+    </div>
+
+    <div class="dc-card animate-fade-in-up animate-delay-1 tw:mt-4">
+        <MudText Typo="Typo.h6" Class="mb-4">Receipt Information</MudText>
+
+        <MudGrid>
+            <MudItem xs="12" md="6" lg="4">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">GRN Number</MudText>
+                <MudText Typo="Typo.body1" Class="fw-bold mb-4">@_receipt.GRNNumber</MudText>
+            </MudItem>
+            <MudItem xs="12" md="6" lg="4">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Receipt Date</MudText>
+                <MudText Typo="Typo.body1" Class="mb-4">@_receipt.ReceivedDate.ToString("dd MMM yyyy")</MudText>
+            </MudItem>
+            <MudItem xs="12" md="6" lg="4">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Supplier</MudText>
+                <MudText Typo="Typo.body1" Class="mb-4">@(_receipt.Supplier?.Name ?? "N/A")</MudText>
+            </MudItem>
+            <MudItem xs="12" md="6" lg="4">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Status</MudText>
+                <div class="mb-4">
+                    <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(_receipt.Status)">@FormatStatus(_receipt.Status)</MudChip>
+                </div>
+            </MudItem>
+            <MudItem xs="12" md="6" lg="4">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Supplier Invoice Number</MudText>
+                <MudText Typo="Typo.body1" Class="mb-4">@(!string.IsNullOrWhiteSpace(_receipt.SupplierInvoiceNumber) ? _receipt.SupplierInvoiceNumber : "N/A")</MudText>
+            </MudItem>
+            <MudItem xs="12" md="6" lg="4">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Delivery Note Number</MudText>
+                <MudText Typo="Typo.body1" Class="mb-4">@(!string.IsNullOrWhiteSpace(_receipt.DeliveryNoteNumber) ? _receipt.DeliveryNoteNumber : "N/A")</MudText>
+            </MudItem>
+            @if (_receipt.Currency != null)
+            {
+                <MudItem xs="12" md="6" lg="4">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Currency</MudText>
+                    <MudText Typo="Typo.body1" Class="mb-4">@_receipt.Currency.Code (@_receipt.Currency.Name)</MudText>
+                </MudItem>
+            }
+            @if (_receipt.ExchangeRateUsed.HasValue)
+            {
+                <MudItem xs="12" md="6" lg="4">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Exchange Rate</MudText>
+                    <MudText Typo="Typo.body1" Class="mb-4">@_receipt.ExchangeRateUsed.Value.ToString("N4")</MudText>
+                </MudItem>
+            }
+            @if (_receipt.DrugRequest != null)
+            {
+                <MudItem xs="12" md="6" lg="4">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Related Request</MudText>
+                    <MudText Typo="Typo.body1" Class="mb-4">
+                        <MudLink Href="@($"/procurement/requests/{_receipt.DrugRequestId}")">@_receipt.DrugRequest.RequestNumber</MudLink>
+                    </MudText>
+                </MudItem>
+            }
+            @if (!string.IsNullOrWhiteSpace(_receipt.Notes))
+            {
+                <MudItem xs="12">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Notes</MudText>
+                    <MudText Typo="Typo.body1" Class="mb-4">@_receipt.Notes</MudText>
+                </MudItem>
+            }
+        </MudGrid>
+    </div>
+
+    <div class="dc-card animate-fade-in-up animate-delay-2 tw:mt-4">
+        <MudText Typo="Typo.h6" Class="mb-4">Received Items</MudText>
+
+        @if (_receipt.Items.Any())
+        {
+            <MudTable T="GoodsReceiptItem" Items="@_receipt.Items" Dense="true" Hover="true" Striped="true" Breakpoint="Breakpoint.Sm">
+                <HeaderContent>
+                    <MudTh>Drug</MudTh>
+                    <MudTh>Batch Number</MudTh>
+                    <MudTh>Expiry Date</MudTh>
+                    <MudTh Style="text-align: right">Ordered Qty</MudTh>
+                    <MudTh Style="text-align: right">Received Qty</MudTh>
+                    <MudTh Style="text-align: right">Accepted Qty</MudTh>
+                    <MudTh Style="text-align: right">Rejected Qty</MudTh>
+                    <MudTh Style="text-align: right">Unit Cost</MudTh>
+                    <MudTh Style="text-align: right">Line Total</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Drug">
+                        <MudText Typo="Typo.body2" Class="fw-bold">@(context.Drug?.Name ?? "Unknown")</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Batch Number">
+                        <MudText Typo="Typo.body2">@(!string.IsNullOrWhiteSpace(context.BatchNumber) ? context.BatchNumber : "N/A")</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Expiry Date">
+                        <MudText Typo="Typo.body2">@(context.ExpiryDate.HasValue ? context.ExpiryDate.Value.ToString("dd MMM yyyy") : "N/A")</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Ordered Qty" Style="text-align: right">
+                        <MudText Typo="Typo.body2">@context.OrderedQuantity</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Received Qty" Style="text-align: right">
+                        <MudText Typo="Typo.body2">@context.ReceivedQuantity</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Accepted Qty" Style="text-align: right">
+                        <MudText Typo="Typo.body2" Color="Color.Success">@context.AcceptedQuantity</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Rejected Qty" Style="text-align: right">
+                        @if (context.RejectedQuantity > 0)
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Error">@context.RejectedQuantity</MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2">0</MudText>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Unit Cost" Style="text-align: right">
+                        <MudText Typo="Typo.body2">@GetCurrencySymbol() @context.UnitCost.ToString("N2")</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Line Total" Style="text-align: right">
+                        <MudText Typo="Typo.body2" Class="fw-bold">@GetCurrencySymbol() @context.LineTotal.ToString("N2")</MudText>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+                </PagerContent>
+            </MudTable>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info">No items have been added to this goods receipt.</MudAlert>
+        }
+    </div>
+
+    <div class="dc-card animate-fade-in-up animate-delay-3 tw:mt-4">
+        <MudText Typo="Typo.h6" Class="mb-4">Summary</MudText>
+
+        <MudGrid>
+            <MudItem xs="12" md="4">
+                <MudPaper Elevation="0" Class="pa-4 d-flex flex-column align-center" Style="background-color: var(--mud-palette-background);">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Line Items</MudText>
+                    <MudText Typo="Typo.h4" Color="Color.Primary" Class="fw-bold">@_receipt.Items.Count</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudPaper Elevation="0" Class="pa-4 d-flex flex-column align-center" Style="background-color: var(--mud-palette-background);">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Accepted Units</MudText>
+                    <MudText Typo="Typo.h4" Color="Color.Primary" Class="fw-bold">@_receipt.Items.Sum(i => i.AcceptedQuantity)</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudPaper Elevation="0" Class="pa-4 d-flex flex-column align-center" Style="background-color: var(--mud-palette-background);">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Value</MudText>
+                    <MudText Typo="Typo.h4" Color="Color.Primary" Class="fw-bold">@GetCurrencySymbol() @_receipt.TotalAmount.ToString("N2")</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        @if (_receipt.TotalAmountBase != _receipt.TotalAmount && _receipt.TotalAmountBase > 0)
+        {
+            <MudDivider Class="my-3" />
+            <div class="d-flex justify-end">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Total in base currency (SSP): <strong>SSP @_receipt.TotalAmountBase.ToString("N2")</strong>
+                </MudText>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private GoodsReceipt? _receipt;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReceiptAsync();
+    }
+
+    private async Task LoadReceiptAsync()
+    {
+        _loading = true;
+        try
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            _receipt = await db.GoodsReceipts
+                .AsNoTracking()
+                .Include(gr => gr.Supplier)
+                .Include(gr => gr.Currency)
+                .Include(gr => gr.DrugRequest)
+                .Include(gr => gr.Items)
+                    .ThenInclude(i => i.Drug)
+                .FirstOrDefaultAsync(gr => gr.Id == Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading goods receipt: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private string GetCurrencySymbol()
+    {
+        if (_receipt?.Currency != null)
+            return _receipt.Currency.Symbol;
+        return "SSP";
+    }
+
+    private Color GetStatusColor(GoodsReceiptStatus status) => status switch
+    {
+        GoodsReceiptStatus.Draft => Color.Default,
+        GoodsReceiptStatus.Pending => Color.Info,
+        GoodsReceiptStatus.PartiallyVerified => Color.Warning,
+        GoodsReceiptStatus.Verified => Color.Warning,
+        GoodsReceiptStatus.Posted => Color.Success,
+        GoodsReceiptStatus.Cancelled => Color.Error,
+        _ => Color.Default
+    };
+
+    private string FormatStatus(GoodsReceiptStatus status) => status switch
+    {
+        GoodsReceiptStatus.PartiallyVerified => "Partially Verified",
+        _ => status.ToString()
+    };
+}

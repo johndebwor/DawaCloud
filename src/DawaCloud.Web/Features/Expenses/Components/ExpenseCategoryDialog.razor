@@ -1,0 +1,239 @@
+@using MudBlazor
+@using MediatR
+@using DawaCloud.Web.Features.Expenses.Commands
+@using DawaCloud.Web.Features.Expenses.Queries
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Category" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">Manage Expense Categories</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        @if (_editMode)
+        {
+            <MudForm @ref="_form" @bind-IsValid="_isValid">
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="_name" Label="Category Name" Required="true"
+                                      RequiredError="Name is required" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="_description" Label="Description"
+                                      Variant="Variant.Outlined" Lines="2" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudNumericField @bind-Value="_budgetLimit" Label="Budget Limit (Optional)"
+                                         Variant="Variant.Outlined" Format="N2" Min="0m" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="string" @bind-Value="_color" Label="Color" Variant="Variant.Outlined">
+                            <MudSelectItem Value="@("#1565C0")">Blue</MudSelectItem>
+                            <MudSelectItem Value="@("#2E7D32")">Green</MudSelectItem>
+                            <MudSelectItem Value="@("#E65100")">Orange</MudSelectItem>
+                            <MudSelectItem Value="@("#C62828")">Red</MudSelectItem>
+                            <MudSelectItem Value="@("#7B1FA2")">Purple</MudSelectItem>
+                            <MudSelectItem Value="@("#00838F")">Teal</MudSelectItem>
+                            <MudSelectItem Value="@("#4E342E")">Brown</MudSelectItem>
+                            <MudSelectItem Value="@("#455A64")">Grey</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                </MudGrid>
+            </MudForm>
+        }
+        else
+        {
+            <div class="d-flex justify-end mb-3">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                           Size="Size.Small" OnClick="StartAdd">Add Category</MudButton>
+            </div>
+
+            @if (_loading)
+            {
+                <div class="d-flex justify-center pa-4">
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                </div>
+            }
+            else if (_categories.Count == 0)
+            {
+                <div class="d-flex flex-column align-center pa-4">
+                    <MudIcon Icon="@Icons.Material.Filled.Category" Size="Size.Large" Style="color: var(--df-text-tertiary);" />
+                    <MudText Typo="Typo.body1" Class="mt-2" Style="color: var(--df-text-secondary);">No categories yet</MudText>
+                </div>
+            }
+            else
+            {
+                <MudList T="ExpenseCategoryDto" Dense="true">
+                    @foreach (var cat in _categories)
+                    {
+                        <MudListItem T="ExpenseCategoryDto">
+                            <div class="d-flex align-center justify-space-between" style="width: 100%;">
+                                <div class="d-flex align-center gap-2">
+                                    <MudAvatar Size="Size.Small" Style="@($"background: {cat.Color ?? "#1565C0"}; color: white; width: 28px; height: 28px; font-size: 0.75rem;")">
+                                        @cat.Name[0]
+                                    </MudAvatar>
+                                    <div>
+                                        <MudText Typo="Typo.body2" Style="font-weight: 600;">@cat.Name</MudText>
+                                        @if (cat.BudgetLimit.HasValue)
+                                        {
+                                            <MudText Typo="Typo.caption" Style="color: var(--df-text-tertiary);">Budget: @cat.BudgetLimit.Value.ToString("N0")</MudText>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-1 align-center">
+                                    <MudText Typo="Typo.caption" Class="mr-2" Style="color: var(--df-text-tertiary);">
+                                        @cat.ExpenseCount expenses
+                                    </MudText>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                                   OnClick="@(() => StartEdit(cat))" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                                   OnClick="@(() => DeleteCategory(cat))"
+                                                   Disabled="@(cat.ExpenseCount > 0)" />
+                                </div>
+                            </div>
+                        </MudListItem>
+                    }
+                </MudList>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        @if (_editMode)
+        {
+            <MudButton OnClick="CancelEdit" Variant="Variant.Text">Back</MudButton>
+            <MudButton OnClick="SaveCategory" Variant="Variant.Filled" Color="Color.Primary"
+                       Disabled="@(!_isValid || _saving)">
+                @if (_saving)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                }
+                @(_editingCategory != null ? "Update" : "Create")
+            </MudButton>
+        }
+        else
+        {
+            <MudButton OnClick="Close" Variant="Variant.Text">Close</MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private List<ExpenseCategoryDto> _categories = new();
+    private bool _loading = true;
+    private bool _editMode;
+    private bool _saving;
+    private ExpenseCategoryDto? _editingCategory;
+
+    private MudForm _form = null!;
+    private bool _isValid;
+    private string _name = string.Empty;
+    private string? _description;
+    private decimal? _budgetLimit;
+    private string? _color = "#1565C0";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategories();
+    }
+
+    private async Task LoadCategories()
+    {
+        _loading = true;
+        _categories = await Mediator.Send(new GetExpenseCategoriesQuery());
+        _loading = false;
+    }
+
+    private void StartAdd()
+    {
+        _editingCategory = null;
+        _name = string.Empty;
+        _description = null;
+        _budgetLimit = null;
+        _color = "#1565C0";
+        _editMode = true;
+    }
+
+    private void StartEdit(ExpenseCategoryDto cat)
+    {
+        _editingCategory = cat;
+        _name = cat.Name;
+        _description = cat.Description;
+        _budgetLimit = cat.BudgetLimit;
+        _color = cat.Color ?? "#1565C0";
+        _editMode = true;
+    }
+
+    private void CancelEdit()
+    {
+        _editMode = false;
+        _editingCategory = null;
+    }
+
+    private async Task SaveCategory()
+    {
+        await _form.Validate();
+        if (!_isValid) return;
+
+        _saving = true;
+        try
+        {
+            if (_editingCategory != null)
+            {
+                var result = await Mediator.Send(new UpdateExpenseCategoryCommand(
+                    _editingCategory.Id, _name, _description, _budgetLimit, _color, null));
+
+                if (result.IsSuccess)
+                {
+                    Snackbar.Add("Category updated", Severity.Success);
+                    _editMode = false;
+                    await LoadCategories();
+                }
+                else
+                {
+                    Snackbar.Add(result.Error ?? "Failed to update", Severity.Error);
+                }
+            }
+            else
+            {
+                var result = await Mediator.Send(new CreateExpenseCategoryCommand(
+                    _name, _description, _budgetLimit, _color, null));
+
+                if (result.IsSuccess)
+                {
+                    Snackbar.Add("Category created", Severity.Success);
+                    _editMode = false;
+                    await LoadCategories();
+                }
+                else
+                {
+                    Snackbar.Add(result.Error ?? "Failed to create", Severity.Error);
+                }
+            }
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task DeleteCategory(ExpenseCategoryDto cat)
+    {
+        var result = await Mediator.Send(new DeleteExpenseCategoryCommand(cat.Id));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Category deleted", Severity.Success);
+            await LoadCategories();
+        }
+        else
+        {
+            Snackbar.Add(result.Error ?? "Failed to delete", Severity.Error);
+        }
+    }
+
+    private void Close() => MudDialog.Close(DialogResult.Ok(true));
+}

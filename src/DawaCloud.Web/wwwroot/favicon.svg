@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0D47A1"/>
+      <stop offset="100%" stop-color="#1565C0"/>
+    </linearGradient>
+    <linearGradient id="cl" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fff"/>
+      <stop offset="100%" stop-color="#E3F2FD"/>
+    </linearGradient>
+    <linearGradient id="ct" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10B981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#bg)"/>
+  <!-- Cloud -->
+  <g transform="translate(32,26)">
+    <ellipse cx="0" cy="4" rx="17" ry="8" fill="url(#cl)" opacity="0.95"/>
+    <circle cx="-8" cy="-1" r="7.5" fill="url(#cl)" opacity="0.95"/>
+    <circle cx="2" cy="-5" r="9" fill="url(#cl)" opacity="0.95"/>
+    <circle cx="9" cy="-1" r="7" fill="url(#cl)" opacity="0.95"/>
+    <rect x="-17" y="1" width="34" height="11" rx="5" fill="url(#cl)" opacity="0.95"/>
+  </g>
+  <!-- Capsule -->
+  <g transform="translate(32,22) rotate(-30)">
+    <path d="M-2.5,-8 a2.5,2.5 0 0,1 5,0 v5 h-5 z" fill="url(#ct)"/>
+    <path d="M-2.5,-3 h5 v5 a2.5,2.5 0 0,1 -5,0 z" fill="#fff" stroke="#e0e0e0" stroke-width="0.3"/>
+  </g>
+  <!-- DC text -->
+  <text x="32" y="50" text-anchor="middle" font-family="'Inter','Segoe UI',Arial,sans-serif" font-size="12" font-weight="800" fill="#fff" opacity="0.9">DC</text>
+</svg>

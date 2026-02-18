@@ -1,0 +1,1906 @@
+/* Disable Tailwind v4 preflight to avoid conflicts with MudBlazor.
+   Import only theme (CSS variables) and utilities (tw: classes). */
+@layer theme, base, mudblazor-overrides, components, utilities;
+@import "tailwindcss/theme.css" layer(theme) prefix(tw);
+@import "tailwindcss/utilities.css" layer(utilities) prefix(tw);
+
+/* Source paths for class scanning */
+@source "../Components/**/*.razor";
+@source "../Features/**/*.razor";
+@source "../Shared/**/*.razor";
+
+/* Minimal base styles needed for Tailwind utilities to work correctly.
+   Without these, tw:border won't show borders (needs border-style: solid)
+   and sizing won't be consistent (needs box-sizing: border-box). */
+@layer base {
+  *, ::before, ::after {
+    box-sizing: border-box;
+    border-width: 0;
+    border-style: solid;
+    border-color: currentColor;
+  }
+}
+
+/* ===================================================================
+   DawaCloud Design System — "Teal Medical"
+   Clean professional teal theme with dark/light mode support.
+   Light mode default. Toggle via .dark class on <html>.
+
+   IMPORTANT: Tailwind v4 CLI drops custom CSS placed between @theme
+   and the first @layer block. ALL custom (unlayered) CSS must come
+   AFTER the @layer blocks to be included in the output.
+   =================================================================== */
+
+@theme {
+  /* Primary — Teal (medical, trust, clarity) */
+  --color-primary-50: #E6F7F9;
+  --color-primary-100: #CCF0F3;
+  --color-primary-200: #99E0E7;
+  --color-primary-300: #4DC4D1;
+  --color-primary-400: #1A9EAF;
+  --color-primary-500: #0C8599;
+  --color-primary-600: #0A7285;
+  --color-primary-700: #085F70;
+  --color-primary-800: #064C5A;
+  --color-primary-900: #043A45;
+  --color-primary-950: #022730;
+
+  /* Accent — Emerald (pharmacy, health, vitality) */
+  --color-accent-50: #ECFDF5;
+  --color-accent-100: #D1FAE5;
+  --color-accent-200: #A7F3D0;
+  --color-accent-300: #6EE7B7;
+  --color-accent-400: #34D399;
+  --color-accent-500: #10B981;
+  --color-accent-600: #059669;
+  --color-accent-700: #047857;
+  --color-accent-800: #065F46;
+  --color-accent-900: #064E3B;
+
+  /* Surfaces (Light mode) */
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #FFFFFF;
+  --color-page: #F8FAFB;
+  --color-muted: #F1F5F9;
+  --color-border: #E2E8F0;
+  --color-border-light: #F1F5F9;
+
+  /* Text (Dark on light) */
+  --color-text: #1E293B;
+  --color-text-secondary: #64748B;
+  --color-text-muted: #94A3B8;
+
+  /* Semantic */
+  --color-success: #10B981;
+  --color-success-50: #ECFDF5;
+  --color-success-600: #059669;
+  --color-warning: #F59E0B;
+  --color-warning-50: #FFFBEB;
+  --color-danger: #EF4444;
+  --color-danger-50: #FEF2F2;
+  --color-info: #0C8599;
+  --color-info-50: #E6F7F9;
+  --color-info-600: #0A7285;
+
+  /* Typography */
+  --font-sans: "DM Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+  --font-display: "Instrument Serif", Georgia, "Times New Roman", serif;
+
+  /* Border Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+
+  /* Shadows (subtle for light mode) */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  --shadow-card: 0 2px 8px -2px rgb(0 0 0 / 0.08);
+  --shadow-elevated: 0 8px 24px -4px rgb(0 0 0 / 0.12);
+  --shadow-glow: 0 0 24px -4px rgb(12 133 153 / 0.12);
+  --shadow-glow-lg: 0 0 40px -8px rgb(12 133 153 / 0.18);
+  --shadow-inner-glow: inset 0 1px 0 0 rgb(12 133 153 / 0.06);
+
+  /* Animations */
+  --animate-fade-in: fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-slide-up: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ===================================================================
+   MudBlazor Component Override Layer
+   =================================================================== */
+
+@layer mudblazor-overrides {
+  /* Typography — force DM Sans */
+  .mud-typography {
+    font-family: var(--tw-font-sans) !important;
+  }
+
+  /* Paper/Surface */
+  .mud-paper {
+    background-color: var(--tw-color-surface) !important;
+    color: var(--tw-color-text) !important;
+    border-radius: var(--tw-radius-xl) !important;
+  }
+
+  .mud-paper:not(.mud-table-container):not(.mud-toolbar):not(.mud-tabs):not(.mud-dialog):not(.mud-card):not(.mud-snackbar):not(.mud-picker):not(.mud-popover):not(.mud-drawer):not(.mud-appbar) {
+    border: 1px solid var(--tw-color-border-light) !important;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease !important;
+  }
+
+  .mud-paper:not(.mud-table-container):not(.mud-toolbar):not(.mud-tabs):not(.mud-dialog):not(.mud-card):not(.mud-snackbar):not(.mud-picker):not(.mud-popover):not(.mud-drawer):not(.mud-appbar):hover {
+    border-color: var(--tw-color-border) !important;
+    box-shadow: var(--tw-shadow-card) !important;
+  }
+
+  /* Outlined inputs — teal focus */
+  .mud-input-outlined .mud-input-outlined-border {
+    border-radius: var(--tw-radius-lg) !important;
+    border-color: var(--tw-color-border) !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+  }
+
+  .mud-input-outlined:hover .mud-input-outlined-border {
+    border-color: var(--tw-color-primary-400) !important;
+  }
+
+  .mud-input-outlined.mud-input-focused .mud-input-outlined-border {
+    border-color: var(--tw-color-primary-500) !important;
+    box-shadow: 0 0 0 3px rgb(12 133 153 / 0.12) !important;
+    background: rgb(12 133 153 / 0.02) !important;
+  }
+
+  .mud-input {
+    color: var(--tw-color-text) !important;
+  }
+
+  .mud-input-slot {
+    color: var(--tw-color-text-muted) !important;
+  }
+
+  .mud-input-label {
+    font-family: var(--tw-font-sans) !important;
+    color: var(--tw-color-text-secondary) !important;
+  }
+
+  .mud-input-label-inputcontrol {
+    color: var(--tw-color-text-secondary) !important;
+  }
+
+  .mud-input-helper-text {
+    font-family: var(--tw-font-sans) !important;
+    color: var(--tw-color-text-muted) !important;
+  }
+
+  /* Primary filled buttons — Teal pill */
+  .mud-button-filled.mud-button-filled-primary {
+    background: linear-gradient(135deg, var(--tw-color-primary-500) 0%, var(--tw-color-primary-600) 100%) !important;
+    color: #FFFFFF !important;
+    border-radius: 9999px !important;
+    text-transform: none !important;
+    font-weight: 600 !important;
+    font-family: var(--tw-font-sans) !important;
+    letter-spacing: 0 !important;
+    box-shadow: 0 2px 12px rgb(12 133 153 / 0.2) !important;
+    transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+  }
+
+  .mud-button-filled.mud-button-filled-primary:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 20px rgb(12 133 153 / 0.3) !important;
+  }
+
+  .mud-button-filled.mud-button-filled-primary:active {
+    transform: translateY(0) scale(0.97) !important;
+    box-shadow: 0 1px 8px rgb(12 133 153 / 0.2) !important;
+  }
+
+  /* Error filled buttons */
+  .mud-button-filled.mud-button-filled-error {
+    background: var(--tw-color-danger) !important;
+    color: #FFFFFF !important;
+    border-radius: 9999px !important;
+    text-transform: none !important;
+    font-weight: 600 !important;
+    font-family: var(--tw-font-sans) !important;
+  }
+
+  /* Other filled button variants */
+  .mud-button-filled.mud-button-filled-info {
+    background: var(--tw-color-info) !important;
+    color: #FFFFFF !important;
+    border-radius: 9999px !important;
+    text-transform: none !important;
+    font-family: var(--tw-font-sans) !important;
+  }
+
+  .mud-button-filled.mud-button-filled-success {
+    background: var(--tw-color-success) !important;
+    color: #FFFFFF !important;
+    border-radius: 9999px !important;
+    text-transform: none !important;
+    font-family: var(--tw-font-sans) !important;
+  }
+
+  .mud-button-filled.mud-button-filled-warning {
+    background: var(--tw-color-warning) !important;
+    color: #1E293B !important;
+    border-radius: 9999px !important;
+    text-transform: none !important;
+    font-family: var(--tw-font-sans) !important;
+  }
+
+  /* Outlined buttons — pill */
+  .mud-button-outlined {
+    border-color: var(--tw-color-border) !important;
+    color: var(--tw-color-text-secondary) !important;
+    border-radius: 9999px !important;
+    font-family: var(--tw-font-sans) !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+  }
+
+  .mud-button-outlined:hover {
+    background: var(--tw-color-muted) !important;
+    color: var(--tw-color-text) !important;
+  }
+
+  .mud-button-outlined:active {
+    transform: scale(0.97) !important;
+  }
+
+  /* Text buttons */
+  .mud-button-text {
+    color: var(--tw-color-primary-500) !important;
+    font-family: var(--tw-font-sans) !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+  }
+
+  .mud-button-text:hover {
+    background: var(--tw-color-primary-50) !important;
+  }
+
+  /* Flat default buttons */
+  .mud-button-filled.mud-button-filled-default {
+    background: var(--tw-color-muted) !important;
+    color: var(--tw-color-text) !important;
+    border-radius: 9999px !important;
+    text-transform: none !important;
+    font-family: var(--tw-font-sans) !important;
+  }
+
+  /* Tables */
+  .mud-table-container {
+    border-radius: var(--tw-radius-xl) !important;
+    border: 1px solid var(--tw-color-border) !important;
+    overflow: hidden !important;
+    background: var(--tw-color-surface) !important;
+  }
+
+  .mud-table-head .mud-table-cell {
+    font-weight: 600 !important;
+    font-size: 0.75rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    color: var(--tw-color-text-muted) !important;
+    background: var(--tw-color-muted) !important;
+    font-family: var(--tw-font-sans) !important;
+    border-bottom: 1px solid var(--tw-color-border) !important;
+  }
+
+  .mud-table-body .mud-table-row {
+    background: var(--tw-color-surface) !important;
+    transition: background 0.15s ease, box-shadow 0.15s ease !important;
+  }
+
+  .mud-table-body .mud-table-row:nth-child(even) {
+    background: var(--tw-color-muted) !important;
+  }
+
+  .mud-table-body .mud-table-cell {
+    color: var(--tw-color-text) !important;
+    border-bottom: 1px solid var(--tw-color-border-light) !important;
+  }
+
+  .mud-table-body .mud-table-row:hover {
+    background: var(--tw-color-primary-50) !important;
+    box-shadow: inset 3px 0 0 0 var(--tw-color-primary-500) !important;
+  }
+
+  .mud-table-foot .mud-table-cell {
+    color: var(--tw-color-text-secondary) !important;
+    background: var(--tw-color-muted) !important;
+    border-top: 1px solid var(--tw-color-border) !important;
+  }
+
+  .mud-table-pagination {
+    color: var(--tw-color-text-secondary) !important;
+    border-top: 1px solid var(--tw-color-border) !important;
+  }
+
+  .mud-table-toolbar {
+    background: var(--tw-color-surface) !important;
+  }
+
+  /* Chips — pill-shaped with subtle depth */
+  .mud-chip {
+    border-radius: 9999px !important;
+    font-weight: 500 !important;
+    font-size: 0.75rem !important;
+    font-family: var(--tw-font-sans) !important;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.06) !important;
+    transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+  }
+
+  .mud-chip:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.1) !important;
+  }
+
+  /* Alerts */
+  .mud-alert {
+    border-radius: var(--tw-radius-lg) !important;
+    font-family: var(--tw-font-sans) !important;
+  }
+
+  .mud-alert-filled {
+    border: 1px solid var(--tw-color-border) !important;
+  }
+
+  /* Links — teal */
+  .mud-link {
+    color: var(--tw-color-primary-500) !important;
+    transition: color 0.15s ease !important;
+  }
+
+  .mud-link:hover {
+    color: var(--tw-color-primary-600) !important;
+  }
+
+  /* Divider */
+  .mud-divider {
+    border-color: var(--tw-color-border) !important;
+  }
+
+  /* Checkbox */
+  .mud-checkbox .mud-primary-text {
+    color: var(--tw-color-primary-500) !important;
+  }
+
+  /* Select */
+  .mud-select .mud-input-outlined-border {
+    border-radius: var(--tw-radius-lg) !important;
+  }
+
+  /* Dialog — slide-up entry with teal accent bar */
+  .mud-dialog {
+    border-radius: var(--tw-radius-2xl) !important;
+    font-family: var(--tw-font-sans) !important;
+    background: var(--tw-color-surface) !important;
+    color: var(--tw-color-text) !important;
+    border: 1px solid var(--tw-color-border) !important;
+    animation: dialogSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-shadow: var(--tw-shadow-elevated) !important;
+  }
+
+  .mud-dialog::before {
+    content: '' !important;
+    display: block !important;
+    height: 3px !important;
+    background: linear-gradient(90deg, var(--tw-color-primary-500), var(--tw-color-accent-500)) !important;
+  }
+
+  .mud-dialog-title {
+    color: var(--tw-color-text) !important;
+    font-weight: 700 !important;
+  }
+
+  /* Popover/Menu */
+  .mud-popover {
+    background: var(--tw-color-surface-elevated) !important;
+    border: 1px solid var(--tw-color-border) !important;
+    color: var(--tw-color-text) !important;
+    box-shadow: var(--tw-shadow-elevated) !important;
+    border-radius: var(--tw-radius-lg) !important;
+  }
+
+  /* List */
+  .mud-list {
+    color: var(--tw-color-text) !important;
+  }
+
+  .mud-list-item {
+    color: var(--tw-color-text-secondary) !important;
+  }
+
+  .mud-list-item:hover {
+    background: var(--tw-color-muted) !important;
+  }
+
+  .mud-list-subheader {
+    color: var(--tw-color-text-muted) !important;
+    font-family: var(--tw-font-sans) !important;
+  }
+
+  /* Menu items */
+  .mud-menu-item {
+    color: var(--tw-color-text-secondary) !important;
+  }
+
+  .mud-menu-item:hover {
+    background: var(--tw-color-muted) !important;
+    color: var(--tw-color-text) !important;
+  }
+
+  /* Card */
+  .mud-card {
+    background: var(--tw-color-surface) !important;
+    color: var(--tw-color-text) !important;
+  }
+
+  /* Snackbar — glassmorphism with severity accent */
+  .mud-snackbar {
+    background: var(--tw-color-surface-elevated) !important;
+    color: var(--tw-color-text) !important;
+    border: 1px solid var(--tw-color-border) !important;
+    backdrop-filter: blur(12px) !important;
+    border-radius: var(--tw-radius-lg) !important;
+    animation: dialogSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+
+  .mud-snackbar.mud-alert-filled-success {
+    border-left: 4px solid var(--tw-color-success) !important;
+  }
+
+  .mud-snackbar.mud-alert-filled-error {
+    border-left: 4px solid var(--tw-color-danger) !important;
+  }
+
+  .mud-snackbar.mud-alert-filled-warning {
+    border-left: 4px solid var(--tw-color-warning) !important;
+  }
+
+  .mud-snackbar.mud-alert-filled-info {
+    border-left: 4px solid var(--tw-color-info) !important;
+  }
+
+  /* Tabs */
+  .mud-tabs {
+    color: var(--tw-color-text) !important;
+  }
+
+  .mud-tabs-toolbar {
+    background: var(--tw-color-surface) !important;
+    border-bottom: 1px solid var(--tw-color-border) !important;
+    border-radius: var(--tw-radius-xl) var(--tw-radius-xl) 0 0 !important;
+  }
+
+  .mud-tab {
+    color: var(--tw-color-text-secondary) !important;
+    font-family: var(--tw-font-sans) !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    font-weight: 500 !important;
+    min-width: auto !important;
+    padding: 0.75rem 1.25rem !important;
+    transition: color 0.2s ease, background 0.2s ease !important;
+  }
+
+  .mud-tab:hover {
+    background: var(--tw-color-muted) !important;
+    color: var(--tw-color-text) !important;
+  }
+
+  .mud-tab.mud-tab-active {
+    color: var(--tw-color-primary-500) !important;
+    font-weight: 600 !important;
+  }
+
+  .mud-tabs-toolbar .mud-tab-slider {
+    background: linear-gradient(90deg, var(--tw-color-primary-500), var(--tw-color-primary-400)) !important;
+    height: 3px !important;
+    border-radius: 3px 3px 0 0 !important;
+    transition: left 0.25s cubic-bezier(0.16, 1, 0.3, 1), width 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+
+  .mud-tabs-panels {
+    background: transparent !important;
+  }
+
+  /* Tooltip */
+  .mud-tooltip {
+    background: var(--tw-color-muted) !important;
+    color: var(--tw-color-text) !important;
+    border: 1px solid var(--tw-color-border) !important;
+    font-family: var(--tw-font-sans) !important;
+  }
+
+  /* Pagination */
+  .mud-pagination .mud-pagination-item {
+    color: var(--tw-color-text-secondary) !important;
+  }
+
+  .mud-pagination .mud-pagination-item.mud-pagination-selected {
+    background: var(--tw-color-primary-500) !important;
+    color: #FFFFFF !important;
+  }
+
+  /* Color text utilities */
+  .mud-primary-text {
+    color: var(--tw-color-primary-500) !important;
+  }
+
+  .mud-secondary-text {
+    color: var(--tw-color-accent-500) !important;
+  }
+
+  .mud-info-text {
+    color: var(--tw-color-info) !important;
+  }
+
+  .mud-success-text {
+    color: var(--tw-color-success) !important;
+  }
+
+  .mud-warning-text {
+    color: var(--tw-color-warning) !important;
+  }
+
+  .mud-error-text {
+    color: var(--tw-color-danger) !important;
+  }
+
+  /* Overlay */
+  .mud-overlay {
+    background: var(--mud-palette-overlay-dark) !important;
+  }
+
+  /* Progress circular */
+  .mud-progress-circular svg circle {
+    transition: stroke 0.2s ease !important;
+  }
+
+  /* Switch */
+  .mud-switch .mud-primary-text {
+    color: var(--tw-color-primary-500) !important;
+  }
+
+  .mud-switch-label {
+    color: var(--tw-color-text) !important;
+    font-family: var(--tw-font-sans) !important;
+  }
+
+  /* Radio */
+  .mud-radio .mud-primary-text {
+    color: var(--tw-color-primary-500) !important;
+  }
+
+  .mud-radio-content {
+    color: var(--tw-color-text) !important;
+  }
+
+  /* Progress linear */
+  .mud-progress-linear {
+    border-radius: 9999px !important;
+    overflow: hidden !important;
+  }
+
+  .mud-progress-linear .mud-progress-linear-bar {
+    border-radius: 9999px !important;
+  }
+
+  /* Icon buttons */
+  .mud-icon-button {
+    transition: background 0.15s ease, transform 0.15s ease !important;
+  }
+
+  .mud-icon-button:hover {
+    transform: scale(1.1) !important;
+  }
+
+  .mud-icon-button:active {
+    transform: scale(0.95) !important;
+  }
+
+  /* Badge */
+  .mud-badge-content {
+    font-family: var(--tw-font-sans) !important;
+  }
+
+  /* DatePicker / Picker */
+  .mud-picker {
+    background: var(--tw-color-surface) !important;
+    color: var(--tw-color-text) !important;
+  }
+
+  .mud-picker-content {
+    background: var(--tw-color-surface) !important;
+  }
+
+  /* Autocomplete */
+  .mud-autocomplete .mud-input-outlined-border {
+    border-radius: var(--tw-radius-lg) !important;
+  }
+
+  /* Breadcrumbs */
+  .mud-breadcrumb-item {
+    color: var(--tw-color-text-secondary) !important;
+  }
+
+  .mud-breadcrumb-separator {
+    color: var(--tw-color-text-muted) !important;
+  }
+
+  /* Expansion panels */
+  .mud-expand-panel {
+    background: var(--tw-color-surface) !important;
+    color: var(--tw-color-text) !important;
+  }
+
+  /* Message box */
+  .mud-message-box {
+    background: var(--tw-color-surface) !important;
+  }
+
+  /* Chart */
+  .mud-chart {
+    background: transparent !important;
+  }
+
+  .mud-chart text {
+    fill: var(--tw-color-text-muted) !important;
+  }
+}
+
+/* ===================================================================
+   Custom Design System Classes (dc-* prefix)
+   Teal Medical component vocabulary
+   =================================================================== */
+
+@layer components {
+  /* Hero section — atmospheric gradient with grain & shimmer accent */
+  .dc-hero {
+    padding: 2rem;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgb(12 133 153 / 0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgb(16 185 129 / 0.04) 0%, transparent 50%),
+      linear-gradient(135deg, var(--tw-color-primary-50) 0%, var(--tw-color-surface) 100%);
+    border-radius: var(--tw-radius-2xl);
+    border: 1px solid var(--tw-color-border-light);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dark .dc-hero {
+    background:
+      radial-gradient(ellipse at 20% 50%, rgb(20 184 166 / 0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgb(52 211 153 / 0.04) 0%, transparent 50%),
+      linear-gradient(135deg, var(--tw-color-primary-50) 0%, var(--tw-color-surface) 100%);
+  }
+
+  /* Animated shimmer top stripe */
+  .dc-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--tw-color-primary-500), var(--tw-color-accent-500), transparent);
+    background-size: 200% 100%;
+    animation: heroShimmer 4s ease-in-out infinite;
+  }
+
+  /* Decorative molecular cross pattern */
+  .dc-hero::after {
+    content: '';
+    position: absolute;
+    top: -20%;
+    right: -5%;
+    width: 280px;
+    height: 280px;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 120 120' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='48' y='8' width='24' height='104' rx='6' fill='%230C8599' opacity='0.04'/%3E%3Crect x='8' y='48' width='104' height='24' rx='6' fill='%230C8599' opacity='0.04'/%3E%3Ccircle cx='60' cy='60' r='12' fill='none' stroke='%230C8599' stroke-width='1' opacity='0.05'/%3E%3Ccircle cx='60' cy='60' r='40' fill='none' stroke='%230C8599' stroke-width='0.5' opacity='0.03'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-size: contain;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Card — surface with teal glow on hover */
+  .dc-card {
+    background: var(--tw-color-surface);
+    border-radius: var(--tw-radius-xl);
+    border: 1px solid var(--tw-color-border-light);
+    padding: 1.5rem;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+  }
+
+  .dc-card:hover {
+    border-color: var(--tw-color-border);
+    box-shadow: var(--tw-shadow-glow);
+    transform: scale(1.003);
+  }
+
+  /* Glass variant — frosted glass effect */
+  .dc-card--glass {
+    background: rgb(255 255 255 / 0.7) !important;
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+  }
+
+  .dark .dc-card--glass {
+    background: rgb(28 25 23 / 0.6) !important;
+  }
+
+  /* Interactive variant — press feedback */
+  .dc-card--interactive {
+    cursor: pointer;
+  }
+
+  .dc-card--interactive:active {
+    transform: scale(0.98) !important;
+    box-shadow: var(--tw-shadow-xs) !important;
+  }
+
+  /* KPI card — reveals animated teal accent stripe on hover */
+  .dc-kpi {
+    background: var(--tw-color-surface);
+    border-radius: var(--tw-radius-xl);
+    border: 1px solid var(--tw-color-border-light);
+    padding: 1.25rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+  }
+
+  .dc-kpi::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--tw-color-primary-500), var(--tw-color-accent-500));
+    transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1), left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .dc-kpi:hover {
+    border-color: var(--tw-color-border);
+    transform: translateY(-3px);
+    box-shadow: var(--tw-shadow-glow), var(--tw-shadow-inner-glow);
+  }
+
+  .dc-kpi:hover::before {
+    width: 100%;
+    left: 0;
+  }
+
+  /* Highlight variant — permanent teal accent for primary KPI */
+  .dc-kpi--highlight {
+    border-color: var(--tw-color-primary-200);
+    box-shadow: var(--tw-shadow-inner-glow);
+  }
+
+  .dc-kpi--highlight::before {
+    width: 100% !important;
+    left: 0 !important;
+  }
+
+  /* Badge — pill-shaped */
+  .dc-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  /* Primary button — Teal pill with glow */
+  .dc-btn-primary {
+    background: linear-gradient(135deg, var(--tw-color-primary-500) 0%, var(--tw-color-primary-600) 100%);
+    color: #FFFFFF;
+    border: none;
+    border-radius: 9999px;
+    padding: 0.625rem 1.5rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    font-family: var(--tw-font-sans);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 2px 12px rgb(12 133 153 / 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+  }
+
+  .dc-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 24px rgb(12 133 153 / 0.3);
+    color: #FFFFFF;
+  }
+
+  .dc-btn-primary:active {
+    transform: translateY(0) scale(0.97);
+    box-shadow: 0 1px 8px rgb(12 133 153 / 0.2);
+  }
+
+  /* Secondary button — subtle pill */
+  .dc-btn-secondary {
+    background: var(--tw-color-muted);
+    color: var(--tw-color-text-secondary);
+    border: 1px solid var(--tw-color-border);
+    border-radius: 9999px;
+    padding: 0.625rem 1.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    font-family: var(--tw-font-sans);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+  }
+
+  .dc-btn-secondary:hover {
+    background: var(--tw-color-border);
+    color: var(--tw-color-text);
+    border-color: var(--tw-color-text-muted);
+  }
+
+  .dc-btn-secondary:active {
+    transform: scale(0.97);
+  }
+
+  /* Icon container */
+  .dc-icon-box {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--tw-radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+}
+
+/* ===================================================================
+   UNLAYERED CSS — Everything below is passed through by Tailwind v4
+   CLI as-is. Must come AFTER all @layer blocks.
+   =================================================================== */
+
+/* ===================================================================
+   Dark Mode Overrides
+   Applied when <html class="dark"> is set.
+   Overrides the --tw-color-* CSS vars generated by @theme.
+   =================================================================== */
+
+.dark {
+  /* Primary — brighter teal for dark backgrounds */
+  --tw-color-primary-50: #0D1B1C;
+  --tw-color-primary-100: #132E2F;
+  --tw-color-primary-200: #1A4748;
+  --tw-color-primary-300: #2A7A78;
+  --tw-color-primary-400: #2DD4BF;
+  --tw-color-primary-500: #14B8A6;
+  --tw-color-primary-600: #0D9488;
+  --tw-color-primary-700: #0F766E;
+  --tw-color-primary-800: #115E59;
+  --tw-color-primary-900: #134E4A;
+  --tw-color-primary-950: #0D3331;
+
+  /* Accent — brighter emerald */
+  --tw-color-accent-50: #071A0E;
+  --tw-color-accent-100: #0D2B1A;
+  --tw-color-accent-200: #154A2D;
+  --tw-color-accent-300: #1F7A47;
+  --tw-color-accent-400: #34D399;
+  --tw-color-accent-500: #34D399;
+  --tw-color-accent-600: #10B981;
+  --tw-color-accent-700: #059669;
+
+  /* Surfaces */
+  --tw-color-surface: #1C1917;
+  --tw-color-surface-elevated: #242220;
+  --tw-color-page: #0C0A09;
+  --tw-color-muted: #292524;
+  --tw-color-border: #3D3835;
+  --tw-color-border-light: #292524;
+
+  /* Text */
+  --tw-color-text: #FAFAF9;
+  --tw-color-text-secondary: #A8A29E;
+  --tw-color-text-muted: #78716C;
+
+  /* Semantic */
+  --tw-color-success: #34D399;
+  --tw-color-success-50: #071A0E;
+  --tw-color-success-600: #059669;
+  --tw-color-warning: #FB923C;
+  --tw-color-warning-50: #1A130A;
+  --tw-color-danger: #FB7185;
+  --tw-color-danger-50: #1A0A0E;
+  --tw-color-info: #2DD4BF;
+  --tw-color-info-50: #0D1B1C;
+  --tw-color-info-600: #14B8A6;
+
+  /* Shadows */
+  --tw-shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+  --tw-shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.5);
+  --tw-shadow-card: 0 2px 8px -2px rgb(0 0 0 / 0.6);
+  --tw-shadow-elevated: 0 8px 24px -4px rgb(0 0 0 / 0.6);
+  --tw-shadow-glow: 0 0 24px -4px rgb(20 184 166 / 0.1);
+  --tw-shadow-glow-lg: 0 0 40px -8px rgb(20 184 166 / 0.15);
+  --tw-shadow-inner-glow: inset 0 1px 0 0 rgb(20 184 166 / 0.08);
+}
+
+/* MudBlazor palette is fully handled by MudThemeProvider via MudThemeConfiguration.cs
+   No need for CSS variable overrides here — MudThemeProvider generates inline styles
+   that come after our CSS and would override these anyway. */
+
+/* ===================================================================
+   Global Base Styles
+   =================================================================== */
+
+html {
+  background-color: var(--tw-color-page);
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--tw-color-page);
+  color: var(--tw-color-text);
+  font-family: "DM Sans", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Teal text selection */
+::selection {
+  background: rgba(12, 133, 153, 0.2);
+  color: var(--tw-color-text);
+}
+
+.dark ::selection {
+  background: rgba(20, 184, 166, 0.3);
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--tw-color-border);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--tw-color-text-muted);
+}
+
+/* ===================================================================
+   Grain Texture & Atmospheric Utilities
+   =================================================================== */
+
+/* Noise grain for tactile depth — add to containers with position:relative */
+.dc-grain {
+  position: relative;
+}
+
+.dc-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  z-index: 1;
+  border-radius: inherit;
+  opacity: 0.5;
+}
+
+.dark .dc-grain::after {
+  opacity: 0.8;
+}
+
+/* Gradient text — teal to emerald */
+.dc-text-gradient {
+  background: linear-gradient(135deg, var(--tw-color-primary-500) 0%, var(--tw-color-accent-500) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glow ring — for interactive focus/hover */
+.dc-glow-ring {
+  transition: box-shadow 0.25s ease;
+}
+
+.dc-glow-ring:hover,
+.dc-glow-ring:focus-visible {
+  box-shadow: 0 0 0 3px rgb(12 133 153 / 0.15), var(--tw-shadow-glow);
+}
+
+.dark .dc-glow-ring:hover,
+.dark .dc-glow-ring:focus-visible {
+  box-shadow: 0 0 0 3px rgb(20 184 166 / 0.12), var(--tw-shadow-glow);
+}
+
+/* Divider with centered accent dot */
+.dc-divider-accent {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--tw-color-text-muted);
+  font-size: 0.75rem;
+}
+
+.dc-divider-accent::before,
+.dc-divider-accent::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--tw-color-border);
+}
+
+/* Shimmer loading skeleton */
+.dc-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--tw-color-muted) 0%,
+    var(--tw-color-border-light) 40%,
+    var(--tw-color-muted) 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmerSlide 1.5s ease-in-out infinite;
+  border-radius: var(--tw-radius-md);
+}
+
+/* ===================================================================
+   Keyframes
+   =================================================================== */
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes dialogSlideUp {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(12 133 153 / 0.3); }
+  50% { box-shadow: 0 0 0 6px rgb(12 133 153 / 0); }
+}
+
+@keyframes heroShimmer {
+  0% { background-position: 200% 0; }
+  50% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes progressFill {
+  from { width: 0; }
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes shimmerSlide {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ===================================================================
+   Animation Utility Classes
+   =================================================================== */
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* Stagger delay system */
+.animate-delay-1 { animation-delay: 0.05s; opacity: 0; }
+.animate-delay-2 { animation-delay: 0.1s; opacity: 0; }
+.animate-delay-3 { animation-delay: 0.15s; opacity: 0; }
+.animate-delay-4 { animation-delay: 0.2s; opacity: 0; }
+.animate-delay-5 { animation-delay: 0.25s; opacity: 0; }
+.animate-delay-6 { animation-delay: 0.3s; opacity: 0; }
+.animate-delay-7 { animation-delay: 0.35s; opacity: 0; }
+.animate-delay-8 { animation-delay: 0.4s; opacity: 0; }
+.animate-delay-9 { animation-delay: 0.45s; opacity: 0; }
+.animate-delay-10 { animation-delay: 0.5s; opacity: 0; }
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-slide-in-left,
+  .animate-scale-in,
+  .animate-pulse-glow {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .dc-kpi::before,
+  .dc-hero::before {
+    animation: none !important;
+  }
+}
+
+/* ===================================================================
+   Medical Layout Shell Styles
+   Merged from medical-layout.css — single source of truth.
+   Uses --tw-color-* CSS variables for dark/light mode support.
+   =================================================================== */
+
+/* ── AppBar — Clean surface with teal accent strip ── */
+.medical-appbar {
+    background: var(--tw-color-surface) !important;
+    border-bottom: 1px solid var(--tw-color-border-light);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.03);
+    transition: box-shadow 0.3s ease;
+    position: relative;
+}
+
+.dark .medical-appbar {
+    background: var(--tw-color-surface) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.15);
+}
+
+/* Teal-to-emerald accent line at the very top */
+.medical-appbar-accent {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--tw-color-primary-500), var(--tw-color-accent-400));
+    z-index: 2;
+}
+
+.medical-appbar-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 0 12px;
+}
+
+/* Menu toggle */
+.medical-menu-btn {
+    color: var(--tw-color-text-secondary) !important;
+    border-radius: 10px !important;
+}
+
+/* ── Logo — Medical cross mark + stacked label ── */
+.medical-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 6px 10px;
+    border-radius: 10px;
+    text-decoration: none;
+}
+
+.medical-logo:hover {
+    background: var(--tw-color-primary-50);
+}
+
+.dark .medical-logo:hover {
+    background: rgba(12, 133, 153, 0.08);
+}
+
+.medical-logo-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(12, 133, 153, 0.08) 0%, rgba(16, 185, 129, 0.06) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+}
+
+.medical-logo:hover .medical-logo-mark {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 3px rgba(12, 133, 153, 0.1);
+}
+
+.medical-logo-icon {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.medical-logo:hover .medical-logo-icon {
+    transform: rotate(90deg);
+}
+
+.medical-logo-label {
+    display: flex;
+    flex-direction: column;
+    line-height: 1;
+}
+
+.medical-logo-text {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: 17px;
+    font-weight: 600;
+    font-style: italic;
+    color: var(--tw-color-text);
+    letter-spacing: -0.02em;
+}
+
+.medical-logo-tag {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--tw-color-primary-500);
+    margin-top: 1px;
+}
+
+/* ── Search Bar — Elegant capsule ── */
+.medical-search {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 14px;
+    background: var(--tw-color-muted);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--tw-color-text-muted);
+    font-size: 13px;
+    min-width: 260px;
+    max-width: 360px;
+    flex: 1;
+}
+
+@media (min-width: 768px) {
+    .medical-search {
+        display: flex;
+    }
+}
+
+.medical-search-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--tw-color-text-muted);
+    transition: color 0.2s ease;
+}
+
+.medical-search:hover {
+    border-color: var(--tw-color-primary-300);
+    background: var(--tw-color-surface);
+    box-shadow: 0 0 0 3px rgba(12, 133, 153, 0.06);
+    color: var(--tw-color-text-secondary);
+}
+
+.medical-search:hover .medical-search-icon {
+    color: var(--tw-color-primary-500);
+}
+
+.medical-search-kbd {
+    margin-left: auto;
+    padding: 2px 7px;
+    background: var(--tw-color-surface);
+    border: 1px solid var(--tw-color-border);
+    border-radius: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--tw-color-text-muted);
+    line-height: 1.4;
+}
+
+/* Mobile search */
+.medical-mobile-search {
+    display: flex;
+}
+
+@media (min-width: 768px) {
+    .medical-mobile-search {
+        display: none;
+    }
+}
+
+/* Toolbar divider between search and actions */
+.medical-toolbar-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--tw-color-border);
+    flex-shrink: 0;
+}
+
+@media (max-width: 767px) {
+    .medical-toolbar-divider { display: none; }
+}
+
+/* Toolbar action buttons */
+.medical-toolbar-btn {
+    color: var(--tw-color-text-secondary) !important;
+    border-radius: 10px !important;
+    width: 36px !important;
+    height: 36px !important;
+}
+
+.medical-toolbar-btn:hover {
+    background: var(--tw-color-muted) !important;
+    color: var(--tw-color-text) !important;
+}
+
+/* ── User Chip — Compact identity widget ── */
+.medical-user-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px 4px 4px;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--tw-color-muted);
+    border: 1px solid transparent;
+}
+
+.medical-user-chip:hover {
+    background: var(--tw-color-surface);
+    border-color: var(--tw-color-border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.medical-user-chip-info {
+    display: none;
+    flex-direction: column;
+    line-height: 1;
+}
+
+@media (min-width: 1024px) {
+    .medical-user-chip-info { display: flex; }
+}
+
+.medical-user-chip-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--tw-color-text);
+}
+
+.medical-user-chip-role {
+    font-size: 10px;
+    color: var(--tw-color-text-muted);
+    text-transform: capitalize;
+    margin-top: 1px;
+}
+
+/* User Avatar */
+.medical-user-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--tw-color-primary-400) 0%, var(--tw-color-accent-500) 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+    letter-spacing: 0.02em;
+    transition: transform 0.2s ease;
+}
+
+.medical-user-chip:hover .medical-user-avatar {
+    transform: scale(1.06);
+}
+
+/* User Menu Header */
+.medical-user-info {
+    padding: 8px 0;
+}
+
+.medical-user-name {
+    font-weight: 600;
+    color: var(--tw-color-text);
+    font-size: 14px;
+}
+
+.medical-user-email {
+    font-size: 12px;
+    color: var(--tw-color-text-secondary);
+    margin-top: 2px;
+}
+
+/* Navigation Drawer — subtle gradient background */
+.medical-drawer {
+    background: linear-gradient(180deg, var(--tw-color-surface) 0%, rgb(248 250 251 / 0.5) 100%) !important;
+    border-right: 1px solid var(--tw-color-border-light);
+}
+
+.dark .medical-drawer {
+    background: linear-gradient(180deg, var(--tw-color-surface) 0%, rgb(12 10 9 / 0.3) 100%) !important;
+}
+
+.medical-drawer-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Navigation Menu */
+.medical-nav-menu {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+}
+
+.medical-nav-menu::-webkit-scrollbar {
+    width: 4px;
+}
+
+.medical-nav-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.medical-nav-menu::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 3px;
+    transition: background 0.2s ease;
+}
+
+.medical-nav-menu:hover::-webkit-scrollbar-thumb {
+    background: var(--tw-color-border);
+}
+
+.medical-nav-menu:hover::-webkit-scrollbar-thumb:hover {
+    background: var(--tw-color-primary-500);
+}
+
+/* Nav link overrides scoped to medical drawer */
+.medical-nav-menu .mud-nav-link {
+    border-radius: 6px;
+    margin-bottom: 3px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.medical-nav-menu .mud-nav-link:hover {
+    background: var(--tw-color-primary-50) !important;
+    color: var(--tw-color-primary-500) !important;
+}
+
+.medical-nav-menu .mud-nav-link.active {
+    background: linear-gradient(135deg, var(--tw-color-primary-50) 0%, rgba(12, 133, 153, 0.15) 100%) !important;
+    color: var(--tw-color-primary-700) !important;
+    font-weight: 600;
+    position: relative;
+}
+
+.dark .medical-nav-menu .mud-nav-link.active {
+    color: var(--tw-color-primary-400) !important;
+}
+
+.medical-nav-menu .mud-nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 20px;
+    background: linear-gradient(180deg, var(--tw-color-primary-500), var(--tw-color-accent-500));
+    border-radius: 0 2px 2px 0;
+    animation: navAccentSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes navAccentSlide {
+    from { height: 0; opacity: 0; }
+    to { height: 20px; opacity: 1; }
+}
+
+/* Nav Groups */
+.medical-nav-menu .mud-nav-group {
+    margin-bottom: 8px;
+}
+
+.medical-nav-menu .mud-nav-group > .mud-nav-link {
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--tw-color-text-muted);
+    padding-top: 12px;
+    padding-bottom: 8px;
+}
+
+.medical-nav-menu .mud-nav-group-content {
+    padding-left: 8px;
+}
+
+/* Main Content */
+.medical-main-content {
+    background: var(--tw-color-page) !important;
+    min-height: 100vh;
+}
+
+.medical-content-wrapper {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+@media (max-width: 768px) {
+    .medical-content-wrapper {
+        padding: 16px;
+    }
+}
+
+/* Notification Drawer */
+.medical-notification-drawer {
+    background: var(--tw-color-surface) !important;
+    border-left: 1px solid var(--tw-color-border-light);
+}
+
+.medical-notification-header {
+    border-bottom: 1px solid var(--tw-color-border-light);
+    padding: 16px 20px;
+}
+
+.medical-notification-title {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--tw-color-text);
+}
+
+.medical-notification-list {
+    padding: 16px;
+}
+
+.medical-notification-item {
+    margin-bottom: 12px;
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid var(--tw-color-border);
+    border-left: 3px solid var(--tw-color-primary-500);
+    background: var(--tw-color-surface);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideInRight 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.medical-notification-item:nth-child(1) { animation-delay: 0s; }
+.medical-notification-item:nth-child(2) { animation-delay: 0.05s; }
+.medical-notification-item:nth-child(3) { animation-delay: 0.1s; }
+.medical-notification-item:nth-child(4) { animation-delay: 0.15s; }
+.medical-notification-item:nth-child(5) { animation-delay: 0.2s; }
+
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.medical-notification-item:hover {
+    border-color: var(--tw-color-primary-500);
+    box-shadow: 0 1px 3px rgba(12, 133, 153, 0.08), 0 1px 2px rgba(12, 133, 153, 0.04);
+}
+
+.medical-notification-item-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--tw-color-text);
+}
+
+.medical-notification-item-message {
+    margin-top: 4px;
+    font-size: 13px;
+    color: var(--tw-color-text-secondary);
+    line-height: 1.5;
+}
+
+.medical-notification-item-time {
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--tw-color-text-muted);
+}
+
+.medical-notification-empty {
+    text-align: center;
+    padding: 48px 20px;
+}
+
+.medical-notification-empty-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: var(--tw-color-page);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+}
+
+.medical-notification-empty-text {
+    font-size: 14px;
+    color: var(--tw-color-text-secondary);
+}
+
+/* Command Palette Overlay */
+.medical-command-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 15vh;
+    z-index: 1700;
+    animation: cmdFadeIn 0.15s ease;
+}
+
+@keyframes cmdFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Command Palette — glassmorphism */
+.medical-command-palette {
+    width: 560px;
+    max-width: 90vw;
+    background: var(--tw-color-surface);
+    border-radius: 16px;
+    overflow: hidden;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--tw-color-border);
+    box-shadow: 0 24px 48px rgb(0 0 0 / 0.15), 0 0 0 1px rgb(255 255 255 / 0.05) inset;
+    animation: cmdScaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes cmdScaleIn {
+    from { opacity: 0; transform: scale(0.96) translateY(-8px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.dark .medical-command-palette {
+    box-shadow: 0 24px 48px rgb(0 0 0 / 0.4), 0 0 0 1px rgb(255 255 255 / 0.03) inset;
+}
+
+.medical-command-search {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--tw-color-border-light);
+}
+
+.medical-command-results {
+    max-height: 420px;
+    overflow-y: auto;
+    padding: 8px;
+}
+
+.medical-command-section {
+    margin-bottom: 8px;
+}
+
+.medical-command-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--tw-color-text-muted);
+    padding: 8px 12px 4px;
+}
+
+.medical-command-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--tw-color-text-secondary);
+    font-size: 14px;
+    transition: all 0.15s ease;
+}
+
+.medical-command-item:hover {
+    background: var(--tw-color-primary-50);
+    color: var(--tw-color-primary-500);
+    padding-left: 16px;
+}
+
+/* Utility */
+.medical-spacer {
+    flex: 1;
+}
+
+/* MudIconButton hover — subtle teal tint in appbar context */
+.medical-appbar .mud-icon-button:hover {
+    background: var(--tw-color-muted) !important;
+}
+
+.medical-drawer .mud-icon-button:hover {
+    background: var(--tw-color-primary-50) !important;
+}
+
+/* Badge — subtle glow pulse */
+.mud-badge .mud-badge-content {
+    animation: badgePulse 2.5s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgb(239 68 68 / 0.3); }
+    50% { box-shadow: 0 0 0 4px rgb(239 68 68 / 0); }
+}
+
+/* RTL Support */
+.rtl-layout .medical-drawer {
+    right: 0;
+    left: auto;
+    border-right: none;
+    border-left: 1px solid var(--tw-color-border-light);
+}
+
+.rtl-layout .medical-nav-link.active::before {
+    left: auto;
+    right: 0;
+    border-radius: 2px 0 0 2px;
+}
+
+/* Medical loading shimmer */
+.medical-loading {
+    background: linear-gradient(
+        90deg,
+        var(--tw-color-page) 0%,
+        var(--tw-color-border-light) 50%,
+        var(--tw-color-page) 100%
+    );
+    background-size: 1000px 100%;
+    animation: shimmerSlide 2s infinite;
+}
+
+/* Micro-interactions — ripple effect */
+.medical-interactive {
+    position: relative;
+    overflow: hidden;
+}
+
+.medical-interactive::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(12, 133, 153, 0.15);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.medical-interactive:active::after {
+    width: 300px;
+    height: 300px;
+}
+
+/* Accessibility Focus States */
+.mud-button:focus-visible,
+.mud-icon-button:focus-visible,
+.mud-nav-link:focus-visible {
+    outline: 2px solid var(--tw-color-primary-500);
+    outline-offset: 2px;
+}
+
+/* Print Styles */
+@media print {
+    .medical-appbar,
+    .medical-drawer,
+    .medical-notification-drawer {
+        display: none !important;
+    }
+
+    .medical-main-content {
+        margin: 0 !important;
+    }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    :root {
+        --tw-color-border: #334155;
+        --tw-color-text-secondary: #1E293B;
+    }
+}
+
+/* ===================================================================
+   Manual variant utilities — Tailwind v4 scanner cannot extract
+   variant:tw: classes (sm:tw:, hover:tw:, etc.) from .razor files.
+   These must be defined manually until the extractor is fixed.
+   =================================================================== */
+
+/* Responsive: sm (≥640px / 40rem) */
+@media (min-width: 40rem) {
+  .sm\:tw\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Responsive: md (≥768px / 48rem) */
+@media (min-width: 48rem) {
+  .md\:tw\:flex { display: flex; }
+  .md\:tw\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .md\:tw\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* Responsive: lg (≥1024px / 64rem) */
+@media (min-width: 64rem) {
+  .lg\:tw\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lg\:tw\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .lg\:tw\:col-span-2 { grid-column: span 2 / span 2; }
+}
+
+/* Negative positioning utilities */
+.-tw\:top-0\.5 { top: calc(var(--tw-spacing) * -0.5); }
+.-tw\:right-0\.5 { right: calc(var(--tw-spacing) * -0.5); }
+
+/* Hover states */
+.hover\:tw\:text-primary-700:hover { color: var(--tw-color-primary-700); }
+.hover\:tw\:text-text-secondary:hover { color: var(--tw-color-text-secondary); }
+.hover\:tw\:translate-x-0\.5:hover { transform: translateX(calc(var(--tw-spacing) * 0.5)); }

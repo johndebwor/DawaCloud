@@ -2,6 +2,8 @@
 @using MudBlazor
 @using DawaCloud.Web.Features.Suppliers.Queries
 @using MediatR
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "RequireInventoryAccess")]
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
@@ -9,11 +11,11 @@
 <PageTitle>Suppliers - DawaCloud</PageTitle>
 
 <!-- Hero Section -->
-<div class="df-hero animate-fade-in-up">
-    <div class="df-hero-content">
-        <div class="df-hero-text">
-            <h1>Suppliers</h1>
-            <p>Manage supplier information and contacts</p>
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">Suppliers</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Manage supplier information and contacts</p>
         </div>
         <MudButton Variant="Variant.Filled"
                    Color="Color.Primary"
@@ -25,56 +27,48 @@
 </div>
 
 <!-- KPI Cards -->
-<div class="df-kpi-grid">
-    <div class="df-kpi-card animate-fade-in-up animate-delay-1">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon success">
-                <MudIcon Icon="@Icons.Material.Filled.Store" />
+<div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 lg:tw:grid-cols-4 tw:gap-4 tw:my-6">
+    <div class="dc-kpi animate-fade-in-up animate-delay-1">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-success/10">
+                <MudIcon Icon="@Icons.Material.Filled.Store" Style="color: var(--tw-color-success);" />
             </div>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">Total Suppliers</div>
-            <div class="df-kpi-value">@_suppliers.Count</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Total Suppliers</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_suppliers.Count</div>
     </div>
-    <div class="df-kpi-card animate-fade-in-up animate-delay-2">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon primary">
-                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+    <div class="dc-kpi animate-fade-in-up animate-delay-2">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-primary-50">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Style="color: var(--tw-color-primary-600);" />
             </div>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">Active</div>
-            <div class="df-kpi-value">@_suppliers.Count(s => s.IsActive)</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Active</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_suppliers.Count(s => s.IsActive)</div>
     </div>
-    <div class="df-kpi-card animate-fade-in-up animate-delay-3">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon info">
-                <MudIcon Icon="@Icons.Material.Filled.Email" />
+    <div class="dc-kpi animate-fade-in-up animate-delay-3">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-info/10">
+                <MudIcon Icon="@Icons.Material.Filled.Email" Style="color: var(--tw-color-info);" />
             </div>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">Email Enabled</div>
-            <div class="df-kpi-value">@_suppliers.Count(s => s.EmailNotificationsEnabled)</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Email Enabled</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_suppliers.Count(s => s.EmailNotificationsEnabled)</div>
     </div>
-    <div class="df-kpi-card animate-fade-in-up animate-delay-4">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon warning">
-                <MudIcon Icon="@Icons.Material.Filled.Chat" />
+    <div class="dc-kpi animate-fade-in-up animate-delay-4">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-warning/10">
+                <MudIcon Icon="@Icons.Material.Filled.Chat" Style="color: var(--tw-color-warning);" />
             </div>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">WhatsApp Enabled</div>
-            <div class="df-kpi-value">@_suppliers.Count(s => s.WhatsAppNotificationsEnabled)</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">WhatsApp Enabled</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_suppliers.Count(s => s.WhatsAppNotificationsEnabled)</div>
     </div>
 </div>
 
 <!-- Suppliers Table -->
-<div class="df-alert-card animate-fade-in-up animate-delay-2 mt-4">
-    <div class="df-alert-header">
+<div class="dc-card animate-fade-in-up animate-delay-2 mt-4">
+    <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
         <MudTextField @bind-Value="_searchTerm"
                       Placeholder="Search suppliers..."
                       Adornment="Adornment.Start"

@@ -89,7 +89,7 @@
     public decimal PaidAmount { get; set; }
 
     private PaymentFormModel _model = new();
-    private DateTime? _paymentDate = DateTime.Now;
+    private DateTime? _paymentDate = DateTime.UtcNow;
     private bool _isProcessing = false;
     private decimal _balance => TotalAmount - PaidAmount;
 

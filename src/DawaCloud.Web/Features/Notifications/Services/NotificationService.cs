@@ -79,7 +79,7 @@ public class NotificationService : INotificationService
         var smtpHost = _configuration["Email:SmtpHost"];
         var smtpPort = _configuration.GetValue<int>("Email:SmtpPort", 587);
         var fromEmail = _configuration["Email:FromEmail"] ?? "noreply@revopharma.com";
-        var fromName = _configuration["Email:FromName"] ?? "Revo Pharma & Medical Ltd";
+        var fromName = _configuration["Email:FromName"] ?? "Guru Brothers Ltd";
         var username = _configuration["Email:Username"];
         var password = _configuration["Email:Password"];
 

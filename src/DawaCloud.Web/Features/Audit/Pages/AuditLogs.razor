@@ -3,26 +3,30 @@
 @using MudBlazor
 @using Microsoft.JSInterop
 @using ClosedXML.Excel
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "RequireAdmin")]
 @inject IJSRuntime JSRuntime
 @inject ISnackbar Snackbar
 
 <PageTitle>Audit Logs - DawaCloud</PageTitle>
 
 <!-- Hero Section -->
-<div class="df-hero animate-fade-in-up">
-    <div class="df-hero-content">
-        <div class="df-hero-text">
-            <h1>Audit Logs</h1>
-            <p>Track all system activities and changes</p>
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">Audit Logs</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Track all system activities and changes</p>
         </div>
-        <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.FileDownload" OnClick="ExportToExcel">
-            Export Logs
-        </MudButton>
+        <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-3">
+            <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.FileDownload" OnClick="ExportToExcel">
+                Export Logs
+            </MudButton>
+        </div>
     </div>
 </div>
 
 <!-- Filters -->
-<div class="df-alert-card animate-fade-in-up animate-delay-1 mt-4">
+<div class="dc-card tw:mb-6 animate-fade-in-up animate-delay-1">
     <MudGrid>
         <MudItem xs="12" md="3">
             <MudTextField @bind-Value="_searchString"
@@ -68,7 +72,7 @@
 </div>
 
 <!-- Audit Logs Table -->
-<div class="df-alert-card animate-fade-in-up animate-delay-2 mt-4">
+<div class="dc-card tw:p-0 tw:overflow-hidden animate-fade-in-up animate-delay-2">
     <MudTable T="AuditLogDto" Items="@FilteredLogs" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading">
         <HeaderContent>
             <MudTh>Timestamp</MudTh>
@@ -230,14 +234,14 @@
     {
         _logs = new List<AuditLogDto>
         {
-            new() { Id = 1, Timestamp = DateTime.Now.AddMinutes(-5), UserId = "1", UserName = "Admin User", Action = "Create", EntityType = "Drug", EntityId = "25", Description = "Created new drug: Paracetamol Extra 650mg", IpAddress = "192.168.1.100", UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", NewValues = "{\n  \"Name\": \"Paracetamol Extra 650mg\",\n  \"Code\": \"PARA650\",\n  \"Price\": 75.00\n}" },
-            new() { Id = 2, Timestamp = DateTime.Now.AddMinutes(-15), UserId = "2", UserName = "John Deng", Action = "Update", EntityType = "Batch", EntityId = "102", Description = "Updated batch status to Quarantined", IpAddress = "192.168.1.105", UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", OldValues = "{\n  \"Status\": \"Active\"\n}", NewValues = "{\n  \"Status\": \"Quarantined\"\n}" },
-            new() { Id = 3, Timestamp = DateTime.Now.AddMinutes(-30), UserId = "3", UserName = "Sarah Ayaa", Action = "Create", EntityType = "Sale", EntityId = "1045", Description = "Completed retail sale RCP-2024012815301", IpAddress = "192.168.1.110", UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", NewValues = "{\n  \"TotalAmount\": 2350.00,\n  \"Items\": 5\n}" },
-            new() { Id = 4, Timestamp = DateTime.Now.AddHours(-1), UserId = "1", UserName = "Admin User", Action = "Login", EntityType = "User", EntityId = "1", Description = "User logged in successfully", IpAddress = "192.168.1.100", UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
-            new() { Id = 5, Timestamp = DateTime.Now.AddHours(-2), UserId = "4", UserName = "Peter Makuei", Action = "Update", EntityType = "StockMovement", EntityId = "567", Description = "Stock adjustment: Added 500 units of Amoxicillin 250mg", IpAddress = "192.168.1.115", UserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", OldValues = "{\n  \"Quantity\": 150\n}", NewValues = "{\n  \"Quantity\": 650,\n  \"Reason\": \"New shipment received\"\n}" },
-            new() { Id = 6, Timestamp = DateTime.Now.AddHours(-3), UserId = "5", UserName = "Grace Nyibol", Action = "Create", EntityType = "Payment", EntityId = "234", Description = "Recorded payment of SSP 125,000 for Invoice INV-2024-0032", IpAddress = "192.168.1.120", UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", NewValues = "{\n  \"Amount\": 125000,\n  \"Method\": \"Bank Transfer\"\n}" },
-            new() { Id = 7, Timestamp = DateTime.Now.AddDays(-1), UserId = "1", UserName = "Admin User", Action = "Delete", EntityType = "User", EntityId = "8", Description = "Deactivated user account: Test User", IpAddress = "192.168.1.100", UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", OldValues = "{\n  \"IsActive\": true\n}", NewValues = "{\n  \"IsActive\": false\n}" },
-            new() { Id = 8, Timestamp = DateTime.Now.AddDays(-1).AddHours(-5), UserId = "2", UserName = "John Deng", Action = "Logout", EntityType = "User", EntityId = "2", Description = "User logged out", IpAddress = "192.168.1.105", UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+            new() { Id = 1, Timestamp = DateTime.UtcNow.AddMinutes(-5), UserId = "1", UserName = "Admin User", Action = "Create", EntityType = "Drug", EntityId = "25", Description = "Created new drug: Paracetamol Extra 650mg", IpAddress = "192.168.1.100", UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", NewValues = "{\n  \"Name\": \"Paracetamol Extra 650mg\",\n  \"Code\": \"PARA650\",\n  \"Price\": 75.00\n}" },
+            new() { Id = 2, Timestamp = DateTime.UtcNow.AddMinutes(-15), UserId = "2", UserName = "John Deng", Action = "Update", EntityType = "Batch", EntityId = "102", Description = "Updated batch status to Quarantined", IpAddress = "192.168.1.105", UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", OldValues = "{\n  \"Status\": \"Active\"\n}", NewValues = "{\n  \"Status\": \"Quarantined\"\n}" },
+            new() { Id = 3, Timestamp = DateTime.UtcNow.AddMinutes(-30), UserId = "3", UserName = "Sarah Ayaa", Action = "Create", EntityType = "Sale", EntityId = "1045", Description = "Completed retail sale RCP-2024012815301", IpAddress = "192.168.1.110", UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", NewValues = "{\n  \"TotalAmount\": 2350.00,\n  \"Items\": 5\n}" },
+            new() { Id = 4, Timestamp = DateTime.UtcNow.AddHours(-1), UserId = "1", UserName = "Admin User", Action = "Login", EntityType = "User", EntityId = "1", Description = "User logged in successfully", IpAddress = "192.168.1.100", UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+            new() { Id = 5, Timestamp = DateTime.UtcNow.AddHours(-2), UserId = "4", UserName = "Peter Makuei", Action = "Update", EntityType = "StockMovement", EntityId = "567", Description = "Stock adjustment: Added 500 units of Amoxicillin 250mg", IpAddress = "192.168.1.115", UserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", OldValues = "{\n  \"Quantity\": 150\n}", NewValues = "{\n  \"Quantity\": 650,\n  \"Reason\": \"New shipment received\"\n}" },
+            new() { Id = 6, Timestamp = DateTime.UtcNow.AddHours(-3), UserId = "5", UserName = "Grace Nyibol", Action = "Create", EntityType = "Payment", EntityId = "234", Description = "Recorded payment of SSP 125,000 for Invoice INV-2024-0032", IpAddress = "192.168.1.120", UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", NewValues = "{\n  \"Amount\": 125000,\n  \"Method\": \"Bank Transfer\"\n}" },
+            new() { Id = 7, Timestamp = DateTime.UtcNow.AddDays(-1), UserId = "1", UserName = "Admin User", Action = "Delete", EntityType = "User", EntityId = "8", Description = "Deactivated user account: Test User", IpAddress = "192.168.1.100", UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", OldValues = "{\n  \"IsActive\": true\n}", NewValues = "{\n  \"IsActive\": false\n}" },
+            new() { Id = 8, Timestamp = DateTime.UtcNow.AddDays(-1).AddHours(-5), UserId = "2", UserName = "John Deng", Action = "Logout", EntityType = "User", EntityId = "2", Description = "User logged out", IpAddress = "192.168.1.105", UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
         };
     }
 
@@ -321,7 +325,7 @@
             var base64 = Convert.ToBase64String(stream.ToArray());
 
             // Download via JavaScript
-            var fileName = $"audit-logs-{DateTime.Now:yyyyMMdd-HHmmss}.xlsx";
+            var fileName = $"audit-logs-{DateTime.UtcNow:yyyyMMdd-HHmmss}.xlsx";
             await JSRuntime.InvokeVoidAsync("downloadFile", fileName, base64, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
             Snackbar.Add($"Exported {logsToExport.Count} audit logs to Excel", Severity.Success);

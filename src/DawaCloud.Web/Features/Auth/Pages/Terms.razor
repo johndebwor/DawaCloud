@@ -1,0 +1,168 @@
+@page "/terms"
+@using MudBlazor
+@using Microsoft.AspNetCore.Authorization
+@layout Shared.Layout.AuthLayout
+@attribute [AllowAnonymous]
+
+<PageTitle>DawaCloud | Terms & Conditions</PageTitle>
+
+<div class="legal-card">
+    <div class="legal-header">
+        <h1 class="legal-title">Terms & Conditions</h1>
+        <p class="legal-updated">Last updated: February 2026</p>
+    </div>
+
+    <div class="legal-body">
+        <section class="legal-section">
+            <h2>1. Acceptance of Terms</h2>
+            <p>By accessing or using DawaCloud ("the Service"), you agree to be bound by these Terms & Conditions. If you do not agree, you may not use the Service.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>2. Description of Service</h2>
+            <p>DawaCloud is a cloud-based pharmaceutical management platform that provides inventory tracking, point-of-sale, procurement, wholesale management, analytics, and related tools for pharmacies operating in South Sudan and surrounding regions.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>3. Account Registration</h2>
+            <p>To use the Service, you must create an account with accurate and complete information. You are responsible for maintaining the confidentiality of your login credentials and for all activities that occur under your account.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>4. Acceptable Use</h2>
+            <p>You agree to use the Service only for lawful purposes related to pharmacy management. You shall not:</p>
+            <ul>
+                <li>Use the Service to facilitate the sale of controlled substances outside applicable regulations</li>
+                <li>Share your account credentials with unauthorized parties</li>
+                <li>Attempt to reverse-engineer, decompile, or interfere with the Service</li>
+                <li>Upload malicious software or content</li>
+            </ul>
+        </section>
+
+        <section class="legal-section">
+            <h2>5. Data & Privacy</h2>
+            <p>Your use of the Service is also governed by our <MudLink Href="/privacy" Color="Color.Primary">Privacy Policy</MudLink>, which describes how we collect, use, and protect your data.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>6. Service Availability</h2>
+            <p>We strive to maintain high availability but do not guarantee uninterrupted access. The Service may be temporarily unavailable due to maintenance, updates, or circumstances beyond our control.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>7. Intellectual Property</h2>
+            <p>All content, trademarks, and technology within DawaCloud are the property of DawaCloud and its licensors. Your subscription grants you a limited, non-exclusive license to use the Service for your pharmacy operations.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>8. Limitation of Liability</h2>
+            <p>DawaCloud shall not be liable for any indirect, incidental, or consequential damages arising from your use of the Service. Our total liability shall not exceed the fees paid by you in the twelve months preceding the claim.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>9. Termination</h2>
+            <p>We may suspend or terminate your account if you violate these Terms. You may cancel your account at any time. Upon termination, your right to use the Service ceases immediately.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>10. Changes to Terms</h2>
+            <p>We reserve the right to modify these Terms at any time. Material changes will be communicated via email or in-app notification. Continued use of the Service after changes constitutes acceptance.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>11. Contact</h2>
+            <p>For questions about these Terms, contact us at <strong>support@@dawacloud.com</strong>.</p>
+        </section>
+    </div>
+
+    <div class="legal-footer">
+        <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/auth/register" StartIcon="@Icons.Material.Filled.ArrowBack">
+            Back to Registration
+        </MudButton>
+    </div>
+</div>
+
+<style>
+    .legal-card {
+        background: var(--tw-color-surface, #fff);
+        border-radius: 1.25rem;
+        padding: 2rem;
+        border: 1px solid var(--tw-color-border, #E2E8F0);
+        box-shadow: 0 2px 8px -2px rgba(0,0,0,0.08);
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .legal-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--tw-color-border, #E2E8F0);
+    }
+
+    .legal-title {
+        font-family: "Instrument Serif", Georgia, serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--tw-color-text, #1E293B);
+        margin: 0 0 0.25rem;
+    }
+
+    .legal-updated {
+        font-size: 0.8rem;
+        color: var(--tw-color-text-muted, #94A3B8);
+        margin: 0;
+    }
+
+    .legal-body {
+        flex: 1;
+        overflow-y: auto;
+        padding-right: 0.5rem;
+    }
+
+    .legal-section {
+        margin-bottom: 1.25rem;
+    }
+
+    .legal-section h2 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--tw-color-text, #1E293B);
+        margin: 0 0 0.5rem;
+    }
+
+    .legal-section p {
+        font-size: 0.85rem;
+        line-height: 1.6;
+        color: var(--tw-color-text-secondary, #64748B);
+        margin: 0 0 0.5rem;
+    }
+
+    .legal-section ul {
+        margin: 0.5rem 0;
+        padding-left: 1.25rem;
+    }
+
+    .legal-section li {
+        font-size: 0.85rem;
+        line-height: 1.6;
+        color: var(--tw-color-text-secondary, #64748B);
+        margin-bottom: 0.25rem;
+    }
+
+    .legal-footer {
+        margin-top: 1.25rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--tw-color-border, #E2E8F0);
+    }
+
+    /* Scrollbar */
+    .legal-body::-webkit-scrollbar { width: 4px; }
+    .legal-body::-webkit-scrollbar-track { background: transparent; }
+    .legal-body::-webkit-scrollbar-thumb { background: var(--tw-color-border, #E2E8F0); border-radius: 9999px; }
+
+    @@media (max-width: 600px) {
+        .legal-card { padding: 1.5rem; }
+        .legal-title { font-size: 1.3rem; }
+    }
+</style>

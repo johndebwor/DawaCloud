@@ -1,57 +1,236 @@
 @inherits LayoutComponentBase
 @using MudBlazor
 
-@* MudBlazor providers are in Routes.razor - no need to duplicate here *@
-
 <div class="auth-layout">
-    <div class="auth-layout-background"></div>
-    <div class="auth-layout-content">
-        @Body
+    @* ── Left Panel: Pharmaceutical Branding ── *@
+    <div class="auth-panel-left">
+        <div class="auth-panel-pattern"></div>
+
+        @* Floating pill capsules *@
+        <div class="pharma-float pharma-float--1">
+            <svg viewBox="0 0 60 28" fill="none"><rect width="30" height="28" rx="14" fill="rgba(12,133,153,0.15)"/><rect x="30" width="30" height="28" rx="14" fill="rgba(16,185,129,0.2)"/><line x1="30" y1="2" x2="30" y2="26" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></svg>
+        </div>
+        <div class="pharma-float pharma-float--2">
+            <svg viewBox="0 0 60 28" fill="none"><rect width="30" height="28" rx="14" fill="rgba(12,133,153,0.12)"/><rect x="30" width="30" height="28" rx="14" fill="rgba(16,185,129,0.15)"/><line x1="30" y1="2" x2="30" y2="26" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/></svg>
+        </div>
+        <div class="pharma-float pharma-float--3">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="rgba(12,133,153,0.08)" stroke="rgba(12,133,153,0.12)" stroke-width="0.5"/><circle cx="12" cy="12" r="4" fill="rgba(12,133,153,0.25)"/></svg>
+        </div>
+        <div class="pharma-float pharma-float--4">
+            <svg viewBox="0 0 60 28" fill="none"><rect width="30" height="28" rx="14" fill="rgba(12,133,153,0.12)"/><rect x="30" width="30" height="28" rx="14" fill="rgba(16,185,129,0.15)"/><line x1="30" y1="2" x2="30" y2="26" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/></svg>
+        </div>
+        <div class="pharma-float pharma-float--5">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="rgba(16,185,129,0.1)" stroke="rgba(16,185,129,0.12)" stroke-width="0.5"/><circle cx="12" cy="12" r="4" fill="rgba(16,185,129,0.2)"/></svg>
+        </div>
+
+        @* DNA Helix decorative line *@
+        <svg class="auth-dna-helix" viewBox="0 0 120 600" fill="none">
+            <path d="M60 0 C20 50 100 100 60 150 C20 200 100 250 60 300 C20 350 100 400 60 450 C20 500 100 550 60 600" stroke="rgba(12,133,153,0.15)" stroke-width="1.5" fill="none"/>
+            <path d="M60 0 C100 50 20 100 60 150 C100 200 20 250 60 300 C100 350 20 400 60 450 C100 500 20 550 60 600" stroke="rgba(16,185,129,0.1)" stroke-width="1.5" fill="none"/>
+            @for (int y = 25; y <= 575; y += 50)
+            {
+                <line x1="30" y1="@y" x2="90" y2="@y" stroke="rgba(255,255,255,0.05)" stroke-width="0.5"/>
+            }
+        </svg>
+
+        <div class="auth-panel-content">
+            <div class="auth-logo">
+                <svg viewBox="0 0 48 48" fill="none" class="auth-logo-icon">
+                    <rect x="18" y="4" width="12" height="40" rx="4" fill="url(#panelCross)"/>
+                    <rect x="4" y="18" width="40" height="12" rx="4" fill="url(#panelCross)"/>
+                    <defs><linearGradient id="panelCross" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stop-color="#0C8599"/><stop offset="100%" stop-color="#10B981"/></linearGradient></defs>
+                </svg>
+                <h2 class="auth-logo-text">DawaCloud</h2>
+            </div>
+
+            <h1 class="auth-headline">Pharmaceutical<br/>Management System</h1>
+            <p class="auth-subheadline">
+                Streamline your pharmacy operations with intelligent inventory tracking,
+                sales management, and real-time analytics.
+            </p>
+
+            <div class="auth-features">
+                <div class="auth-feature-item">
+                    <div class="auth-feature-check">
+                        <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/></svg>
+                    </div>
+                    <span>Real-time inventory & batch tracking</span>
+                </div>
+                <div class="auth-feature-item">
+                    <div class="auth-feature-check">
+                        <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/></svg>
+                    </div>
+                    <span>POS, wholesale & procurement</span>
+                </div>
+                <div class="auth-feature-item">
+                    <div class="auth-feature-check">
+                        <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/></svg>
+                    </div>
+                    <span>Expiry alerts & compliance reports</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="auth-trust-badge">Trusted by pharmacies across South Sudan</div>
+    </div>
+
+    @* ── Right Panel: Form Content ── *@
+    <div class="auth-panel-right">
+        <div class="auth-corner-accent"></div>
+        <div class="auth-form-container">
+            @Body
+        </div>
     </div>
 </div>
 
 <style>
+    /* Layout shell */
     .auth-layout {
-        min-height: 100vh;
         display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 2rem 1rem;
+        min-height: 100vh;
+        font-family: "DM Sans", system-ui, -apple-system, sans-serif;
     }
 
-    .auth-layout-background {
+    /* ── Left panel ── */
+    .auth-panel-left {
+        flex: 0 0 52%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        padding: 2.5rem;
+        background: linear-gradient(160deg, #0C0A09 0%, #0A1A1C 40%, #0D1F22 100%);
+    }
+
+    .auth-panel-left::before {
+        content: '';
         position: absolute;
-        inset: 0;
-        background-image:
-            radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+        inset: -50%;
+        background:
+            radial-gradient(ellipse at 30% 20%, rgba(12,133,153,0.12) 0%, transparent 50%),
+            radial-gradient(ellipse at 70% 80%, rgba(16,185,129,0.08) 0%, transparent 50%),
+            radial-gradient(ellipse at 60% 30%, rgba(20,184,166,0.06) 0%, transparent 40%);
+        animation: gradientMesh 20s ease-in-out infinite alternate;
         pointer-events: none;
     }
 
-    .auth-layout-content {
-        position: relative;
-        z-index: 1;
-        width: 100%;
-        max-width: 480px;
+    @@keyframes gradientMesh {
+        0% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(-3%, 2%) scale(1.02); }
+        66% { transform: translate(2%, -3%) scale(0.98); }
+        100% { transform: translate(-1%, 1%) scale(1.01); }
     }
 
-    .auth-container {
-        width: 100%;
+    .auth-panel-pattern {
+        position: absolute; inset: 0;
+        background-image: radial-gradient(circle at 1px 1px, rgba(12,133,153,0.04) 1px, transparent 0);
+        background-size: 32px 32px;
+        pointer-events: none; z-index: 1;
     }
 
-    .auth-card {
-        background: white;
-        border-radius: 16px;
-        padding: 2.5rem 2rem;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    /* Floating pharmaceutical elements */
+    .pharma-float { position: absolute; pointer-events: none; opacity: 0.7; z-index: 2; filter: drop-shadow(0 0 8px rgba(12,133,153,0.15)); }
+    .pharma-float--1 { width: 72px; top: 12%; right: 18%; animation: floatPill 14s ease-in-out infinite; transform: rotate(-25deg); }
+    .pharma-float--2 { width: 56px; bottom: 22%; left: 12%; animation: floatPill 18s ease-in-out infinite reverse; transform: rotate(15deg); }
+    .pharma-float--3 { width: 32px; top: 35%; left: 8%; animation: floatTablet 12s ease-in-out infinite; filter: drop-shadow(0 0 6px rgba(12,133,153,0.2)); }
+    .pharma-float--4 { width: 64px; bottom: 35%; right: 10%; animation: floatPill 16s ease-in-out infinite; transform: rotate(40deg); }
+    .pharma-float--5 { width: 28px; top: 60%; right: 30%; animation: floatTablet 15s ease-in-out infinite reverse; filter: drop-shadow(0 0 6px rgba(16,185,129,0.2)); }
+
+    @@keyframes floatPill {
+        0%, 100% { transform: translateY(0) rotate(-25deg); }
+        25% { transform: translateY(-20px) rotate(-15deg); }
+        50% { transform: translateY(8px) rotate(-30deg); }
+        75% { transform: translateY(-12px) rotate(-20deg); }
     }
 
-    @@media (max-width: 600px) {
-        .auth-card {
-            padding: 2rem 1.5rem;
+    @@keyframes floatTablet {
+        0%, 100% { transform: translateY(0) scale(1); }
+        50% { transform: translateY(-18px) scale(1.05); }
+    }
+
+    .auth-dna-helix {
+        position: absolute; right: 0; top: 0; height: 100%; width: 120px;
+        opacity: 0.5; pointer-events: none;
+    }
+
+    /* Panel content */
+    .auth-panel-content { position: relative; z-index: 10; max-width: 440px; }
+
+    .auth-logo { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2.5rem; }
+    .auth-logo-icon { width: 36px; height: 36px; }
+    .auth-logo-text {
+        font-family: "Instrument Serif", Georgia, serif;
+        font-size: 1.25rem; font-weight: 700; font-style: italic;
+        color: rgba(255,255,255,0.95); letter-spacing: -0.02em; margin: 0;
+    }
+
+    .auth-headline {
+        font-size: 2.25rem; font-weight: 800; letter-spacing: -0.025em;
+        line-height: 1.2; color: white; margin: 0 0 1.25rem;
+    }
+
+    .auth-subheadline {
+        font-size: 1rem; line-height: 1.625; color: rgba(255,255,255,0.55);
+        margin: 0 0 2.5rem; max-width: 380px;
+    }
+
+    .auth-features { display: flex; flex-direction: column; gap: 0.875rem; }
+    .auth-feature-item {
+        display: flex; align-items: center; gap: 0.75rem;
+        font-size: 0.875rem; color: rgba(255,255,255,0.7);
+    }
+    .auth-feature-check {
+        width: 1.75rem; height: 1.75rem; border-radius: 0.5rem;
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        background: rgba(12,133,153,0.2); color: #14B8A6;
+    }
+
+    .auth-trust-badge {
+        position: absolute; bottom: 2.5rem; left: 2.5rem;
+        z-index: 10; font-size: 0.75rem; color: rgba(12,133,153,0.3);
+    }
+
+    /* ── Right panel ── */
+    .auth-panel-right {
+        flex: 1; display: flex; align-items: center; justify-content: center;
+        padding: 2rem; overflow-y: auto; position: relative;
+        background: var(--tw-color-page, #F8FAFB);
+    }
+
+    :global(.dark) .auth-panel-right {
+        background: var(--tw-color-page, #0C0A09);
+    }
+
+    .auth-corner-accent {
+        position: absolute; top: 0; right: 0; width: 200px; height: 200px;
+        background: radial-gradient(circle at 100% 0%, rgba(12,133,153,0.06) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .auth-form-container {
+        width: 100%; max-width: 420px; position: relative; z-index: 10;
+        animation: formReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        opacity: 0;
+    }
+
+    @@keyframes formReveal {
+        from { opacity: 0; transform: translateY(20px) scale(0.98); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ── Responsive: hide left panel on small screens ── */
+    @@media (max-width: 960px) {
+        .auth-panel-left { display: none; }
+        .auth-panel-right { padding: 1.5rem; }
+    }
+
+    @@media (prefers-reduced-motion: reduce) {
+        .auth-panel-left::before,
+        .pharma-float,
+        .auth-form-container {
+            animation: none !important;
+            opacity: 1;
         }
     }
 </style>
-

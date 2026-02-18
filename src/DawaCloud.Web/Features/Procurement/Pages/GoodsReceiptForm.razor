@@ -2,32 +2,31 @@
 @page "/procurement/goods-receipts/{Id:int}/edit"
 @using MudBlazor
 @using DawaCloud.Web.Data.Entities
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "RequireInventoryAccess")]
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 
 <PageTitle>@(_isEditMode ? "Edit Goods Receipt" : "New Goods Receipt") - DawaCloud</PageTitle>
 
-<div class="mb-4">
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
     <MudBreadcrumbs Items="_breadcrumbItems" Class="mb-4" />
-
-    <div class="d-flex justify-space-between align-center mb-4">
-        <div>
-            <MudText Typo="Typo.h4" Class="mb-1">@(_isEditMode ? "Edit Goods Receipt" : "New Goods Receipt")</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">
-                Record supplier delivery and verify received items
-            </MudText>
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">@(_isEditMode ? "Edit Goods Receipt" : "New Goods Receipt")</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Record supplier delivery and verify received items</p>
         </div>
-        <MudButton Variant="Variant.Outlined"
-                   Color="Color.Default"
-                   StartIcon="@Icons.Material.Filled.ArrowBack"
-                   Href="/procurement/goods-receipts">
+        <MudButton Variant="Variant.Outlined" Color="Color.Default" Href="/procurement/goods-receipts" StartIcon="@Icons.Material.Filled.ArrowBack">
             Back to List
         </MudButton>
     </div>
+</div>
+
+<div>
 
     <MudGrid>
         <MudItem xs="12" md="8">
-            <MudPaper Elevation="2" Class="pa-6">
+            <MudPaper Elevation="0" Class="pa-6 dc-card animate-fade-in-up animate-delay-1">
                 <MudForm @ref="_form">
                     <MudText Typo="Typo.h6" Class="mb-4">Receipt Information</MudText>
 
@@ -50,7 +49,8 @@
                                        Label="Supplier"
                                        Variant="Variant.Outlined"
                                        Required="true"
-                                       OnSelectedValuesChanged="OnSupplierChanged">
+                                       OnSelectedValuesChanged="OnSupplierChanged"
+                                       ToStringFunc="@(id => id.HasValue ? _suppliers.FirstOrDefault(s => s.Id == id.Value)?.Name ?? id.ToString() : "")">
                                 @foreach (var supplier in _suppliers)
                                 {
                                     <MudSelectItem T="int?" Value="@supplier.Id">@supplier.Name</MudSelectItem>
@@ -60,7 +60,8 @@
                         <MudItem xs="12" md="6">
                             <MudSelect T="int?" @bind-Value="_model.RequestId"
                                        Label="Related Request (Optional)"
-                                       Variant="Variant.Outlined">
+                                       Variant="Variant.Outlined"
+                                       ToStringFunc="@(id => id.HasValue ? _requests.FirstOrDefault(r => r.Id == id.Value)?.RequestNumber ?? id.ToString() : "None")">
                                 <MudSelectItem T="int?" Value="null">None</MudSelectItem>
                                 @foreach (var request in _requests)
                                 {
@@ -154,7 +155,7 @@
         </MudItem>
 
         <MudItem xs="12" md="4">
-            <MudPaper Elevation="2" Class="pa-4 mb-4">
+            <MudPaper Elevation="0" Class="pa-4 dc-card tw:mb-4 animate-fade-in-up animate-delay-1">
                 <MudText Typo="Typo.h6" Class="mb-3">Summary</MudText>
                 <div class="d-flex flex-column gap-2">
                     <div class="d-flex justify-space-between">
@@ -219,7 +220,7 @@
 
         if (!_isEditMode)
         {
-            _model.GRNNumber = $"GRN-{DateTime.Now:yyyyMMddHHmmss}";
+            _model.GRNNumber = $"GRN-{DateTime.UtcNow:yyyyMMddHHmmss}";
         }
         else
         {
@@ -265,7 +266,7 @@
             SupplierInvoiceNumber = "INV-ABC-12345",
             Status = "Verified"
         };
-        _receiptDate = DateTime.Now.AddDays(-2);
+        _receiptDate = DateTime.UtcNow.AddDays(-2);
     }
 
     private void OnSupplierChanged()

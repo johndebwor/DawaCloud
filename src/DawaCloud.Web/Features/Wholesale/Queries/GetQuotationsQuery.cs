@@ -82,7 +82,7 @@ public class GetQuotationsQueryHandler : IRequestHandler<GetQuotationsQuery, Lis
                 q.TotalAmount,
                 q.Status,
                 q.Items.Count,
-                q.ValidUntil < DateTime.Now,
+                q.ValidUntil < DateTime.UtcNow,
                 q.ConvertedToSaleId
             ))
             .ToListAsync(ct);

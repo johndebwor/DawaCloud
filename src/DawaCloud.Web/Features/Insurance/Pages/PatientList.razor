@@ -4,23 +4,25 @@
 
 <PageTitle>Insurance Patients - DawaCloud</PageTitle>
 
-<div class="df-hero animate-fade-in-up">
-    <div class="df-hero-content">
-        <div class="df-hero-text">
-            <h1>Insurance Patients</h1>
-            <p>Manage patients with health insurance coverage</p>
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">Insurance Patients</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Manage patients with health insurance coverage</p>
         </div>
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   StartIcon="@Icons.Material.Filled.Add"
-                   Href="/insurance/patients/new">
-            Register Patient
-        </MudButton>
+        <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-3">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       Href="/insurance/patients/new">
+                Register Patient
+            </MudButton>
+        </div>
     </div>
 </div>
 
-<div class="df-alert-card animate-fade-in-up animate-delay-1 mt-4">
-    <div class="df-alert-header">
+<div class="dc-card tw:p-0 tw:overflow-hidden animate-fade-in-up animate-delay-1">
+    <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4 tw:p-4">
         <MudTextField @bind-Value="_searchString"
                       Placeholder="Search by name, member number..."
                       Adornment="Adornment.Start"
@@ -146,9 +148,9 @@
         // Sample data
         _patients = new List<PatientDto>
         {
-            new() { Id = 1, MemberNumber = "PHX-2024-001", FullName = "Sarah Ayaa", Phone = "+211921234567", ProviderId = 1, ProviderName = "Phoenix Health Insurance", CoverageStartDate = DateTime.Now.AddMonths(-6), AnnualCoverageLimit = 500000, YearToDateUsed = 125000, Status = "Active" },
-            new() { Id = 2, MemberNumber = "NHIF-2023-456", FullName = "John Deng", Phone = "+211922345678", ProviderId = 2, ProviderName = "National Health Insurance Fund", CoverageStartDate = DateTime.Now.AddYears(-1), AnnualCoverageLimit = 300000, YearToDateUsed = 280000, Status = "Active" },
-            new() { Id = 3, MemberNumber = "PHP-2024-789", FullName = "Grace Nyibol", Phone = "+211923456789", ProviderId = 3, ProviderName = "Private Health Plans", CoverageStartDate = DateTime.Now.AddMonths(-3), AnnualCoverageLimit = 1000000, YearToDateUsed = 45000, Status = "Active" }
+            new() { Id = 1, MemberNumber = "PHX-2024-001", FullName = "Sarah Ayaa", Phone = "+211921234567", ProviderId = 1, ProviderName = "Phoenix Health Insurance", CoverageStartDate = DateTime.UtcNow.AddMonths(-6), AnnualCoverageLimit = 500000, YearToDateUsed = 125000, Status = "Active" },
+            new() { Id = 2, MemberNumber = "NHIF-2023-456", FullName = "John Deng", Phone = "+211922345678", ProviderId = 2, ProviderName = "National Health Insurance Fund", CoverageStartDate = DateTime.UtcNow.AddYears(-1), AnnualCoverageLimit = 300000, YearToDateUsed = 280000, Status = "Active" },
+            new() { Id = 3, MemberNumber = "PHP-2024-789", FullName = "Grace Nyibol", Phone = "+211923456789", ProviderId = 3, ProviderName = "Private Health Plans", CoverageStartDate = DateTime.UtcNow.AddMonths(-3), AnnualCoverageLimit = 1000000, YearToDateUsed = 45000, Status = "Active" }
         };
     }
 

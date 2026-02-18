@@ -35,7 +35,7 @@ public static class IdentitySeeder
         }
 
         // Seed Admin User
-        var adminEmail = "admin@dawaflow.com";
+        var adminEmail = "admin@dawacloud.com";
         var adminUser = await userManager.FindByEmailAsync(adminEmail);
 
         if (adminUser == null)

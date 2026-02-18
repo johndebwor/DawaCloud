@@ -1,0 +1,74 @@
+@using Microsoft.AspNetCore.Localization
+@using System.Globalization
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<MudSelect T="string"
+           Value="@_currentLocale"
+           ValueChanged="@OnLocaleChanged"
+           Label="Language"
+           Variant="Variant.Outlined"
+           Dense="true"
+           AnchorOrigin="Origin.BottomCenter">
+    <MudSelectItem Value="@("en-US")">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span>🇬🇧</span>
+            <span>English</span>
+        </div>
+    </MudSelectItem>
+    <MudSelectItem Value="@("ar-SA")">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span>🇸🇦</span>
+            <span>العربية</span>
+        </div>
+    </MudSelectItem>
+    <MudSelectItem Value="@("fr-FR")">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span>🇫🇷</span>
+            <span>Français</span>
+        </div>
+    </MudSelectItem>
+    <MudSelectItem Value="@("de-DE")">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span>🇩🇪</span>
+            <span>Deutsch</span>
+        </div>
+    </MudSelectItem>
+    <MudSelectItem Value="@("pt-PT")">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span>🇵🇹</span>
+            <span>Português</span>
+        </div>
+    </MudSelectItem>
+    <MudSelectItem Value="@("es-ES")">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span>🇪🇸</span>
+            <span>Español</span>
+        </div>
+    </MudSelectItem>
+</MudSelect>
+
+@code {
+    private string _currentLocale = "en-US";
+
+    protected override void OnInitialized()
+    {
+        // Get current culture from cookie or default
+        _currentLocale = CultureInfo.CurrentUICulture.Name;
+    }
+
+    private async Task OnLocaleChanged(string newLocale)
+    {
+        if (_currentLocale == newLocale) return;
+
+        _currentLocale = newLocale;
+
+        // Set culture cookie
+        await JS.InvokeVoidAsync("eval", $@"
+            document.cookie = '{CookieRequestCultureProvider.DefaultCookieName}=c={newLocale}|uic={newLocale}; path=/; max-age=31536000';
+        ");
+
+        // Reload page to apply new culture
+        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+    }
+}

@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
-    <RuntimeIdentifier Condition="'$(Configuration)'=='Release'">win-x64</RuntimeIdentifier>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,7 +26,21 @@
     <PackageReference Include="QuestPDF" Version="2025.12.3" />
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
+    <PackageReference Include="Stripe.net" Version="47.*" />
     <PackageReference Include="Twilio" Version="7.14.2" />
   </ItemGroup>
+
+  <!-- Tailwind CSS Build Integration -->
+  <Target Name="NpmInstall" BeforeTargets="TailwindBuild" Condition="!Exists('node_modules')">
+    <Exec Command="npm install" />
+  </Target>
+
+  <Target Name="TailwindBuild" BeforeTargets="Build">
+    <Exec Command="npm run css:build" />
+  </Target>
+
+  <Target Name="TailwindPublish" BeforeTargets="Publish">
+    <Exec Command="npm run css:build" />
+  </Target>
 
 </Project>

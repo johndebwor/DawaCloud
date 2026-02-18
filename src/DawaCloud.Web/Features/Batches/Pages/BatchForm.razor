@@ -2,6 +2,8 @@
 @page "/batches/{id:int}/edit"
 @using MudBlazor
 @using MediatR
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "RequireInventoryAccess")]
 @using DawaCloud.Web.Data
 @using DawaCloud.Web.Data.Entities
 @using DawaCloud.Web.Features.Batches.Queries
@@ -9,24 +11,24 @@
 @using DawaCloud.Web.Features.Currency.Services
 @using Microsoft.EntityFrameworkCore
 @inject IMediator Mediator
-@inject AppDbContext DbContext
+@inject IServiceScopeFactory ScopeFactory
 @inject ICurrencyService CurrencyService
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
 
 <PageTitle>@(_isEditMode ? "Edit Batch" : "New Batch") - DawaCloud</PageTitle>
 
-<div class="mb-4">
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
     <MudBreadcrumbs Items="_breadcrumbItems" Class="mb-4" />
-
-    <div class="d-flex justify-space-between align-center mb-4">
-        <div>
-            <MudText Typo="Typo.h4" Class="mb-1">@(_isEditMode ? "Edit Batch" : "Add New Batch")</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">
-                @(_isEditMode ? "Update batch information" : "Record a new drug batch")
-            </MudText>
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">@(_isEditMode ? "Edit Batch" : "Add New Batch")</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">@(_isEditMode ? "Update batch information" : "Record a new drug batch")</p>
         </div>
     </div>
+</div>
+
+<div>
 
     @if (_isLoading)
     {
@@ -36,7 +38,7 @@
     {
     <MudGrid>
         <MudItem xs="12" md="8">
-            <MudPaper Elevation="2" Class="pa-6">
+            <MudPaper Elevation="0" Class="pa-6 dc-card animate-fade-in-up animate-delay-1">
                 <MudForm @ref="_form" @bind-IsValid="@_isValid">
                     <MudText Typo="Typo.h6" Class="mb-4">Batch Information</MudText>
 
@@ -199,7 +201,7 @@
         </MudItem>
 
         <MudItem xs="12" md="4">
-            <MudPaper Elevation="2" Class="pa-4 mb-4">
+            <MudPaper Elevation="0" Class="pa-4 dc-card tw:mb-4 animate-fade-in-up animate-delay-1">
                 <MudText Typo="Typo.h6" Class="mb-3">Batch Summary</MudText>
                 <div class="mb-3">
                     <MudText Typo="Typo.caption" Color="Color.Secondary">Shelf Life</MudText>
@@ -224,7 +226,7 @@
                 </div>
             </MudPaper>
 
-            <MudPaper Elevation="2" Class="pa-4">
+            <MudPaper Elevation="0" Class="pa-4 dc-card animate-fade-in-up animate-delay-1">
                 <MudText Typo="Typo.h6" Class="mb-3">Guidelines</MudText>
                 <MudList T="string" Dense="true">
                     <MudListItem T="string" Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
@@ -299,7 +301,9 @@
 
     private async Task LoadDrugsAsync()
     {
-        _drugs = await DbContext.Drugs
+        using var scope = ScopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        _drugs = await db.Drugs
             .Where(d => d.IsActive)
             .OrderBy(d => d.Name)
             .ToListAsync();

@@ -1,0 +1,120 @@
+@using MudBlazor
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
+
+<MudDialog>
+    <DialogContent>
+        <div class="crop-container">
+            <img id="crop-image" src="@ImageDataUrl" alt="Crop preview" style="max-width: 100%; display: block;" />
+        </div>
+        <div style="margin-top: 0.75rem;">
+            <MudText Typo="Typo.caption" Color="Color.Default">
+                Drag to reposition. Resize the crop area to select the portion you want. Output: @OutputWidth x @OutputHeight px.
+            </MudText>
+        </div>
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-2" Dense="true">@_errorMessage</MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton OnClick="Crop" Variant="Variant.Filled" Color="Color.Primary" Disabled="@_isCropping">
+            @if (_isCropping)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Style="margin-right: 0.5rem;" />
+                <span>Cropping...</span>
+            }
+            else
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Crop" Style="margin-right: 0.5rem;" />
+                <span>Crop & Apply</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public string ImageDataUrl { get; set; } = string.Empty;
+
+    [Parameter]
+    public double AspectRatio { get; set; } = 1;
+
+    [Parameter]
+    public int OutputWidth { get; set; } = 200;
+
+    [Parameter]
+    public int OutputHeight { get; set; } = 200;
+
+    private bool _isCropping;
+    private string? _errorMessage;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Delay to let dialog and image render fully
+            await Task.Delay(300);
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("imageCrop.init", "crop-image", AspectRatio);
+            }
+            catch (Exception ex)
+            {
+                _errorMessage = $"Failed to initialize cropper: {ex.Message}";
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task Crop()
+    {
+        _isCropping = true;
+        _errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var croppedDataUrl = await JSRuntime.InvokeAsync<string?>(
+                "imageCrop.getCroppedImage", OutputWidth, OutputHeight, "image/png");
+
+            if (!string.IsNullOrEmpty(croppedDataUrl))
+            {
+                try { await JSRuntime.InvokeVoidAsync("imageCrop.destroy"); } catch { }
+                MudDialog.Close(DialogResult.Ok(croppedDataUrl));
+            }
+            else
+            {
+                _errorMessage = "Could not crop the image. Please try uploading again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Crop failed: {ex.Message}";
+        }
+        finally
+        {
+            _isCropping = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task Cancel()
+    {
+        try { await JSRuntime.InvokeVoidAsync("imageCrop.destroy"); } catch { }
+        MudDialog.Cancel();
+    }
+}
+
+<style>
+    .crop-container {
+        min-height: 300px;
+        border-radius: 0.75rem;
+        border: 1px solid var(--tw-color-border, #E2E8F0);
+        background: var(--tw-color-muted, #F1F5F9);
+    }
+</style>

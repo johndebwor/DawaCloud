@@ -1,6 +1,7 @@
 using DawaCloud.Web.Data;
 using DawaCloud.Web.Data.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace DawaCloud.Web.Infrastructure.Data;
 
@@ -8,6 +9,9 @@ public static class DbSeeder
 {
     public static async Task SeedAsync(AppDbContext context)
     {
+        // Seed subscription plans if they don't exist
+        await SeedSubscriptionPlansAsync(context);
+
         // Check if data already exists
         if (await context.Drugs.AnyAsync())
         {
@@ -227,7 +231,7 @@ public static class DbSeeder
                 DrugId = drugs[4].Id,
                 BatchNumber = "BTH-2024-003",
                 ManufactureDate = new DateTime(2024, 3, 15),
-                ExpiryDate = DateTime.Now.AddDays(25),
+                ExpiryDate = DateTime.UtcNow.AddDays(25),
                 InitialQuantity = 1500,
                 CurrentQuantity = 800,
                 ReservedQuantity = 0,
@@ -281,7 +285,7 @@ public static class DbSeeder
                 BalanceAfter = 3200,
                 Reference = "Various sales",
                 Reason = "Retail sales",
-                CreatedAt = DateTime.Now.AddDays(-10),
+                CreatedAt = DateTime.UtcNow.AddDays(-10),
                 CreatedBy = "System"
             },
             // Amoxicillin - Initial purchase
@@ -310,7 +314,7 @@ public static class DbSeeder
                 BalanceAfter = 1800,
                 Reference = "Various sales",
                 Reason = "Retail sales",
-                CreatedAt = DateTime.Now.AddDays(-5),
+                CreatedAt = DateTime.UtcNow.AddDays(-5),
                 CreatedBy = "System"
             },
             // Ibuprofen - Initial purchase
@@ -338,7 +342,7 @@ public static class DbSeeder
                 BalanceAfter = 700,
                 Reference = "Various sales",
                 Reason = "Retail sales",
-                CreatedAt = DateTime.Now.AddDays(-30),
+                CreatedAt = DateTime.UtcNow.AddDays(-30),
                 CreatedBy = "System"
             },
             new()
@@ -352,7 +356,7 @@ public static class DbSeeder
                 Reference = "ADJ-2024-001",
                 Reason = "Damaged",
                 Notes = "Found 50 damaged tablets during stock check",
-                CreatedAt = DateTime.Now.AddDays(-3),
+                CreatedAt = DateTime.UtcNow.AddDays(-3),
                 CreatedBy = "Admin"
             },
             // Ciprofloxacin - Initial purchase
@@ -380,12 +384,74 @@ public static class DbSeeder
                 BalanceAfter = 800,
                 Reference = "Various sales",
                 Reason = "Retail sales",
-                CreatedAt = DateTime.Now.AddDays(-7),
+                CreatedAt = DateTime.UtcNow.AddDays(-7),
                 CreatedBy = "System"
             }
         };
 
         await context.StockMovements.AddRangeAsync(stockMovements);
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedSubscriptionPlansAsync(AppDbContext context)
+    {
+        if (await context.SubscriptionPlans.AnyAsync())
+            return;
+
+        var plans = new List<SubscriptionPlan>
+        {
+            new()
+            {
+                Name = "Free Trial",
+                PriceMonthly = 0,
+                PriceAnnual = 0,
+                MaxUsers = 2,
+                MaxDrugs = 100,
+                StorageLimitMb = 500,
+                FeaturesJson = JsonSerializer.Serialize(new[] { "Up to 2 users", "100 drug entries", "Basic POS", "500MB storage", "Email support" }),
+                SortOrder = 1,
+                IsActive = true
+            },
+            new()
+            {
+                Name = "Starter",
+                PriceMonthly = 29,
+                PriceAnnual = 278,
+                MaxUsers = 5,
+                MaxDrugs = 500,
+                StorageLimitMb = 2048,
+                FeaturesJson = JsonSerializer.Serialize(new[] { "Up to 5 users", "500 drug entries", "Full POS & Wholesale", "Expense tracking", "2GB storage", "Priority email support" }),
+                SortOrder = 2,
+                IsActive = true
+            },
+            new()
+            {
+                Name = "Professional",
+                PriceMonthly = 79,
+                PriceAnnual = 758,
+                MaxUsers = 15,
+                MaxDrugs = -1,
+                StorageLimitMb = 10240,
+                FeaturesJson = JsonSerializer.Serialize(new[] { "Up to 15 users", "Unlimited drugs", "Full POS & Wholesale", "Expense & Bank accounts", "Advanced analytics", "10GB storage", "Phone & email support" }),
+                SortOrder = 3,
+                IsFeatured = true,
+                IsActive = true
+            },
+            new()
+            {
+                Name = "Enterprise",
+                PriceMonthly = 0,
+                PriceAnnual = 0,
+                MaxUsers = -1,
+                MaxDrugs = -1,
+                StorageLimitMb = -1,
+                FeaturesJson = JsonSerializer.Serialize(new[] { "Unlimited users", "Unlimited drugs", "All features", "Insurance integration", "Custom integrations", "Unlimited storage", "Dedicated support", "SLA guarantee" }),
+                SortOrder = 4,
+                IsActive = true
+            }
+        };
+
+        await context.SubscriptionPlans.AddRangeAsync(plans);
         await context.SaveChangesAsync();
     }
 }

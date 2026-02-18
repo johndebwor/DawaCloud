@@ -1,0 +1,174 @@
+@using MudBlazor
+@using MediatR
+@using DawaCloud.Web.Features.BankAccounts.Commands
+@using DawaCloud.Web.Features.BankAccounts.Queries
+@using DawaCloud.Web.Data
+@using DawaCloud.Web.Data.Entities
+@using Microsoft.EntityFrameworkCore
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject IServiceScopeFactory ScopeFactory
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">@(_isEdit ? "Edit Account" : "New Bank Account")</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_isValid">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_accountName" Label="Account Name" Required="true"
+                                  RequiredError="Account name is required" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_bankName" Label="Bank Name" Required="true"
+                                  RequiredError="Bank name is required" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_accountNumber" Label="Account Number"
+                                  Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_branchCode" Label="Branch Code"
+                                  Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="BankAccountType" @bind-Value="_accountType" Label="Account Type"
+                               Variant="Variant.Outlined">
+                        <MudSelectItem T="BankAccountType" Value="BankAccountType.Current">Current</MudSelectItem>
+                        <MudSelectItem T="BankAccountType" Value="BankAccountType.Savings">Savings</MudSelectItem>
+                        <MudSelectItem T="BankAccountType" Value="BankAccountType.FixedDeposit">Fixed Deposit</MudSelectItem>
+                        <MudSelectItem T="BankAccountType" Value="BankAccountType.MobileMoney">Mobile Money</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="int?" @bind-Value="_currencyId" Label="Currency" Variant="Variant.Outlined"
+                               Clearable="true">
+                        @foreach (var c in _currencies)
+                        {
+                            <MudSelectItem T="int?" Value="@c.Id">@c.Code - @c.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField @bind-Value="_currentBalance" Label="Current Balance"
+                                     Variant="Variant.Outlined" Format="N2" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudCheckBox @bind-Value="_isDefault" Label="Set as default account" Color="Color.Primary" />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton OnClick="Submit" Variant="Variant.Filled" Color="Color.Primary"
+                   Disabled="@(!_isValid || _saving)">
+            @if (_saving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+            }
+            @(_isEdit ? "Update" : "Create")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public BankAccountDto? Account { get; set; }
+
+    private MudForm _form = null!;
+    private bool _isValid;
+    private bool _saving;
+    private bool _isEdit;
+
+    private string _accountName = string.Empty;
+    private string _bankName = string.Empty;
+    private string? _accountNumber;
+    private string? _branchCode;
+    private int? _currencyId;
+    private BankAccountType _accountType = BankAccountType.Current;
+    private decimal _currentBalance;
+    private bool _isDefault;
+
+    private record CurrencyItem(int Id, string Code, string Name);
+    private List<CurrencyItem> _currencies = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var scope = ScopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        _currencies = await db.Currencies
+            .AsNoTracking()
+            .Where(c => c.IsActive)
+            .Select(c => new CurrencyItem(c.Id, c.Code, c.Name))
+            .ToListAsync();
+
+        if (Account != null)
+        {
+            _isEdit = true;
+            _accountName = Account.AccountName;
+            _bankName = Account.BankName;
+            _accountNumber = Account.AccountNumber;
+            _branchCode = Account.BranchCode;
+            _accountType = Account.AccountType;
+            _currentBalance = Account.CurrentBalance;
+            _isDefault = Account.IsDefault;
+
+            var currency = _currencies.FirstOrDefault(c => c.Code == Account.CurrencyCode);
+            _currencyId = currency?.Id;
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Submit()
+    {
+        await _form.Validate();
+        if (!_isValid) return;
+
+        _saving = true;
+        try
+        {
+            if (_isEdit && Account != null)
+            {
+                var result = await Mediator.Send(new UpdateBankAccountCommand(
+                    Account.Id, _accountName, _bankName, _accountNumber, _branchCode,
+                    _currencyId, _accountType, _currentBalance, _isDefault));
+
+                if (result.IsSuccess)
+                {
+                    Snackbar.Add("Account updated", Severity.Success);
+                    MudDialog.Close(DialogResult.Ok(true));
+                }
+                else
+                {
+                    Snackbar.Add(result.Error ?? "Failed to update", Severity.Error);
+                }
+            }
+            else
+            {
+                var result = await Mediator.Send(new CreateBankAccountCommand(
+                    _accountName, _bankName, _accountNumber, _branchCode,
+                    _currencyId, _accountType, _currentBalance, _isDefault));
+
+                if (result.IsSuccess)
+                {
+                    Snackbar.Add("Account created", Severity.Success);
+                    MudDialog.Close(DialogResult.Ok(true));
+                }
+                else
+                {
+                    Snackbar.Add(result.Error ?? "Failed to create", Severity.Error);
+                }
+            }
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

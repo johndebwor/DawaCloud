@@ -1,6 +1,8 @@
 @page "/users"
 @using MudBlazor
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "RequireAdmin")]
 @using DawaCloud.Web.Infrastructure.Identity
 @inject UserManager<ApplicationUser> UserManager
 @inject RoleManager<ApplicationRole> RoleManager
@@ -9,70 +11,64 @@
 <PageTitle>User Management - DawaCloud</PageTitle>
 
 <!-- Hero Section -->
-<div class="df-hero animate-fade-in-up">
-    <div class="df-hero-content">
-        <div class="df-hero-text">
-            <h1>User Management</h1>
-            <p>Manage system users, roles, and permissions</p>
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">User Management</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Manage system users, roles, and permissions</p>
         </div>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd"
-                   OnClick="@(() => _showCreateDialog = true)">
-            Add User
-        </MudButton>
+        <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-3">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd"
+                       OnClick="@(() => _showCreateDialog = true)">
+                Add User
+            </MudButton>
+        </div>
     </div>
 </div>
 
 <!-- KPI Cards -->
-<div class="df-kpi-grid">
-    <div class="df-kpi-card animate-fade-in-up animate-delay-1">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon primary">
-                <MudIcon Icon="@Icons.Material.Filled.People" />
+<div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 lg:tw:grid-cols-4 tw:gap-4 tw:my-6">
+    <div class="dc-kpi animate-fade-in-up animate-delay-1">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-primary-50">
+                <MudIcon Icon="@Icons.Material.Filled.People" Style="color: var(--tw-color-primary-600);" />
             </div>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">Total Users</div>
-            <div class="df-kpi-value">@_users.Count</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Total Users</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_users.Count</div>
     </div>
-    <div class="df-kpi-card animate-fade-in-up animate-delay-2">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon success">
-                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+    <div class="dc-kpi animate-fade-in-up animate-delay-2">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-success-50">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Style="color: var(--tw-color-success-600);" />
             </div>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">Active Users</div>
-            <div class="df-kpi-value">@_users.Count(u => u.IsActive)</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Active Users</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_users.Count(u => u.IsActive)</div>
     </div>
-    <div class="df-kpi-card animate-fade-in-up animate-delay-3">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon info">
-                <MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" />
+    <div class="dc-kpi animate-fade-in-up animate-delay-3">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-info-50">
+                <MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" Style="color: var(--tw-color-info-600);" />
             </div>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">Administrators</div>
-            <div class="df-kpi-value">@_users.Count(u => u.Role == "Admin")</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Administrators</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_users.Count(u => u.Role == "SuperAdmin")</div>
     </div>
-    <div class="df-kpi-card animate-fade-in-up animate-delay-4">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon warning">
-                <MudIcon Icon="@Icons.Material.Filled.Schedule" />
+    <div class="dc-kpi animate-fade-in-up animate-delay-4">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-warning-50">
+                <MudIcon Icon="@Icons.Material.Filled.Schedule" Style="color: var(--tw-color-warning-600);" />
             </div>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">Online Now</div>
-            <div class="df-kpi-value">@_users.Count(u => u.IsOnline)</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Online Now</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_users.Count(u => u.IsOnline)</div>
     </div>
 </div>
 
 <!-- Users Table -->
-<div class="df-alert-card animate-fade-in-up animate-delay-2 mt-4">
-    <div class="df-alert-header">
+<div class="dc-card animate-fade-in-up animate-delay-2">
+    <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
         <MudTextField @bind-Value="_searchString"
                       Placeholder="Search users..."
                       Adornment="Adornment.Start"
@@ -83,11 +79,12 @@
         <div class="d-flex gap-2">
             <MudSelect T="string" @bind-Value="_selectedRole" Label="Role" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
                 <MudSelectItem Value="@("All")">All Roles</MudSelectItem>
-                <MudSelectItem Value="@("Admin")">Administrator</MudSelectItem>
-                <MudSelectItem Value="@("Manager")">Inventory Manager</MudSelectItem>
+                <MudSelectItem Value="@("SuperAdmin")">Administrator</MudSelectItem>
+                <MudSelectItem Value="@("InventoryManager")">Inventory Manager</MudSelectItem>
                 <MudSelectItem Value="@("Pharmacist")">Pharmacist</MudSelectItem>
                 <MudSelectItem Value="@("Cashier")">Cashier</MudSelectItem>
                 <MudSelectItem Value="@("Accountant")">Accountant</MudSelectItem>
+                <MudSelectItem Value="@("Auditor")">Auditor</MudSelectItem>
             </MudSelect>
             <MudSelect T="string" @bind-Value="_selectedStatus" Label="Status" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
                 <MudSelectItem Value="@("All")">All Status</MudSelectItem>
@@ -183,8 +180,8 @@
                 </MudItem>
                 <MudItem xs="12" md="6">
                     <MudSelect T="string" @bind-Value="_model.Role" Label="Role" Required="true" Variant="Variant.Outlined">
-                        <MudSelectItem Value="@("Admin")">Administrator</MudSelectItem>
-                        <MudSelectItem Value="@("Manager")">Inventory Manager</MudSelectItem>
+                        <MudSelectItem Value="@("SuperAdmin")">Administrator</MudSelectItem>
+                        <MudSelectItem Value="@("InventoryManager")">Inventory Manager</MudSelectItem>
                         <MudSelectItem Value="@("Pharmacist")">Pharmacist</MudSelectItem>
                         <MudSelectItem Value="@("Cashier")">Cashier</MudSelectItem>
                         <MudSelectItem Value="@("Accountant")">Accountant</MudSelectItem>
@@ -319,21 +316,23 @@
 
     private Color GetRoleColor(string role) => role switch
     {
-        "Admin" => Color.Primary,
-        "Manager" => Color.Info,
+        "SuperAdmin" => Color.Primary,
+        "InventoryManager" => Color.Info,
         "Pharmacist" => Color.Success,
         "Cashier" => Color.Warning,
         "Accountant" => Color.Secondary,
+        "Auditor" => Color.Tertiary,
         _ => Color.Default
     };
 
     private Color GetAvatarColor(string role) => role switch
     {
-        "Admin" => Color.Primary,
-        "Manager" => Color.Info,
+        "SuperAdmin" => Color.Primary,
+        "InventoryManager" => Color.Info,
         "Pharmacist" => Color.Success,
         "Cashier" => Color.Warning,
         "Accountant" => Color.Secondary,
+        "Auditor" => Color.Tertiary,
         _ => Color.Default
     };
 
@@ -362,12 +361,12 @@
             Phone = user.Phone,
             Role = user.Role,
             IsActive = user.IsActive,
-            CanManageDrugs = user.Role == "Admin" || user.Role == "Manager" || user.Role == "Pharmacist",
-            CanManageInventory = user.Role == "Admin" || user.Role == "Manager",
-            CanProcessSales = user.Role == "Admin" || user.Role == "Cashier" || user.Role == "Pharmacist",
-            CanViewReports = user.Role == "Admin" || user.Role == "Manager" || user.Role == "Accountant",
-            CanManageUsers = user.Role == "Admin",
-            CanManageSettings = user.Role == "Admin"
+            CanManageDrugs = user.Role == "SuperAdmin" || user.Role == "InventoryManager" || user.Role == "Pharmacist",
+            CanManageInventory = user.Role == "SuperAdmin" || user.Role == "InventoryManager",
+            CanProcessSales = user.Role == "SuperAdmin" || user.Role == "Cashier" || user.Role == "Pharmacist",
+            CanViewReports = user.Role == "SuperAdmin" || user.Role == "InventoryManager" || user.Role == "Accountant",
+            CanManageUsers = user.Role == "SuperAdmin",
+            CanManageSettings = user.Role == "SuperAdmin"
         };
         _showCreateDialog = true;
     }

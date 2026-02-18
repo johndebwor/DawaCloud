@@ -1,0 +1,328 @@
+@page "/finance/expenses/new"
+@page "/finance/expenses/{Id:int}/edit"
+@using MudBlazor
+@using MediatR
+@using Microsoft.AspNetCore.Authorization
+@using DawaCloud.Web.Features.Expenses.Commands
+@using DawaCloud.Web.Features.Expenses.Queries
+@using DawaCloud.Web.Features.Expenses.Components
+@using DawaCloud.Web.Data.Entities
+@using DawaCloud.Web.Data
+@using Microsoft.EntityFrameworkCore
+@attribute [Authorize(Policy = "RequireFinanceAccess")]
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+@inject IServiceScopeFactory ScopeFactory
+
+<PageTitle>DawaCloud | @(_isEdit ? "Edit Expense" : "New Expense")</PageTitle>
+
+<!-- Header -->
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="GoBack" />
+            <div class="tw:flex-1">
+                <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">@(_isEdit ? "Edit Expense" : "New Expense")</h1>
+                <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">@(_isEdit ? "Update the expense details below" : "Record a new business expense")</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<MudPaper Elevation="0" Class="pa-6 dc-card tw:max-w-4xl animate-fade-in-up animate-delay-1">
+    <MudForm @ref="_form" @bind-IsValid="_isValid">
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudDatePicker @bind-Date="_date" Label="Expense Date" Required="true"
+                               RequiredError="Date is required" Variant="Variant.Outlined"
+                               DateFormat="yyyy-MM-dd" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="int" @bind-Value="_categoryId" Label="Category" Required="true"
+                           RequiredError="Category is required" Variant="Variant.Outlined"
+                           ToStringFunc="@(id => _categories.FirstOrDefault(c => c.Id == id)?.Name ?? id.ToString())">
+                    @foreach (var cat in _categories)
+                    {
+                        <MudSelectItem T="int" Value="@cat.Id">@cat.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="_description" Label="Description" Required="true"
+                              RequiredError="Description is required" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudNumericField @bind-Value="_amount" Label="Amount" Required="true"
+                                 RequiredError="Amount is required" Variant="Variant.Outlined"
+                                 Format="N2" Min="0.01m" />
+            </MudItem>
+            @if (IsBudgetExceeded())
+            {
+                <MudItem xs="12">
+                    <MudAlert Severity="Severity.Warning" Icon="@Icons.Material.Filled.Warning" Dense="true">
+                        <strong>Budget Alert:</strong> This expense (@_amount.ToString("N2")) exceeds the category budget limit (@GetCategoryBudgetLimit()?.ToString("N2") ?? "N/A").
+                    </MudAlert>
+                </MudItem>
+            }
+            <MudItem xs="12" md="6">
+                <MudSelect T="PaymentMethod" @bind-Value="_paymentMethod" Label="Payment Method"
+                           Variant="Variant.Outlined">
+                    <MudSelectItem T="PaymentMethod" Value="PaymentMethod.Cash">Cash</MudSelectItem>
+                    <MudSelectItem T="PaymentMethod" Value="PaymentMethod.Card">Card</MudSelectItem>
+                    <MudSelectItem T="PaymentMethod" Value="PaymentMethod.MoMo">Mobile Money</MudSelectItem>
+                    <MudSelectItem T="PaymentMethod" Value="PaymentMethod.BankTransfer">Bank Transfer</MudSelectItem>
+                    <MudSelectItem T="PaymentMethod" Value="PaymentMethod.Cheque">Cheque</MudSelectItem>
+                    <MudSelectItem T="PaymentMethod" Value="PaymentMethod.Credit">Credit</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="int?" @bind-Value="_currencyId" Label="Currency (Optional)" Variant="Variant.Outlined"
+                           Clearable="true"
+                           ToStringFunc="@(id => id.HasValue ? _currencies.FirstOrDefault(c => c.Id == id.Value)?.Code + " - " + _currencies.FirstOrDefault(c => c.Id == id.Value)?.Name ?? id.ToString() : "")">
+                    @foreach (var c in _currencies)
+                    {
+                        <MudSelectItem T="int?" Value="@c.Id">@c.Code - @c.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_vendorName" Label="Payee/Vendor"
+                              Placeholder="Payee name or office expense description"
+                              Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="_notes" Label="Notes" Variant="Variant.Outlined"
+                              Lines="3" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudSwitch @bind-Value="_isRecurring" Label="Recurring Expense" Color="Color.Primary" Class="mb-3" />
+            </MudItem>
+            @if (_isRecurring)
+            {
+                <MudItem xs="12">
+                    <RecurrencePatternEditor Frequency="@_recurrenceFrequency"
+                                            FrequencyChanged="@(v => _recurrenceFrequency = v)"
+                                            Interval="@_recurrenceInterval"
+                                            IntervalChanged="@(v => _recurrenceInterval = v)"
+                                            WeeklyDays="@_weeklyDays"
+                                            WeeklyDaysChanged="@(v => _weeklyDays = v)"
+                                            MonthlyType="@_monthlyType"
+                                            MonthlyTypeChanged="@(v => _monthlyType = v)"
+                                            MonthlyDay="@_monthlyDay"
+                                            MonthlyDayChanged="@(v => _monthlyDay = v)"
+                                            DayOfWeek="@_monthlyDayOfWeek"
+                                            DayOfWeekChanged="@(v => _monthlyDayOfWeek = v)"
+                                            WeekPos="@_monthlyWeekPosition"
+                                            WeekPosChanged="@(v => _monthlyWeekPosition = v)"
+                                            EndType="@_recurrenceEndType"
+                                            EndTypeChanged="@(v => _recurrenceEndType = v)"
+                                            EndDate="@_recurrenceEndDate"
+                                            EndDateChanged="@(v => _recurrenceEndDate = v)"
+                                            EndAfterCount="@_recurrenceEndAfterCount"
+                                            EndAfterCountChanged="@(v => _recurrenceEndAfterCount = v)"
+                                            BaseDate="@(_date ?? DateTime.Today)" />
+                </MudItem>
+            }
+        </MudGrid>
+
+        <div class="d-flex gap-3 mt-6">
+            <MudButton Variant="Variant.Outlined" OnClick="GoBack">Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveExpense"
+                       Disabled="@(!_isValid || _saving)">
+                @if (_saving)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                }
+                @(_isEdit ? "Update Expense" : "Create Expense")
+            </MudButton>
+        </div>
+    </MudForm>
+</MudPaper>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private bool _isEdit => Id.HasValue;
+
+    private MudForm _form = null!;
+    private bool _isValid;
+    private bool _saving;
+
+    private List<ExpenseCategoryDto> _categories = new();
+    private List<CurrencyItem> _currencies = new();
+
+    // Form fields
+    private DateTime? _date = DateTime.Today;
+    private int _categoryId;
+    private string _description = string.Empty;
+    private decimal _amount;
+    private int? _currencyId;
+    private PaymentMethod _paymentMethod = PaymentMethod.Cash;
+    private string? _vendorName;
+    private string? _notes;
+    private bool _isRecurring;
+
+    // Recurrence fields
+    private RecurrenceFrequency _recurrenceFrequency = RecurrenceFrequency.None;
+    private int _recurrenceInterval = 1;
+    private int? _weeklyDays;
+    private MonthlyRecurrenceType? _monthlyType = MonthlyRecurrenceType.DayOfMonth;
+    private int? _monthlyDay;
+    private DayOfWeek? _monthlyDayOfWeek = DayOfWeek.Monday;
+    private WeekPosition? _monthlyWeekPosition = WeekPosition.First;
+    private RecurrenceEndType _recurrenceEndType = RecurrenceEndType.Never;
+    private DateTime? _recurrenceEndDate;
+    private int? _recurrenceEndAfterCount;
+
+    // Deprecated (kept for backward compatibility)
+    private string? _recurrencePattern;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _categories = await Mediator.Send(new GetExpenseCategoriesQuery());
+
+        using var scope = ScopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        _currencies = await db.Currencies
+            .Where(c => c.IsActive)
+            .OrderBy(c => c.DisplayOrder)
+            .Select(c => new CurrencyItem(c.Id, c.Code, c.Name))
+            .ToListAsync();
+
+        if (_isEdit && Id.HasValue)
+        {
+            var expense = await db.Expenses
+                .AsNoTracking()
+                .FirstOrDefaultAsync(e => e.Id == Id.Value);
+
+            if (expense != null)
+            {
+                _date = expense.Date;
+                _categoryId = expense.CategoryId;
+                _description = expense.Description;
+                _amount = expense.Amount;
+                _currencyId = expense.CurrencyId;
+                _paymentMethod = expense.PaymentMethod;
+                _vendorName = expense.VendorName;
+                _notes = expense.Notes;
+                _isRecurring = expense.IsRecurring;
+
+                // Load recurrence fields
+                _recurrenceFrequency = expense.RecurrenceFrequency;
+                _recurrenceInterval = expense.RecurrenceInterval;
+                _weeklyDays = expense.WeeklyDays;
+                _monthlyType = expense.MonthlyRecurrenceType;
+                _monthlyDay = expense.MonthlyDayOfMonth;
+                _monthlyDayOfWeek = expense.MonthlyDayOfWeek;
+                _monthlyWeekPosition = expense.MonthlyWeekPosition;
+                _recurrenceEndType = expense.RecurrenceEndType;
+                _recurrenceEndDate = expense.RecurrenceEndDate;
+                _recurrenceEndAfterCount = expense.RecurrenceEndAfterCount;
+                _recurrencePattern = expense.RecurrencePattern;
+            }
+        }
+    }
+
+    private record CurrencyItem(int Id, string Code, string Name);
+
+    private async Task SaveExpense()
+    {
+        await _form.Validate();
+        if (!_isValid || _date == null) return;
+
+        _saving = true;
+        try
+        {
+            if (_isEdit && Id.HasValue)
+            {
+                var result = await Mediator.Send(new UpdateExpenseCommand(
+                    Id.Value,
+                    _date.Value,
+                    _categoryId,
+                    _description,
+                    _amount,
+                    _currencyId,
+                    _paymentMethod,
+                    _vendorName,
+                    _notes,
+                    _isRecurring,
+                    _recurrenceFrequency,
+                    _recurrenceInterval,
+                    _weeklyDays,
+                    _monthlyType,
+                    _monthlyDay,
+                    _monthlyDayOfWeek,
+                    _monthlyWeekPosition,
+                    _recurrenceEndType,
+                    _recurrenceEndDate,
+                    _recurrenceEndAfterCount
+                ));
+
+                if (result.IsSuccess)
+                {
+                    Snackbar.Add("Expense updated successfully", Severity.Success);
+                    NavigationManager.NavigateTo("/finance/expenses");
+                }
+                else
+                {
+                    Snackbar.Add(result.Error ?? "Failed to update expense", Severity.Error);
+                }
+            }
+            else
+            {
+                var result = await Mediator.Send(new CreateExpenseCommand(
+                    _date.Value,
+                    _categoryId,
+                    _description,
+                    _amount,
+                    _currencyId,
+                    _paymentMethod,
+                    _vendorName,
+                    _notes,
+                    _isRecurring,
+                    _recurrenceFrequency,
+                    _recurrenceInterval,
+                    _weeklyDays,
+                    _monthlyType,
+                    _monthlyDay,
+                    _monthlyDayOfWeek,
+                    _monthlyWeekPosition,
+                    _recurrenceEndType,
+                    _recurrenceEndDate,
+                    _recurrenceEndAfterCount
+                ));
+
+                if (result.IsSuccess)
+                {
+                    Snackbar.Add("Expense created successfully", Severity.Success);
+                    NavigationManager.NavigateTo("/finance/expenses");
+                }
+                else
+                {
+                    Snackbar.Add(result.Error ?? "Failed to create expense", Severity.Error);
+                }
+            }
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void GoBack() => NavigationManager.NavigateTo("/finance/expenses");
+
+    private bool IsBudgetExceeded()
+    {
+        if (_categoryId == 0 || _amount <= 0) return false;
+        var category = _categories.FirstOrDefault(c => c.Id == _categoryId);
+        return category?.BudgetLimit.HasValue == true && _amount > category.BudgetLimit.Value;
+    }
+
+    private decimal? GetCategoryBudgetLimit()
+    {
+        if (_categoryId == 0) return null;
+        return _categories.FirstOrDefault(c => c.Id == _categoryId)?.BudgetLimit;
+    }
+}

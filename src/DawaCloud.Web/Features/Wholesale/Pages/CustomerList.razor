@@ -18,13 +18,13 @@
 <PageTitle>@Localizer["PageTitle_Wholesale"]</PageTitle>
 
 <!-- Hero Section -->
-<div class="df-hero animate-fade-in-up">
-    <div class="df-hero-content">
-        <div class="df-hero-text">
-            <h1>@Localizer["WholesaleCustomers"]</h1>
-            <p>@Localizer["ManageB2BCustomers"]</p>
+<div class="dc-hero tw:mb-6">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">@Localizer["WholesaleCustomers"]</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">@Localizer["ManageB2BCustomers"]</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-3">
             <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.FileDownload"
                        OnClick="ExportCustomers">
                 @Localizer["Export"]
@@ -38,56 +38,48 @@
 </div>
 
 <!-- KPI Cards -->
-<div class="df-kpi-grid">
-    <div class="df-kpi-card animate-fade-in-up animate-delay-1">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon primary">
-                <MudIcon Icon="@Icons.Material.Filled.Groups" />
+<div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 lg:tw:grid-cols-4 tw:gap-4 tw:my-6">
+    <div class="dc-kpi">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-primary-50">
+                <MudIcon Icon="@Icons.Material.Filled.Groups" Style="color: var(--tw-color-primary-600);" />
             </div>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">@Localizer["TotalCustomers"]</div>
-            <div class="df-kpi-value">@_customers.Count</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">@Localizer["TotalCustomers"]</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_customers.Count</div>
     </div>
-    <div class="df-kpi-card animate-fade-in-up animate-delay-2">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon success">
-                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+    <div class="dc-kpi">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-accent-50">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Style="color: var(--tw-color-success);" />
             </div>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">@Localizer["ActiveCustomers"]</div>
-            <div class="df-kpi-value">@_customers.Count(c => c.IsActive)</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">@Localizer["ActiveCustomers"]</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_customers.Count(c => c.IsActive)</div>
     </div>
-    <div class="df-kpi-card animate-fade-in-up animate-delay-3">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon warning">
-                <MudIcon Icon="@Icons.Material.Filled.AccountBalance" />
+    <div class="dc-kpi">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-warning/10">
+                <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Style="color: var(--tw-color-warning);" />
             </div>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">@Localizer["TotalOutstanding"]</div>
-            <div class="df-kpi-value">SSP @_customers.Sum(c => c.CurrentBalance).ToString("N0")</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">@Localizer["TotalOutstanding"]</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">SSP @_customers.Sum(c => c.CurrentBalance).ToString("N0")</div>
     </div>
-    <div class="df-kpi-card animate-fade-in-up animate-delay-4">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon danger">
-                <MudIcon Icon="@Icons.Material.Filled.Warning" />
+    <div class="dc-kpi">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-danger/10">
+                <MudIcon Icon="@Icons.Material.Filled.Warning" Style="color: var(--tw-color-danger);" />
             </div>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">@Localizer["OverCreditLimit"]</div>
-            <div class="df-kpi-value">@_customers.Count(c => c.CurrentBalance > c.CreditLimit)</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">@Localizer["OverCreditLimit"]</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_customers.Count(c => c.CurrentBalance > c.CreditLimit)</div>
     </div>
 </div>
 
 <!-- Customers Table -->
-<div class="df-alert-card animate-fade-in-up animate-delay-2 mt-4">
-    <div class="df-alert-header">
+<div class="dc-card tw:mt-4">
+    <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
         <MudTextField @bind-Value="_searchString"
                       Placeholder="@Localizer["SearchCustomers"]"
                       Adornment="Adornment.Start"
@@ -97,7 +89,7 @@
                       OnDebounceIntervalElapsed="LoadCustomersAsync"
                       DebounceInterval="300"
                       Style="max-width: 400px;" />
-        <div class="d-flex gap-2">
+        <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-3">
             <MudSelect T="string" Value="_selectedTier" ValueChanged="OnFilterChanged" Label="@Localizer["PricingTier"]" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
                 <MudSelectItem Value="@("All")">@Localizer["AllTiers"]</MudSelectItem>
                 <MudSelectItem Value="@("Retail")">@Localizer["Retail"]</MudSelectItem>

@@ -1,0 +1,191 @@
+@page "/chat"
+@using MudBlazor
+@using Microsoft.AspNetCore.Authorization
+@using DawaCloud.Web.Features.Chat.Services
+@attribute [Authorize]
+@using Microsoft.JSInterop
+@inject IAiChatService ChatService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+
+<PageTitle>AI Assistant - DawaCloud</PageTitle>
+
+<div class="tw:max-w-4xl tw:mx-auto tw:flex tw:flex-col" style="height: calc(100vh - 120px);">
+    <!-- Header -->
+    <div class="dc-hero tw:mb-4 animate-fade-in-up">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-primary-50 tw:text-primary-600" style="width: 44px; height: 44px;">
+                <MudIcon Icon="@Icons.Material.Filled.SmartToy" />
+            </div>
+            <div>
+                <h1 class="tw:text-xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">DawaCloud AI Assistant</h1>
+                <p class="tw:text-xs tw:text-text-muted tw:m-0 tw:mt-0.5">Ask questions about your pharmacy data</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Messages -->
+    <div data-chat-scroll class="tw:flex-1 tw:overflow-y-auto tw:py-4" style="scroll-behavior: smooth;">
+        @if (!_messages.Any())
+        {
+            <!-- Welcome State -->
+            <div class="tw:text-center tw:py-12 tw:px-4 animate-fade-in-up">
+                <div class="dc-icon-box tw:bg-primary-50 tw:text-primary-500 tw:mx-auto tw:mb-6" style="width: 80px; height: 80px; border-radius: 1.25rem;">
+                    <MudIcon Icon="@Icons.Material.Filled.SmartToy" Style="font-size: 2.5rem;" />
+                </div>
+                <h2 class="tw:text-xl tw:font-bold tw:text-text tw:mb-2 tw:font-display">How can I help you today?</h2>
+                <p class="tw:text-base tw:text-text-secondary tw:mb-8">
+                    I can help you with questions about your pharmacy's inventory, sales, expenses, and more.
+                </p>
+
+                <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-3 tw:max-w-2xl tw:mx-auto">
+                    @foreach (var suggestion in _suggestions)
+                    {
+                        <div class="dc-card dc-card--interactive tw:p-3 animate-fade-in-up"
+                             @onclick="@(() => SendSuggestion(suggestion.Query))">
+                            <div class="tw:flex tw:items-center tw:gap-2.5">
+                                <div class="dc-icon-box tw:bg-primary-50 tw:text-primary-500" style="width: 2rem; height: 2rem;">
+                                    <MudIcon Icon="@suggestion.Icon" Size="Size.Small" />
+                                </div>
+                                <div class="tw:text-left">
+                                    <div class="tw:text-sm tw:font-semibold tw:text-text">@suggestion.Title</div>
+                                    <div class="tw:text-xs tw:text-text-muted">@suggestion.Query</div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            @foreach (var msg in _messages)
+            {
+                <div class="tw:flex tw:gap-3 tw:mb-4 @(msg.Role == "user" ? "tw:flex-row-reverse" : "")">
+                    @if (msg.Role == "assistant")
+                    {
+                        <div class="dc-icon-box tw:bg-primary-50 tw:text-primary-500 tw:shrink-0" style="width: 36px; height: 36px;">
+                            <MudIcon Icon="@Icons.Material.Filled.SmartToy" Size="Size.Small" />
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="dc-icon-box tw:bg-muted tw:text-text-secondary tw:shrink-0" style="width: 36px; height: 36px;">
+                            <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" />
+                        </div>
+                    }
+                    <div class="tw:px-4 tw:py-3 tw:rounded-2xl tw:border @(msg.Role == "user" ? "tw:bg-primary-50 tw:border-primary-200 tw:rounded-tr-sm" : "tw:bg-surface tw:border-border-light tw:rounded-tl-sm")" style="max-width: 75%;">
+                        <MudText Typo="Typo.body2" Style="white-space: pre-wrap; line-height: 1.6;">@msg.Content</MudText>
+                        <div class="tw:text-xs tw:text-text-muted tw:mt-1">
+                            @msg.Timestamp.ToLocalTime().ToString("HH:mm")
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (_isLoading)
+            {
+                <div class="tw:flex tw:gap-3 tw:mb-4">
+                    <div class="dc-icon-box tw:bg-primary-50 tw:text-primary-500 tw:shrink-0" style="width: 36px; height: 36px;">
+                        <MudIcon Icon="@Icons.Material.Filled.SmartToy" Size="Size.Small" />
+                    </div>
+                    <div class="tw:px-4 tw:py-3 tw:rounded-2xl tw:border tw:border-border-light tw:bg-surface tw:rounded-tl-sm">
+                        <div class="tw:flex tw:items-center tw:gap-2">
+                            <MudProgressCircular Size="Size.Small" Color="Color.Primary" Indeterminate="true" />
+                            <MudText Typo="Typo.body2" Class="tw:text-text-muted">Analyzing your data...</MudText>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- Input Area -->
+    <div class="tw:py-4 tw:border-t tw:border-border">
+        <div class="tw:flex tw:gap-2">
+            <MudTextField @bind-Value="_userInput" Placeholder="Ask about your inventory, sales, expenses..."
+                          Variant="Variant.Outlined" FullWidth="true" Lines="1"
+                          Disabled="@_isLoading"
+                          OnKeyUp="OnInputKeyUp"
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Chat" />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SendMessage"
+                       Disabled="@(_isLoading || string.IsNullOrWhiteSpace(_userInput))"
+                       Style="min-width: 56px; height: 56px;">
+                <MudIcon Icon="@Icons.Material.Filled.Send" />
+            </MudButton>
+        </div>
+        <p class="tw:text-xs tw:text-text-muted tw:text-center tw:mt-2">
+            AI responses are based on your current pharmacy data. Always verify critical information.
+        </p>
+    </div>
+</div>
+
+@code {
+    private string _userInput = string.Empty;
+    private bool _isLoading;
+    private List<ChatMessage> _messages = new();
+
+    private static readonly List<SuggestionItem> _suggestions = new()
+    {
+        new("Inventory Status", "What is my current inventory value?", Icons.Material.Filled.Inventory),
+        new("Low Stock", "Which drugs are running low on stock?", Icons.Material.Filled.Warning),
+        new("Expiring Soon", "What batches are expiring within 30 days?", Icons.Material.Filled.EventBusy),
+        new("Sales Today", "How much did we sell today?", Icons.Material.Filled.PointOfSale),
+        new("Top Products", "What are our top selling drugs this month?", Icons.Material.Filled.TrendingUp),
+        new("Expense Summary", "Show me a summary of pending expenses", Icons.Material.Filled.Receipt),
+    };
+
+    private async Task SendSuggestion(string query)
+    {
+        _userInput = query;
+        await SendMessage();
+    }
+
+    private async Task OnInputKeyUp(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey && !_isLoading && !string.IsNullOrWhiteSpace(_userInput))
+            await SendMessage();
+    }
+
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(_userInput) || _isLoading)
+            return;
+
+        var question = _userInput.Trim();
+        _userInput = string.Empty;
+
+        _messages.Add(new ChatMessage { Role = "user", Content = question });
+        _isLoading = true;
+        StateHasChanged();
+        await ScrollToBottom();
+
+        try
+        {
+            var response = await ChatService.AskAsync(question, _messages.Where(m => m.Role != "system").ToList());
+            _messages.Add(new ChatMessage { Role = "assistant", Content = response });
+        }
+        catch (Exception ex)
+        {
+            _messages.Add(new ChatMessage { Role = "assistant", Content = $"Sorry, an error occurred: {ex.Message}" });
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+            await ScrollToBottom();
+        }
+    }
+
+    private async Task ScrollToBottom()
+    {
+        await Task.Delay(50);
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("eval", "document.querySelector('[data-chat-scroll]')?.scrollTo(0, document.querySelector('[data-chat-scroll]').scrollHeight)");
+        }
+        catch { /* Ignore JS interop errors */ }
+    }
+
+    private record SuggestionItem(string Title, string Query, string Icon);
+}

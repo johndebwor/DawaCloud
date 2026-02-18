@@ -103,7 +103,8 @@ public class DeleteNotificationTemplateCommandHandler : IRequestHandler<DeleteNo
 
         if (template != null)
         {
-            _context.NotificationTemplates.Remove(template);
+            template.IsDeleted = true;
+            template.DeletedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync(ct);
         }
     }

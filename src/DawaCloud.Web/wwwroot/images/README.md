@@ -2,7 +2,7 @@
 
 This directory contains the CLIENT company logo that appears on printable documents (invoices, receipts, reports).
 
-**Important:** This is NOT the DawaCloud application logo. This is the logo of the company using the DawaCloud system (currently Revo Pharma & Medical Ltd).
+**Important:** This is NOT the DawaCloud application logo. This is the logo of the company using the DawaCloud system (currently Guru Brothers Ltd).
 
 ## Logo Files
 
@@ -60,7 +60,7 @@ The logo is referenced in:
 - Appears in the web application UI
 
 **Client Company Branding (This Logo):**
-- Your company name: e.g., "Revo Pharma & Medical Ltd"
+- Your company name: e.g., "Guru Brothers Ltd"
 - Printable documents (invoices, receipts, reports)
 - Email communications sent to customers
 - Appears ONLY on documents, not in the application interface

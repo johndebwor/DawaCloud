@@ -1,0 +1,1428 @@
+@inherits LayoutComponentBase
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@using DawaCloud.Web.Infrastructure.Identity
+@using Microsoft.AspNetCore.Localization
+@using DawaCloud.Web.Components.Shared
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IHttpContextAccessor HttpContextAccessor
+
+@{
+    var culture = HttpContextAccessor.HttpContext?.Features
+        .Get<IRequestCultureFeature>()?.RequestCulture.Culture;
+    var isRtl = culture?.TextInfo.IsRightToLeft ?? false;
+    var direction = isRtl ? "rtl" : "ltr";
+}
+
+<div dir="@direction" class="@(isRtl ? "rtl-layout" : "")">
+<MudLayout Class="app-layout">
+    <!-- AppBar -->
+    <MudAppBar Elevation="0" Dense="false" Class="app-appbar">
+        <div class="app-appbar-content">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                           Color="Color.Inherit"
+                           Edge="Edge.Start"
+                           OnClick="@(() => _drawerOpen = !_drawerOpen)" />
+            <!-- Logo -->
+            <div class="app-logo" @onclick="NavigateHome">
+                <MudIcon Icon="@Icons.Material.Filled.LocalPharmacy" Color="Color.Primary" Size="Size.Medium" />
+                <span class="app-logo-text">DawaCloud</span>
+            </div>
+
+            <MudSpacer />
+
+            <!-- Search -->
+            <MudIconButton Icon="@Icons.Material.Filled.Search"
+                           Color="Color.Inherit"
+                           OnClick="@(() => { _commandSearch = string.Empty; _showCommandPalette = true; })" />
+
+            <!-- Notifications -->
+            <MudIconButton Icon="@Icons.Material.Filled.Notifications"
+                           Color="Color.Inherit"
+                           OnClick="ToggleNotifications">
+                @if (_notificationCount > 0)
+                {
+                    <MudBadge Content="@_notificationCount" Color="Color.Error" Overlap="true" />
+                }
+            </MudIconButton>
+
+            <!-- User Menu -->
+            <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+                <ActivatorContent>
+                    <MudIconButton Icon="@Icons.Material.Filled.AccountCircle"
+                                   Color="Color.Inherit" />
+                </ActivatorContent>
+                <ChildContent>
+                    <MudMenuItem Disabled="true">
+                        <div style="padding: 8px 0;">
+                            <div style="font-weight: 600;">@_userName</div>
+                            <div style="font-size: 0.875rem; color: var(--app-text-secondary);">@_userEmail</div>
+                        </div>
+                    </MudMenuItem>
+                    <MudDivider />
+                    <MudMenuItem Icon="@Icons.Material.Filled.Person" OnClick="NavigateToProfile">
+                        My Profile
+                    </MudMenuItem>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Settings" OnClick="NavigateToSettings">
+                        Settings
+                    </MudMenuItem>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Help" OnClick="NavigateToHelp">
+                        Help & Support
+                    </MudMenuItem>
+                    <MudDivider />
+                    <div style="padding: 8px 12px;">
+                        <LanguageSelector />
+                    </div>
+                    <MudDivider />
+                    <MudMenuItem Icon="@Icons.Material.Filled.Logout" IconColor="Color.Error" OnClick="HandleSignOut">
+                        Sign Out
+                    </MudMenuItem>
+                </ChildContent>
+            </MudMenu>
+        </div>
+    </MudAppBar>
+
+    <!-- Navigation Drawer -->
+    <MudDrawer @bind-Open="_drawerOpen"
+               Elevation="1"
+               ClipMode="DrawerClipMode.Always"
+               Width="260px"
+               Class="app-drawer">
+        <div class="drawer-content">
+            <!-- Navigation Menu -->
+            <MudNavMenu Class="nav-menu">
+                <!-- Dashboard -->
+                <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">
+                    Dashboard
+                </MudNavLink>
+
+                <!-- Pharmacy -->
+                <MudNavGroup Title="Pharmacy" Icon="@Icons.Material.Filled.LocalPharmacy" Expanded="true">
+                    <MudNavLink Href="/drugs" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Medication">
+                        Drugs
+                    </MudNavLink>
+                    <MudNavLink Href="/categories" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Category">
+                        Categories
+                    </MudNavLink>
+                    <MudNavLink Href="/batches" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.QrCode2">
+                        Batches
+                    </MudNavLink>
+                </MudNavGroup>
+
+                <!-- Inventory -->
+                <MudNavGroup Title="Inventory" Icon="@Icons.Material.Filled.Warehouse">
+                    <MudNavLink Href="/inventory/stock-levels" Icon="@Icons.Material.Filled.Inventory2">
+                        Stock Levels
+                    </MudNavLink>
+                    <MudNavLink Href="/inventory/movements" Icon="@Icons.Material.Filled.LocalShipping">
+                        Movements
+                    </MudNavLink>
+                    <MudNavLink Href="/inventory/stock-counts" Icon="@Icons.Material.Filled.Checklist">
+                        Stock Counts
+                    </MudNavLink>
+                    <MudNavLink Href="/inventory/adjustments/new" Icon="@Icons.Material.Filled.Tune">
+                        Adjustments
+                    </MudNavLink>
+                </MudNavGroup>
+
+                <!-- Procurement -->
+                <MudNavGroup Title="Procurement" Icon="@Icons.Material.Filled.ShoppingCart">
+                    <MudNavLink Href="/suppliers" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Store">
+                        Suppliers
+                    </MudNavLink>
+                    <MudNavLink Href="/procurement/requests" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.RequestQuote">
+                        Purchase Orders
+                    </MudNavLink>
+                </MudNavGroup>
+
+                <!-- Sales -->
+                <MudNavGroup Title="Sales" Icon="@Icons.Material.Filled.Storefront">
+                    <MudNavLink Href="/pos" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PointOfSale">
+                        Point of Sale
+                    </MudNavLink>
+                    <MudNavLink Href="/wholesale/customers" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Business">
+                        Wholesale Customers
+                    </MudNavLink>
+                    <MudNavLink Href="/wholesale/sales" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Receipt">
+                        Wholesale Sales
+                    </MudNavLink>
+                </MudNavGroup>
+
+                <!-- Finance -->
+                <MudNavGroup Title="Finance" Icon="@Icons.Material.Filled.AccountBalance">
+                    <MudNavLink Href="/finance/expenses" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.CreditCard">
+                        Expenses
+                    </MudNavLink>
+                    <MudNavLink Href="/finance/bank-accounts" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AccountBalanceWallet">
+                        Bank Accounts
+                    </MudNavLink>
+                </MudNavGroup>
+
+                <!-- Analytics -->
+                <MudNavGroup Title="Analytics & Reports" Icon="@Icons.Material.Filled.Insights">
+                    <MudNavLink Href="/reports" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assessment">
+                        Reports
+                    </MudNavLink>
+                    <MudNavLink Href="/analytics" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Analytics">
+                        Advanced Analytics
+                    </MudNavLink>
+                    <MudNavLink Href="/audit" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.History">
+                        Audit Logs
+                    </MudNavLink>
+                </MudNavGroup>
+
+                <!-- AI & Tools -->
+                <MudNavGroup Title="AI & Tools" Icon="@Icons.Material.Filled.AutoAwesome">
+                    <MudNavLink Href="/chat" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.SmartToy">
+                        AI Assistant
+                    </MudNavLink>
+                </MudNavGroup>
+
+                <!-- System -->
+                <MudNavGroup Title="System" Icon="@Icons.Material.Filled.Settings">
+                    <MudNavLink Href="/users" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.People">
+                        Users
+                    </MudNavLink>
+                    <MudNavLink Href="/settings" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.SettingsApplications">
+                        Settings
+                    </MudNavLink>
+                </MudNavGroup>
+            </MudNavMenu>
+        </div>
+    </MudDrawer>
+
+    <!-- Main Content -->
+    <MudMainContent Class="app-main">
+        <div class="app-content">
+            @Body
+        </div>
+    </MudMainContent>
+
+    <!-- Notification Drawer -->
+    <MudDrawer @bind-Open="_showNotifications"
+               Anchor="Anchor.Right"
+               Elevation="2"
+               Width="320px"
+               Class="app-notif-drawer">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">Notifications</MudText>
+        </MudDrawerHeader>
+        <div style="padding: 16px;">
+            @if (_notifications.Any())
+            {
+                @foreach (var notif in _notifications)
+                {
+                    <MudCard Class="mb-3">
+                        <MudCardContent>
+                            <MudText Typo="Typo.subtitle2">@notif.Title</MudText>
+                            <MudText Typo="Typo.body2" Class="mt-1">@notif.Message</MudText>
+                            <MudText Typo="Typo.caption" Class="mt-1" Color="Color.Secondary">@notif.Time</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                }
+            }
+            else
+            {
+                <div style="text-align: center; padding: 40px 20px;">
+                    <MudIcon Icon="@Icons.Material.Filled.NotificationsNone" Size="Size.Large" Style="color: var(--app-text-secondary); opacity: 0.5;" />
+                    <MudText Typo="Typo.body2" Class="mt-2" Color="Color.Secondary">No new notifications</MudText>
+                </div>
+            }
+        </div>
+    </MudDrawer>
+</MudLayout>
+</div>
+
+<!-- RTL Support -->
+<style>
+    .rtl-layout .pharma-drawer { right: 0; left: auto; }
+    .rtl-layout .pharma-notif-drawer { left: 0; right: auto; }
+    .rtl-layout .pharma-logo { flex-direction: row-reverse; }
+    .rtl-layout .pharma-search { flex-direction: row-reverse; }
+</style>
+
+<!-- Command Palette -->
+<MudDialog @bind-Visible="_showCommandPalette" Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, NoHeader = true, CloseButton = false })">
+    <DialogContent>
+        <div style="padding: 8px;">
+            <MudTextField @bind-Value="_commandSearch"
+                          Placeholder="Search commands, drugs, reports..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Variant="Variant.Outlined"
+                          FullWidth="true"
+                          Immediate="true"
+                          AutoFocus="true" />
+        </div>
+        <MudDivider />
+        <div style="max-height: 420px; overflow-y: auto;">
+            @if (string.IsNullOrWhiteSpace(_commandSearch))
+            {
+                <MudList T="string" Dense="true">
+                    <MudListSubheader>Quick Actions</MudListSubheader>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.PointOfSale" OnClick="@(() => NavigateCommand("/pos"))">New Sale (POS)</MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Add" OnClick="@(() => NavigateCommand("/drugs/new"))">New Drug</MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.LocalShipping" OnClick="@(() => NavigateCommand("/procurement/goods-receipts/new"))">Receive Stock</MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Description" OnClick="@(() => NavigateCommand("/reports"))">Generate Report</MudListItem>
+                    <MudListSubheader>Navigation</MudListSubheader>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Dashboard" OnClick="@(() => NavigateCommand("/"))">Dashboard</MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Inventory" OnClick="@(() => NavigateCommand("/inventory/stock-levels"))">Stock Levels</MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Store" OnClick="@(() => NavigateCommand("/suppliers"))">Suppliers</MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Settings" OnClick="@(() => NavigateCommand("/settings"))">Settings</MudListItem>
+                </MudList>
+            }
+            else
+            {
+                <MudList T="string" Dense="true">
+                    @foreach (var item in GetFilteredCommands())
+                    {
+                        <MudListItem T="string" Icon="@item.Icon" OnClick="@(() => NavigateCommand(item.Url))">@item.Label</MudListItem>
+                    }
+                </MudList>
+            }
+        </div>
+    </DialogContent>
+</MudDialog>
+
+<!-- Basic Application Styles -->
+<style>
+    :root {
+        --app-primary: #0C8599;
+        --app-secondary: #475569;
+        --app-background: #F8FAFC;
+        --app-surface: #FFFFFF;
+        --app-border: #E2E8F0;
+        --app-text: #1E293B;
+        --app-text-secondary: #64748B;
+    }
+
+    /* Global Layout */
+    .app-layout {
+        min-height: 100vh;
+        background: var(--app-background);
+    }
+
+    /* AppBar */
+    .app-appbar {
+        background: var(--app-surface) !important;
+        border-bottom: 1px solid var(--app-border);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .app-appbar-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        width: 100%;
+    }
+
+    /* Distinctive Pharma Logo with Vial Animation */
+    .pharma-logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .pharma-logo:hover {
+        transform: translateY(-1px);
+    }
+
+    .pharma-logo-vial {
+        position: relative;
+        width: 32px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--pharma-teal-500) 0%, var(--pharma-teal-600) 100%);
+        border-radius: 4px 4px 8px 8px;
+        box-shadow: 0 4px 12px rgba(12, 133, 153, 0.25),
+                    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+        overflow: hidden;
+    }
+
+    .pharma-logo-liquid {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 65%;
+        background: linear-gradient(180deg,
+            rgba(179, 232, 237, 0.4) 0%,
+            rgba(128, 217, 225, 0.6) 100%);
+        animation: pharmaLiquidWave 3s ease-in-out infinite;
+    }
+
+    @@keyframes pharmaLiquidWave {
+        0%, 100% { height: 65%; }
+        50% { height: 72%; }
+    }
+
+    .pharma-logo-cap {
+        position: absolute;
+        top: -6px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 24px;
+        height: 8px;
+        background: linear-gradient(180deg, var(--pharma-amber-500) 0%, var(--pharma-amber-600) 100%);
+        border-radius: 3px 3px 0 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    }
+
+    .pharma-logo-text {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .pharma-logo-main {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        background: linear-gradient(135deg, var(--pharma-teal-600) 0%, var(--pharma-teal-500) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+    }
+
+    .pharma-logo-tagline {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 0.6875rem;
+        font-weight: 500;
+        color: var(--pharma-slate-500);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        line-height: 1;
+        margin-top: 2px;
+    }
+
+    /* Elegant Search Bar */
+    .pharma-search {
+        display: none;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 16px;
+        background: var(--pharma-slate-50);
+        border: 1px solid var(--pharma-slate-200);
+        border-radius: 12px;
+        min-width: 360px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .pharma-search:hover {
+        background: var(--pharma-white);
+        border-color: var(--pharma-teal-200);
+        box-shadow: 0 0 0 3px rgba(12, 133, 153, 0.08);
+    }
+
+    @@media (min-width: 768px) {
+        .pharma-search {
+            display: flex;
+        }
+    }
+
+    .pharma-search-icon {
+        color: var(--pharma-slate-400);
+    }
+
+    .pharma-search-text {
+        flex: 1;
+        font-size: 0.875rem;
+        color: var(--pharma-slate-400);
+        user-select: none;
+    }
+
+    .pharma-search-kbd {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.75rem;
+    }
+
+    .pharma-search-kbd kbd {
+        padding: 3px 8px;
+        background: var(--pharma-white);
+        border: 1px solid var(--pharma-slate-200);
+        border-radius: 4px;
+        font-family: 'Outfit', monospace;
+        font-weight: 600;
+        color: var(--pharma-slate-600);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .pharma-search-kbd span {
+        color: var(--pharma-slate-400);
+    }
+
+    /* Notification Button with Medical Pulse */
+    .pharma-notif-btn {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: var(--pharma-slate-50);
+        border: 1px solid var(--pharma-slate-200);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .pharma-notif-btn:hover {
+        background: var(--pharma-white);
+        border-color: var(--pharma-teal-200);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .pharma-notif-icon {
+        position: relative;
+        color: var(--pharma-slate-600);
+    }
+
+    .pharma-notif-pulse {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        width: 8px;
+        height: 8px;
+        background: var(--pharma-error);
+        border-radius: 50%;
+        animation: pharmaPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @@keyframes pharmaPulse {
+        0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 0.5;
+            transform: scale(1.3);
+        }
+    }
+
+    .pharma-notif-badge {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, var(--pharma-error) 0%, #DC2626 100%);
+        color: white;
+        font-size: 0.65rem;
+        font-weight: 700;
+        border-radius: 9px;
+        border: 2px solid var(--pharma-white);
+        box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+    }
+
+    /* Premium User Menu */
+    .pharma-user-trigger {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 6px 12px 6px 6px;
+        background: var(--pharma-slate-50);
+        border: 1px solid var(--pharma-slate-200);
+        border-radius: 24px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .pharma-user-trigger:hover {
+        background: var(--pharma-white);
+        border-color: var(--pharma-teal-200);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .pharma-user-avatar {
+        position: relative;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, var(--pharma-teal-500) 0%, var(--pharma-teal-600) 100%);
+        color: white;
+        font-size: 0.875rem;
+        font-weight: 700;
+        border-radius: 50%;
+        box-shadow: 0 0 0 3px rgba(12, 133, 153, 0.15);
+    }
+
+    .pharma-user-status {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 10px;
+        height: 10px;
+        background: var(--pharma-success);
+        border-radius: 50%;
+        border: 2px solid var(--pharma-white);
+    }
+
+    .pharma-user-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .pharma-user-name {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--pharma-slate-800);
+        line-height: 1;
+    }
+
+    .pharma-user-role {
+        font-size: 0.75rem;
+        color: var(--pharma-slate-500);
+        line-height: 1;
+    }
+
+    .pharma-user-chevron {
+        color: var(--pharma-slate-400);
+    }
+
+    .pharma-menu-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+        background: linear-gradient(135deg, var(--pharma-teal-500) 0%, var(--pharma-teal-600) 100%);
+    }
+
+    .pharma-menu-avatar {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        color: white;
+        font-size: 1.125rem;
+        font-weight: 700;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .pharma-menu-user-details {
+        flex: 1;
+        color: white;
+    }
+
+    .pharma-menu-username {
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 2px;
+    }
+
+    .pharma-menu-useremail {
+        font-size: 0.8125rem;
+        opacity: 0.9;
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       Navigation Drawer - Liquid Pharma Design
+       ════════════════════════════════════════════════════════════ */
+    .pharma-drawer {
+        background: var(--pharma-white) !important;
+        border-right: 1px solid var(--pharma-slate-200) !important;
+        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    .pharma-drawer-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        padding: 12px 8px;
+    }
+
+    .pharma-drawer-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 8px 8px 16px;
+    }
+
+    .pharma-toggle-btn {
+        color: var(--pharma-slate-600) !important;
+        background: var(--pharma-slate-50) !important;
+        border-radius: 8px !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .pharma-toggle-btn:hover {
+        background: var(--pharma-teal-50) !important;
+        color: var(--pharma-teal-600) !important;
+    }
+
+    .pharma-nav-scroll {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-bottom: 16px;
+    }
+
+    .pharma-nav-scroll::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .pharma-nav-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .pharma-nav-scroll::-webkit-scrollbar-thumb {
+        background: var(--pharma-slate-200);
+        border-radius: 3px;
+    }
+
+    .pharma-nav-scroll::-webkit-scrollbar-thumb:hover {
+        background: var(--pharma-slate-300);
+    }
+
+    .pharma-nav-group {
+        margin-bottom: 8px;
+    }
+
+    /* Section Headers with Decorative Elements */
+    .pharma-section-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 16px 12px 10px;
+        margin-top: 12px;
+        opacity: 0;
+        animation: pharmaSectionFadeIn 0.4s ease forwards;
+    }
+
+    @@keyframes pharmaSectionFadeIn {
+        from {
+            opacity: 0;
+            transform: translateX(-8px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .pharma-section-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        background: var(--pharma-slate-100);
+        color: var(--pharma-slate-600);
+    }
+
+    .pharma-section-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--pharma-slate-600);
+    }
+
+    .pharma-section-line {
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, var(--pharma-slate-200) 0%, transparent 100%);
+    }
+
+    /* Color-coded section icons */
+    .pharma-section-medical .pharma-section-icon {
+        background: linear-gradient(135deg, rgba(12, 133, 153, 0.1) 0%, rgba(10, 107, 124, 0.15) 100%);
+        color: var(--pharma-teal-600);
+    }
+
+    .pharma-section-inventory .pharma-section-icon {
+        background: linear-gradient(135deg, rgba(227, 152, 68, 0.1) 0%, rgba(209, 122, 34, 0.15) 100%);
+        color: var(--pharma-amber-600);
+    }
+
+    .pharma-section-procurement .pharma-section-icon {
+        background: linear-gradient(135deg, rgba(127, 176, 105, 0.1) 0%, rgba(98, 147, 80, 0.15) 100%);
+        color: var(--pharma-sage-600);
+    }
+
+    .pharma-section-sales .pharma-section-icon {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.15) 100%);
+        color: var(--pharma-success);
+    }
+
+    .pharma-section-finance .pharma-section-icon {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.15) 100%);
+        color: var(--pharma-warning);
+    }
+
+    .pharma-section-analytics .pharma-section-icon {
+        background: linear-gradient(135deg, rgba(155, 126, 222, 0.1) 0%, rgba(124, 95, 202, 0.15) 100%);
+        color: var(--pharma-violet-600);
+    }
+
+    .pharma-section-ai .pharma-section-icon {
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(147, 51, 234, 0.15) 100%);
+        color: #9333EA;
+    }
+
+    .pharma-section-system .pharma-section-icon {
+        background: linear-gradient(135deg, rgba(100, 116, 139, 0.1) 0%, rgba(71, 85, 105, 0.15) 100%);
+        color: var(--pharma-slate-600);
+    }
+
+    /* Navigation Items - Liquid Gradient Design */
+    .pharma-nav-item {
+        position: relative;
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        margin: 3px 4px !important;
+        padding: 11px 14px !important;
+        border-radius: 12px !important;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        font-size: 0.875rem !important;
+        font-weight: 500 !important;
+        color: var(--pharma-slate-700) !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        overflow: hidden !important;
+    }
+
+    .pharma-nav-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: transparent;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+        border-radius: 12px;
+    }
+
+    .pharma-nav-item::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 3px;
+        height: 0;
+        background: currentColor;
+        border-radius: 0 2px 2px 0;
+        opacity: 0;
+        transition: all 0.25s ease;
+    }
+
+    .pharma-nav-item .mud-icon-root {
+        font-size: 1.25rem !important;
+        transition: all 0.25s ease !important;
+    }
+
+    .pharma-nav-label {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        opacity: 0;
+        max-width: 0;
+        transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                    max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Show labels when drawer is open */
+    .pharma-drawer.mud-drawer-open .pharma-nav-label {
+        opacity: 1;
+        max-width: 200px;
+    }
+
+    /* Hover States with Liquid Gradients */
+    .pharma-nav-item:hover {
+        transform: translateX(3px);
+    }
+
+    .pharma-nav-item:hover::before {
+        opacity: 1;
+    }
+
+    .pharma-nav-item:hover .mud-icon-root {
+        transform: scale(1.1);
+    }
+
+    /* Dashboard */
+    .pharma-nav-dashboard:hover::before {
+        background: linear-gradient(135deg, rgba(12, 133, 153, 0.08) 0%, rgba(10, 107, 124, 0.12) 100%);
+    }
+
+    .pharma-nav-dashboard:hover {
+        color: var(--pharma-teal-600) !important;
+    }
+
+    .pharma-nav-dashboard.active {
+        background: linear-gradient(135deg, rgba(12, 133, 153, 0.12) 0%, rgba(10, 107, 124, 0.18) 100%) !important;
+        color: var(--pharma-teal-700) !important;
+        font-weight: 600 !important;
+        box-shadow: 0 2px 8px rgba(12, 133, 153, 0.15);
+    }
+
+    .pharma-nav-dashboard.active::after {
+        height: 60%;
+        opacity: 1;
+        color: var(--pharma-teal-600);
+    }
+
+    /* Medical/Pharmacy */
+    .pharma-nav-medical:hover::before {
+        background: linear-gradient(135deg, rgba(12, 133, 153, 0.08) 0%, rgba(10, 107, 124, 0.12) 100%);
+    }
+
+    .pharma-nav-medical:hover {
+        color: var(--pharma-teal-600) !important;
+    }
+
+    .pharma-nav-medical.active {
+        background: linear-gradient(135deg, rgba(12, 133, 153, 0.12) 0%, rgba(10, 107, 124, 0.16) 100%) !important;
+        color: var(--pharma-teal-700) !important;
+        font-weight: 600 !important;
+    }
+
+    .pharma-nav-medical.active::after {
+        height: 60%;
+        opacity: 1;
+        color: var(--pharma-teal-600);
+    }
+
+    /* Inventory */
+    .pharma-nav-inventory:hover::before {
+        background: linear-gradient(135deg, rgba(227, 152, 68, 0.08) 0%, rgba(209, 122, 34, 0.12) 100%);
+    }
+
+    .pharma-nav-inventory:hover {
+        color: var(--pharma-amber-600) !important;
+    }
+
+    .pharma-nav-inventory.active {
+        background: linear-gradient(135deg, rgba(227, 152, 68, 0.12) 0%, rgba(209, 122, 34, 0.16) 100%) !important;
+        color: var(--pharma-amber-700) !important;
+        font-weight: 600 !important;
+    }
+
+    .pharma-nav-inventory.active::after {
+        height: 60%;
+        opacity: 1;
+        color: var(--pharma-amber-600);
+    }
+
+    /* Procurement */
+    .pharma-nav-procurement:hover::before {
+        background: linear-gradient(135deg, rgba(127, 176, 105, 0.08) 0%, rgba(98, 147, 80, 0.12) 100%);
+    }
+
+    .pharma-nav-procurement:hover {
+        color: var(--pharma-sage-600) !important;
+    }
+
+    .pharma-nav-procurement.active {
+        background: linear-gradient(135deg, rgba(127, 176, 105, 0.12) 0%, rgba(98, 147, 80, 0.16) 100%) !important;
+        color: var(--pharma-sage-600) !important;
+        font-weight: 600 !important;
+    }
+
+    .pharma-nav-procurement.active::after {
+        height: 60%;
+        opacity: 1;
+        color: var(--pharma-sage-600);
+    }
+
+    /* Sales */
+    .pharma-nav-sales:hover::before {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.12) 100%);
+    }
+
+    .pharma-nav-sales:hover {
+        color: var(--pharma-success) !important;
+    }
+
+    .pharma-nav-sales.active {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.16) 100%) !important;
+        color: #059669 !important;
+        font-weight: 600 !important;
+    }
+
+    .pharma-nav-sales.active::after {
+        height: 60%;
+        opacity: 1;
+        color: var(--pharma-success);
+    }
+
+    /* Finance */
+    .pharma-nav-finance:hover::before {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(217, 119, 6, 0.12) 100%);
+    }
+
+    .pharma-nav-finance:hover {
+        color: var(--pharma-warning) !important;
+    }
+
+    .pharma-nav-finance.active {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(217, 119, 6, 0.16) 100%) !important;
+        color: #D97706 !important;
+        font-weight: 600 !important;
+    }
+
+    .pharma-nav-finance.active::after {
+        height: 60%;
+        opacity: 1;
+        color: var(--pharma-warning);
+    }
+
+    /* Analytics */
+    .pharma-nav-analytics:hover::before {
+        background: linear-gradient(135deg, rgba(155, 126, 222, 0.08) 0%, rgba(124, 95, 202, 0.12) 100%);
+    }
+
+    .pharma-nav-analytics:hover {
+        color: var(--pharma-violet-600) !important;
+    }
+
+    .pharma-nav-analytics.active {
+        background: linear-gradient(135deg, rgba(155, 126, 222, 0.12) 0%, rgba(124, 95, 202, 0.16) 100%) !important;
+        color: var(--pharma-violet-600) !important;
+        font-weight: 600 !important;
+    }
+
+    .pharma-nav-analytics.active::after {
+        height: 60%;
+        opacity: 1;
+        color: var(--pharma-violet-600);
+    }
+
+    /* AI */
+    .pharma-nav-ai:hover::before {
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(147, 51, 234, 0.12) 100%);
+    }
+
+    .pharma-nav-ai:hover {
+        color: #9333EA !important;
+    }
+
+    .pharma-nav-ai.active {
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(147, 51, 234, 0.16) 100%) !important;
+        color: #9333EA !important;
+        font-weight: 600 !important;
+    }
+
+    .pharma-nav-ai.active::after {
+        height: 60%;
+        opacity: 1;
+        color: #9333EA;
+    }
+
+    /* System */
+    .pharma-nav-system:hover::before {
+        background: linear-gradient(135deg, rgba(100, 116, 139, 0.08) 0%, rgba(71, 85, 105, 0.12) 100%);
+    }
+
+    .pharma-nav-system:hover {
+        color: var(--pharma-slate-700) !important;
+    }
+
+    .pharma-nav-system.active {
+        background: linear-gradient(135deg, rgba(100, 116, 139, 0.12) 0%, rgba(71, 85, 105, 0.16) 100%) !important;
+        color: var(--pharma-slate-800) !important;
+        font-weight: 600 !important;
+    }
+
+    .pharma-nav-system.active::after {
+        height: 60%;
+        opacity: 1;
+        color: var(--pharma-slate-600);
+    }
+
+    /* Featured Nav Items (POS, AI) - Extra Emphasis */
+    .pharma-nav-featured {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .pharma-nav-featured:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .pharma-nav-featured.active {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+    }
+
+    /* Drawer Footer */
+    .pharma-drawer-footer {
+        padding: 12px 8px 8px;
+        border-top: 1px solid var(--pharma-slate-200);
+        margin-top: auto;
+        opacity: 0;
+        animation: pharmaFooterFadeIn 0.4s ease 0.2s forwards;
+    }
+
+    @@keyframes pharmaFooterFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .pharma-help-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        background: linear-gradient(135deg, var(--pharma-teal-50) 0%, var(--pharma-slate-50) 100%);
+        border: 1px solid var(--pharma-teal-100);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        margin-bottom: 12px;
+    }
+
+    .pharma-help-card:hover {
+        background: linear-gradient(135deg, var(--pharma-teal-100) 0%, var(--pharma-teal-50) 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(12, 133, 153, 0.15);
+    }
+
+    .pharma-help-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        background: var(--pharma-white);
+        border-radius: 8px;
+        color: var(--pharma-teal-600);
+    }
+
+    .pharma-help-content {
+        flex: 1;
+    }
+
+    .pharma-help-title {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--pharma-slate-800);
+        margin-bottom: 2px;
+    }
+
+    .pharma-help-desc {
+        font-size: 0.75rem;
+        color: var(--pharma-slate-600);
+    }
+
+    .pharma-version {
+        text-align: center;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        color: var(--pharma-slate-400);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       Main Content with Ambient Background
+       ════════════════════════════════════════════════════════════ */
+    .pharma-main {
+        position: relative;
+        min-height: calc(100vh - 64px);
+        background: var(--pharma-slate-50);
+    }
+
+    .pharma-ambient-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 400px;
+        background: radial-gradient(ellipse at top, rgba(12, 133, 153, 0.06) 0%, transparent 70%),
+                    radial-gradient(ellipse at 80% 20%, rgba(227, 152, 68, 0.04) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .pharma-content {
+        position: relative;
+        z-index: 1;
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 24px;
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       Notification Drawer
+       ════════════════════════════════════════════════════════════ */
+    .pharma-notif-drawer {
+        background: var(--pharma-white) !important;
+        border-left: 1px solid var(--pharma-slate-200) !important;
+    }
+
+    .pharma-notif-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px;
+        border-bottom: 1px solid var(--pharma-slate-200);
+    }
+
+    .pharma-notif-list {
+        padding: 12px;
+        overflow-y: auto;
+        height: calc(100vh - 80px);
+    }
+
+    .pharma-notif-item {
+        display: flex;
+        gap: 12px;
+        padding: 14px;
+        border-radius: 12px;
+        margin-bottom: 8px;
+        background: var(--pharma-white);
+        border: 1px solid var(--pharma-slate-200);
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .pharma-notif-item.unread {
+        background: var(--pharma-teal-50);
+        border-color: var(--pharma-teal-100);
+    }
+
+    .pharma-notif-item:hover {
+        transform: translateX(-3px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .pharma-notif-indicator {
+        width: 4px;
+        border-radius: 2px;
+        flex-shrink: 0;
+    }
+
+    .pharma-notif-content {
+        flex: 1;
+    }
+
+    .pharma-notif-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--pharma-slate-800);
+        margin-bottom: 4px;
+    }
+
+    .pharma-notif-message {
+        font-size: 0.8125rem;
+        color: var(--pharma-slate-600);
+        margin-bottom: 6px;
+        line-height: 1.4;
+    }
+
+    .pharma-notif-time {
+        font-size: 0.75rem;
+        color: var(--pharma-slate-500);
+    }
+
+    .pharma-notif-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 20px;
+        text-align: center;
+    }
+
+    .pharma-notif-empty-text {
+        margin-top: 12px;
+        font-size: 0.875rem;
+        color: var(--pharma-slate-500);
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       Responsive Design
+       ════════════════════════════════════════════════════════════ */
+    @@media (max-width: 960px) {
+        .pharma-content {
+            padding: 16px;
+        }
+
+        .pharma-logo-text {
+            display: none;
+        }
+
+        .pharma-user-info {
+            display: none !important;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .pharma-search {
+            display: none !important;
+        }
+    }
+</style>
+
+@code {
+    private bool _drawerOpen = true;
+    private string _searchText = string.Empty;
+    private int _notificationCount = 0;
+
+    // Notification drawer
+    private bool _showNotifications = false;
+    private List<NotificationItem> _notifications = new();
+
+    // Command palette
+    private bool _showCommandPalette = false;
+    private string _commandSearch = string.Empty;
+
+    private static readonly List<CommandItem> _allCommands = new()
+    {
+        new("New Sale (POS)", "/pos", Icons.Material.Filled.PointOfSale),
+        new("New Drug", "/drugs/new", Icons.Material.Filled.Add),
+        new("Receive Stock", "/procurement/goods-receipts/new", Icons.Material.Filled.LocalShipping),
+        new("Generate Report", "/reports", Icons.Material.Filled.Description),
+        new("Dashboard", "/", Icons.Material.Filled.Dashboard),
+        new("Stock Levels", "/inventory/stock-levels", Icons.Material.Filled.Inventory),
+        new("Stock Movements", "/inventory/movements", Icons.Material.Filled.History),
+        new("Stock Counts", "/inventory/stock-counts", Icons.Material.Filled.Rule),
+        new("Drugs", "/drugs", Icons.Material.Filled.Medication),
+        new("Categories", "/categories", Icons.Material.Filled.Category),
+        new("Batches", "/batches", Icons.Material.Filled.LocalOffer),
+        new("Suppliers", "/suppliers", Icons.Material.Filled.Store),
+        new("Procurement", "/procurement/requests", Icons.Material.Filled.ShoppingCart),
+        new("Wholesale Customers", "/wholesale/customers", Icons.Material.Filled.People),
+        new("Wholesale Sales", "/wholesale/sales", Icons.Material.Filled.Business),
+        new("Expenses", "/finance/expenses", Icons.Material.Filled.Receipt),
+        new("Bank Accounts", "/finance/bank-accounts", Icons.Material.Filled.AccountBalance),
+        new("Reports", "/reports", Icons.Material.Filled.Assessment),
+        new("Advanced Analytics", "/analytics", Icons.Material.Filled.Analytics),
+        new("AI Assistant", "/chat", Icons.Material.Filled.SmartToy),
+        new("Audit Logs", "/audit", Icons.Material.Filled.History),
+        new("Users", "/users", Icons.Material.Filled.People),
+        new("Settings", "/settings", Icons.Material.Filled.Settings),
+        new("My Profile", "/profile", Icons.Material.Filled.Person),
+        new("Help & Support", "/help", Icons.Material.Filled.Help),
+    };
+
+    // User info from authentication state
+    private string _userName = string.Empty;
+    private string _userEmail = string.Empty;
+    private string _userRole = string.Empty;
+    private string _userInitials => GetUserInitials();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserInfoAsync();
+    }
+
+    private async Task LoadUserInfoAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var claimsPrincipal = authState.User;
+
+        if (claimsPrincipal.Identity?.IsAuthenticated == true)
+        {
+            _userEmail = claimsPrincipal.Identity.Name ?? "User";
+
+            var firstName = claimsPrincipal.FindFirst("FirstName")?.Value ?? string.Empty;
+            var lastName = claimsPrincipal.FindFirst("LastName")?.Value ?? string.Empty;
+
+            if (!string.IsNullOrEmpty(firstName) || !string.IsNullOrEmpty(lastName))
+                _userName = $"{firstName} {lastName}".Trim();
+            else
+                _userName = _userEmail.Contains('@') ? _userEmail.Split('@')[0] : _userEmail;
+
+            _userRole = claimsPrincipal.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "User";
+        }
+        else
+        {
+            _userName = "Guest";
+            _userEmail = "";
+            _userRole = "";
+        }
+    }
+
+    private string GetUserInitials()
+    {
+        if (string.IsNullOrWhiteSpace(_userName))
+            return "?";
+
+        var parts = _userName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length >= 2)
+            return $"{parts[0][0]}{parts[1][0]}".ToUpper();
+        else if (parts.Length == 1 && parts[0].Length > 0)
+            return parts[0][0].ToString().ToUpper();
+        return "?";
+    }
+
+    private void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    private void NavigateHome()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    private void HandleSignOut()
+    {
+        NavigationManager.NavigateTo("/api/auth/logout", forceLoad: true);
+    }
+
+    private void ToggleNotifications()
+    {
+        _showNotifications = !_showNotifications;
+    }
+
+    private IEnumerable<CommandItem> GetFilteredCommands()
+    {
+        if (string.IsNullOrWhiteSpace(_commandSearch)) return _allCommands;
+        return _allCommands.Where(c => c.Label.Contains(_commandSearch, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void NavigateCommand(string url)
+    {
+        _showCommandPalette = false;
+        NavigationManager.NavigateTo(url);
+    }
+
+    private void NavigateToProfile()
+    {
+        NavigationManager.NavigateTo("/profile");
+    }
+
+    private void NavigateToSettings()
+    {
+        NavigationManager.NavigateTo("/settings");
+    }
+
+    private void NavigateToHelp()
+    {
+        NavigationManager.NavigateTo("/help");
+    }
+
+    private record NotificationItem(string Title, string Message, string Time, string Color, bool IsRead);
+    private record CommandItem(string Label, string Url, string Icon);
+}

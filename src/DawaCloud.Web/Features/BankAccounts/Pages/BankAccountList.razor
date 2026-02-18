@@ -1,0 +1,187 @@
+@page "/finance/bank-accounts"
+@using MudBlazor
+@using MediatR
+@using Microsoft.AspNetCore.Authorization
+@using DawaCloud.Web.Features.BankAccounts.Queries
+@using DawaCloud.Web.Features.BankAccounts.Commands
+@using DawaCloud.Web.Features.BankAccounts.Components
+@using DawaCloud.Web.Data.Entities
+@attribute [Authorize(Policy = "RequireFinanceAccess")]
+@inject IMediator Mediator
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>DawaCloud | Bank Accounts</PageTitle>
+
+<!-- Hero Section -->
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">Bank Accounts</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Manage your business bank accounts</p>
+        </div>
+        <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-3">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="AddAccount" Size="Size.Small">
+                Add Account
+            </MudButton>
+        </div>
+    </div>
+</div>
+
+<!-- Total Balance Card -->
+<MudPaper Elevation="0" Class="pa-5 mb-4 dc-kpi dc-kpi--highlight" Style="background: linear-gradient(135deg, var(--tw-color-primary-500), var(--tw-color-primary-700)); color: white;">
+    <MudText Typo="Typo.caption" Style="opacity: 0.8;">Total Balance (All Accounts)</MudText>
+    <MudText Typo="Typo.h4" Class="tw:font-bold tw:mt-1">
+        @_accounts.Sum(a => a.CurrentBalance).ToString("N2")
+    </MudText>
+    <MudText Typo="Typo.body2" Style="opacity: 0.7;" Class="tw:mt-1">
+        @_accounts.Count account(s)
+    </MudText>
+</MudPaper>
+
+<!-- Account Cards -->
+@if (_loading)
+{
+    <div class="d-flex justify-center pa-8">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    </div>
+}
+else if (_accounts.Count == 0)
+{
+    <MudPaper Elevation="0" Class="pa-8 dc-card tw:text-center">
+        <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Size="Size.Large" Class="tw:text-text-secondary" Style="font-size: 4rem;" />
+        <MudText Typo="Typo.h6" Class="mt-4 tw:text-text-secondary">No bank accounts yet</MudText>
+        <MudText Typo="Typo.body2" Class="tw:text-text-secondary">Add your first bank account to start tracking</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="AddAccount">
+            Add Account
+        </MudButton>
+    </MudPaper>
+}
+else
+{
+    <MudGrid>
+        @foreach (var account in _accounts)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Elevation="0" Class="pa-5 dc-card tw:relative">
+                    @if (account.IsDefault)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary"
+                                 Class="tw:absolute tw:top-3 tw:right-3">Default</MudChip>
+                    }
+                    <div class="d-flex align-center gap-3 mb-3">
+                        <div class="dc-icon-box tw:bg-primary-50 tw:text-primary-600">
+                            <MudIcon Icon="@Icons.Material.Filled.AccountBalance" />
+                        </div>
+                        <div>
+                            <MudText Typo="Typo.subtitle1" Class="tw:font-bold">@account.AccountName</MudText>
+                            <MudText Typo="Typo.caption" Class="tw:text-text-secondary">@account.BankName</MudText>
+                        </div>
+                    </div>
+                    <MudDivider Class="mb-3" />
+                    <div class="d-flex justify-space-between mb-2">
+                        <MudText Typo="Typo.caption" Class="tw:text-text-secondary">Account Number</MudText>
+                        <MudText Typo="Typo.body2" Class="tw:font-mono">
+                            @MaskAccountNumber(account.AccountNumber)
+                        </MudText>
+                    </div>
+                    <div class="d-flex justify-space-between mb-2">
+                        <MudText Typo="Typo.caption" Class="tw:text-text-secondary">Type</MudText>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@account.AccountType.ToString()</MudChip>
+                    </div>
+                    <div class="d-flex justify-space-between mb-2">
+                        <MudText Typo="Typo.caption" Class="tw:text-text-secondary">Currency</MudText>
+                        <MudText Typo="Typo.body2">@(account.CurrencyCode ?? "Base")</MudText>
+                    </div>
+                    <MudDivider Class="my-3" />
+                    <div class="d-flex justify-space-between align-center">
+                        <div>
+                            <MudText Typo="Typo.caption" Class="tw:text-text-secondary">Balance</MudText>
+                            <MudText Typo="Typo.h6" Color="@(account.CurrentBalance >= 0 ? Color.Success : Color.Error)" Class="tw:font-bold">
+                                @account.CurrentBalance.ToString("N2")
+                            </MudText>
+                        </div>
+                        <div>
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                           OnClick="@(() => EditAccount(account))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                           OnClick="@(() => DeleteAccount(account))" />
+                        </div>
+                    </div>
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+}
+
+@code {
+    private bool _loading = true;
+    private List<BankAccountDto> _accounts = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAccounts();
+    }
+
+    private async Task LoadAccounts()
+    {
+        _loading = true;
+        _accounts = await Mediator.Send(new GetBankAccountsQuery());
+        _loading = false;
+    }
+
+    private async Task AddAccount()
+    {
+        var dialog = await DialogService.ShowAsync<BankAccountDialog>("Add Bank Account",
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+            await LoadAccounts();
+    }
+
+    private async Task EditAccount(BankAccountDto account)
+    {
+        var parameters = new DialogParameters<BankAccountDialog>
+        {
+            { x => x.Account, account }
+        };
+
+        var dialog = await DialogService.ShowAsync<BankAccountDialog>("Edit Bank Account", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+            await LoadAccounts();
+    }
+
+    private async Task DeleteAccount(BankAccountDto account)
+    {
+        var confirm = await DialogService.ShowMessageBox(
+            "Delete Account",
+            $"Are you sure you want to delete {account.AccountName}?",
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (confirm == true)
+        {
+            var result = await Mediator.Send(new DeleteBankAccountCommand(account.Id));
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Account deleted", Severity.Success);
+                await LoadAccounts();
+            }
+            else
+            {
+                Snackbar.Add(result.Error ?? "Failed to delete", Severity.Error);
+            }
+        }
+    }
+
+    private string MaskAccountNumber(string? number)
+    {
+        if (string.IsNullOrEmpty(number) || number.Length < 4)
+            return number ?? "—";
+        return "****" + number[^4..];
+    }
+}

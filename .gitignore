@@ -1,3 +1,6 @@
+# Windows reserved filenames
+nul
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/

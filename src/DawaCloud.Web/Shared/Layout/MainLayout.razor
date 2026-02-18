@@ -3,30 +3,38 @@
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components.Web
 @using MudBlazor
+@inject DawaCloud.Web.Services.ThemeService ThemeService
+@inject NavigationManager NavigationManager
 
 <MudLayout>
-    <MudAppBar Elevation="0" Dense="true" Class="modern-appbar">
+    <MudAppBar Elevation="0" Dense="true" Class="medical-appbar">
         <MudIconButton Icon="@Icons.Material.Filled.Menu"
                        Color="Color.Inherit"
                        Edge="Edge.Start"
                        OnClick="@ToggleDrawer"
                        Class="d-lg-none" />
 
-        <MudText Typo="Typo.h6" Class="ml-3 modern-logo">DawaCloud</MudText>
+        <div class="medical-logo" @onclick="NavigateHome">
+            <svg viewBox="0 0 36 36" fill="none" class="medical-logo-icon">
+                <rect x="13" y="3" width="10" height="30" rx="3" fill="url(#logoCross)"/>
+                <rect x="3" y="13" width="30" height="10" rx="3" fill="url(#logoCross)"/>
+                <defs><linearGradient id="logoCross" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#0C8599"/><stop offset="100%" stop-color="#10B981"/></linearGradient></defs>
+            </svg>
+            <span class="medical-logo-text">DawaCloud</span>
+        </div>
 
-        <MudSpacer />
+        <div class="medical-search" @onclick="OpenCommandPalette">
+            <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" Style="color: var(--tw-color-text-muted);" />
+            <span>Search drugs, actions...</span>
+            <span class="medical-search-kbd">Ctrl+K</span>
+        </div>
 
-        <MudTextField @bind-Value="_searchQuery"
-                      Placeholder="Search drugs, actions... (⌘K)"
-                      Adornment="Adornment.Start"
-                      AdornmentIcon="@Icons.Material.Filled.Search"
-                      Variant="Variant.Outlined"
-                      Margin="Margin.Dense"
-                      Class="modern-search mx-4"
-                      OnKeyDown="@HandleSearchKeyDown"
-                      Style="max-width: 400px;" />
+        <div class="medical-spacer"></div>
 
-        <MudSpacer />
+        <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
+                       Color="Color.Inherit"
+                       OnClick="ToggleTheme"
+                       Title="@(_isDarkMode ? "Switch to light mode" : "Switch to dark mode")" />
 
         <MudBadge Content="3" Color="Color.Error" Overlap="true">
             <MudIconButton Icon="@Icons.Material.Filled.Notifications"
@@ -39,7 +47,8 @@
                  AnchorOrigin="Origin.BottomRight"
                  TransformOrigin="Origin.TopRight">
             <MudMenuItem Icon="@Icons.Material.Filled.Person">Profile</MudMenuItem>
-            <MudMenuItem Icon="@Icons.Material.Filled.Settings">Settings</MudMenuItem>
+            <MudMenuItem Icon="@Icons.Material.Filled.Settings"
+                         OnClick="@(() => NavigationManager.NavigateTo("/settings"))">Settings</MudMenuItem>
             <MudDivider />
             <MudMenuItem Icon="@Icons.Material.Filled.Logout">Logout</MudMenuItem>
         </MudMenu>
@@ -50,64 +59,80 @@
                OpenMiniOnHover="true"
                ClipMode="DrawerClipMode.Always"
                Elevation="0"
-               Class="modern-drawer">
-        <MudNavMenu Class="modern-navmenu">
-            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">
-                Dashboard
-            </MudNavLink>
-            <MudNavLink Href="/drugs" Icon="@Icons.Material.Filled.Medication">
-                Drugs
-            </MudNavLink>
-            <MudNavLink Href="/categories" Icon="@Icons.Material.Filled.Category">
-                Categories
-            </MudNavLink>
-            <MudNavLink Href="/batches" Icon="@Icons.Material.Filled.Inventory2">
-                Batches
-            </MudNavLink>
-            <MudNavLink Href="/inventory/stock-levels" Icon="@Icons.Material.Filled.Inventory">
-                Inventory
-            </MudNavLink>
-            <MudNavLink Href="/procurement/requests" Icon="@Icons.Material.Filled.ShoppingCart">
-                Procurement
-            </MudNavLink>
-            <MudNavLink Href="/suppliers" Icon="@Icons.Material.Filled.LocalShipping">
-                Suppliers
-            </MudNavLink>
-            <MudNavLink Href="/wholesale" Icon="@Icons.Material.Filled.BusinessCenter">
-                Wholesale
-            </MudNavLink>
-            <MudNavLink Href="/pos" Icon="@Icons.Material.Filled.PointOfSale">
-                POS
-            </MudNavLink>
-            <MudNavLink Href="/reports" Icon="@Icons.Material.Filled.Assessment">
-                Reports
-            </MudNavLink>
-            <MudNavLink Href="/audit" Icon="@Icons.Material.Filled.History">
-                Audit Logs
-            </MudNavLink>
-            <MudNavLink Href="/users" Icon="@Icons.Material.Filled.People">
-                Users
-            </MudNavLink>
+               Class="medical-drawer">
+        <div class="medical-drawer-content">
+            <MudNavMenu Class="medical-nav-menu">
+                <MudNavLink Href="/dashboard" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">
+                    Dashboard
+                </MudNavLink>
+                <MudNavLink Href="/drugs" Icon="@Icons.Material.Filled.Medication">
+                    Drugs
+                </MudNavLink>
+                <MudNavLink Href="/categories" Icon="@Icons.Material.Filled.Category">
+                    Categories
+                </MudNavLink>
+                <MudNavLink Href="/batches" Icon="@Icons.Material.Filled.Inventory2">
+                    Batches
+                </MudNavLink>
+                <MudNavLink Href="/inventory/stock-levels" Icon="@Icons.Material.Filled.Inventory">
+                    Inventory
+                </MudNavLink>
+                <MudNavLink Href="/procurement/requests" Icon="@Icons.Material.Filled.ShoppingCart">
+                    Procurement
+                </MudNavLink>
+                <MudNavLink Href="/suppliers" Icon="@Icons.Material.Filled.LocalShipping">
+                    Suppliers
+                </MudNavLink>
+                <MudNavLink Href="/wholesale" Icon="@Icons.Material.Filled.BusinessCenter">
+                    Wholesale
+                </MudNavLink>
+                <MudNavLink Href="/pos" Icon="@Icons.Material.Filled.PointOfSale">
+                    POS
+                </MudNavLink>
+                <MudNavLink Href="/reports" Icon="@Icons.Material.Filled.Assessment">
+                    Reports
+                </MudNavLink>
+                <MudNavLink Href="/audit" Icon="@Icons.Material.Filled.History">
+                    Audit Logs
+                </MudNavLink>
+                <MudNavLink Href="/users" Icon="@Icons.Material.Filled.People">
+                    Users
+                </MudNavLink>
 
-            <div style="flex: 1;"></div>
+                <div style="flex: 1;"></div>
 
-            <MudNavLink Href="/settings" Icon="@Icons.Material.Filled.Settings">
-                Settings
-            </MudNavLink>
-        </MudNavMenu>
+                <MudNavLink Href="/settings" Icon="@Icons.Material.Filled.Settings">
+                    Settings
+                </MudNavLink>
+            </MudNavMenu>
+        </div>
     </MudDrawer>
 
-    <MudMainContent Class="modern-main-content">
-        <div class="pa-6">
+    <MudMainContent Class="medical-main-content">
+        <div class="medical-content-wrapper">
             @Body
         </div>
     </MudMainContent>
 </MudLayout>
 
+<CommandPalette @ref="_commandPalette" />
+
 @code {
     private bool _drawerOpen = true;
     private bool _notificationsOpen = false;
-    private string _searchQuery = string.Empty;
+    private bool _isDarkMode;
+    private CommandPalette? _commandPalette;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ThemeService.InitializeAsync();
+            _isDarkMode = ThemeService.IsDarkMode;
+            ThemeService.OnThemeChanged += HandleThemeChanged;
+            StateHasChanged();
+        }
+    }
 
     private void ToggleDrawer()
     {
@@ -119,11 +144,24 @@
         _notificationsOpen = !_notificationsOpen;
     }
 
-    private void HandleSearchKeyDown(KeyboardEventArgs e)
+    private async Task ToggleTheme()
     {
-        if ((e.CtrlKey || e.MetaKey) && e.Key == "k")
-        {
-            // Open command palette
-        }
+        await ThemeService.ToggleAsync();
+    }
+
+    private void HandleThemeChanged()
+    {
+        _isDarkMode = ThemeService.IsDarkMode;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void NavigateHome()
+    {
+        NavigationManager.NavigateTo("/dashboard");
+    }
+
+    private void OpenCommandPalette()
+    {
+        _commandPalette?.Open();
     }
 }

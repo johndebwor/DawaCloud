@@ -301,6 +301,21 @@ public class CurrencyService : ICurrencyService
 
     #endregion
 
+    #region Cache Management
+
+    public void ClearCache()
+    {
+        _cache.Remove($"{CurrenciesCacheKey}_{true}");
+        _cache.Remove($"{CurrenciesCacheKey}_{false}");
+        _cache.Remove(BaseCurrencyCacheKey);
+        _cache.Remove($"{ExchangeRatesCacheKey}_{true}");
+        _cache.Remove($"{ExchangeRatesCacheKey}_{false}");
+        _currencyCache = null;
+        _currencyCodeToIdCache = null;
+    }
+
+    #endregion
+
     #region Exchange Rate Management
 
     public async Task<SetExchangeRateResult> SetExchangeRateAsync(

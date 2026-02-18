@@ -37,7 +37,7 @@ public class CreateQuotationCommandHandler : IRequestHandler<CreateQuotationComm
         if (customer == null)
             return Result<int>.Fail("Customer not found");
 
-        if (request.ValidUntil <= DateTime.Now)
+        if (request.ValidUntil <= DateTime.UtcNow)
             return Result<int>.Fail("Valid until date must be in the future");
 
         if (request.Items.Count == 0)
@@ -86,14 +86,14 @@ public class CreateQuotationCommandHandler : IRequestHandler<CreateQuotationComm
             .FirstOrDefaultAsync(ct);
 
         var nextNumber = (lastQuotation?.Id ?? 0) + 1;
-        var quotationNumber = $"QUO-{DateTime.Now:yyyyMM}-{nextNumber:D5}";
+        var quotationNumber = $"QUO-{DateTime.UtcNow:yyyyMM}-{nextNumber:D5}";
 
         // Create quotation
         var quotation = new Quotation
         {
             QuotationNumber = quotationNumber,
             CustomerId = request.CustomerId,
-            QuotationDate = DateTime.Now,
+            QuotationDate = DateTime.UtcNow,
             ValidUntil = request.ValidUntil,
             SubTotal = subTotal,
             TaxAmount = taxAmount,

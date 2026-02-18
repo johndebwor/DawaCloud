@@ -1,4 +1,4 @@
-@page "/"
+@page "/dashboard"
 @using MudBlazor
 @using Microsoft.AspNetCore.Components.Authorization
 @using MediatR
@@ -7,367 +7,324 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IMediator Mediator
 
-<PageTitle>Dashboard - DawaCloud</PageTitle>
+<PageTitle>DawaCloud | Dashboard</PageTitle>
 
 <!-- Hero Welcome Section -->
-<div class="df-hero animate-fade-in-up">
-    <div class="df-hero-content">
-        <div class="df-hero-text">
-            <h1>@_greeting, @_firstName!</h1>
-            <p>Here's what's happening with your pharmacy today.</p>
+<div class="dash-hero">
+    <div class="dash-hero-accent"></div>
+    <div class="dash-hero-body">
+        <div class="dash-hero-content">
+            <div class="dash-hero-label">
+                <MudIcon Icon="@Icons.Material.Filled.CalendarToday" Size="Size.Small" />
+                <span>@DateTime.UtcNow.ToString("dddd, MMMM d, yyyy")</span>
+            </div>
+            <h1 class="dash-hero-title">@_greeting, <span class="name-accent">@_firstName</span></h1>
+            <p class="dash-hero-subtitle">Overview of your pharmacy operations.</p>
         </div>
-        <div class="df-hero-date">
-            <MudIcon Icon="@Icons.Material.Filled.CalendarToday" Class="df-hero-date-icon" Size="Size.Small" />
-            <span class="df-hero-date-text">@DateTime.Now.ToString("dddd, MMMM d, yyyy")</span>
-        </div>
-    </div>
-</div>
-
-<!-- Quick Actions Bar -->
-<div class="df-quick-actions animate-fade-in-up animate-delay-1">
-    <div class="df-quick-actions-content">
-        <div class="df-quick-actions-text">
-            <h3>Quick Actions</h3>
-            <p>Perform common tasks with one click</p>
-        </div>
-        <div class="df-quick-actions-buttons">
-            <a href="/pos" class="df-quick-btn primary">
+        <div class="dash-hero-actions">
+            <a href="/pos" class="action-btn action-btn--primary">
                 <MudIcon Icon="@Icons.Material.Filled.PointOfSale" Size="Size.Small" />
-                New Sale
+                <span>New Sale</span>
             </a>
-            <a href="/drugs/new" class="df-quick-btn outline">
+            <a href="/drugs/new" class="action-btn">
                 <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
-                New Drug
+                <span>New Drug</span>
             </a>
-            <a href="/procurement/goods-receipts/new" class="df-quick-btn outline">
+            <a href="/procurement/goods-receipts/new" class="action-btn">
                 <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Size="Size.Small" />
-                Receive Stock
+                <span>Receive Stock</span>
             </a>
-            <a href="/reports" class="df-quick-btn outline">
+            <a href="/reports" class="action-btn">
                 <MudIcon Icon="@Icons.Material.Filled.Assessment" Size="Size.Small" />
-                Generate Report
+                <span>Reports</span>
             </a>
         </div>
     </div>
 </div>
 
 <!-- KPI Cards Grid -->
-<div class="df-kpi-grid">
-    <!-- Featured Card - Today's Sales -->
-    <div class="df-kpi-card featured animate-fade-in-up animate-delay-1">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon primary">
-                <MudIcon Icon="@Icons.Material.Filled.PointOfSale" />
+<div class="kpi-grid">
+    <!-- Today's Sales -->
+    <div class="kpi-card kpi-card--primary">
+        <div class="kpi-header">
+            <div class="kpi-icon">
+                <MudIcon Icon="@Icons.Material.Filled.PointOfSale" Size="Size.Medium" />
             </div>
-            <div class="df-kpi-trend up">
-                <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Size="Size.Small" />
-                <span>12.5%</span>
-            </div>
+            <span class="kpi-label">Today's Sales</span>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">Today's Sales</div>
-            <div class="df-kpi-value">SSP 125,450</div>
-            <div class="df-kpi-subtitle">+SSP 13,945 from yesterday</div>
+        <div class="kpi-value">SSP 125,450</div>
+        <div class="kpi-delta kpi-delta--positive">
+            <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Size="Size.Small" />
+            <span>+12.5% from yesterday</span>
         </div>
     </div>
 
-    <!-- Stock Value Card -->
-    <div class="df-kpi-card animate-fade-in-up animate-delay-2">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon success">
-                <MudIcon Icon="@Icons.Material.Filled.Inventory2" />
+    <!-- Stock Value -->
+    <div class="kpi-card kpi-card--accent">
+        <div class="kpi-header">
+            <div class="kpi-icon">
+                <MudIcon Icon="@Icons.Material.Filled.Inventory2" Size="Size.Medium" />
             </div>
-            <div class="df-kpi-trend neutral">
-                <MudIcon Icon="@Icons.Material.Filled.Remove" Size="Size.Small" />
-                <span>Stable</span>
-            </div>
+            <span class="kpi-label">Stock Value</span>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">Stock Value</div>
-            <div class="df-kpi-value">SSP 2.4M</div>
-            <div class="df-kpi-subtitle">758 items in inventory</div>
+        <div class="kpi-value">SSP 2.4M</div>
+        <div class="kpi-delta">
+            <span>758 items in inventory</span>
         </div>
     </div>
 
-    <!-- Low Stock Card -->
-    <div class="df-kpi-card animate-fade-in-up animate-delay-3">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon warning">
-                <MudIcon Icon="@Icons.Material.Filled.Warning" />
+    <!-- Low Stock Items -->
+    <div class="kpi-card kpi-card--warning">
+        <div class="kpi-header">
+            <div class="kpi-icon">
+                <MudIcon Icon="@Icons.Material.Filled.Warning" Size="Size.Medium" />
             </div>
-            <div class="df-kpi-trend down">
-                <MudIcon Icon="@Icons.Material.Filled.TrendingDown" Size="Size.Small" />
-                <span>+3</span>
-            </div>
+            <span class="kpi-label">Low Stock Items</span>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">Low Stock Items</div>
-            <div class="df-kpi-value">12</div>
-            <div class="df-kpi-subtitle">Requires immediate attention</div>
+        <div class="kpi-value">12</div>
+        <div class="kpi-delta kpi-delta--attention">
+            <MudIcon Icon="@Icons.Material.Filled.TrendingDown" Size="Size.Small" />
+            <span>+3 needs attention</span>
         </div>
     </div>
 
-    <!-- Expiring Soon Card -->
-    <div class="df-kpi-card animate-fade-in-up animate-delay-4">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon danger">
-                <MudIcon Icon="@Icons.Material.Filled.EventBusy" />
+    <!-- Expiring Soon -->
+    <div class="kpi-card kpi-card--danger">
+        <div class="kpi-header">
+            <div class="kpi-icon">
+                <MudIcon Icon="@Icons.Material.Filled.EventBusy" Size="Size.Medium" />
             </div>
-            <div class="df-kpi-trend down">
-                <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" />
-                <span>Urgent</span>
-            </div>
+            <span class="kpi-label">Expiring Soon</span>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">Expiring Soon</div>
-            <div class="df-kpi-value">5</div>
-            <div class="df-kpi-subtitle">Within next 30 days</div>
+        <div class="kpi-value">5</div>
+        <div class="kpi-delta kpi-delta--critical">
+            <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" />
+            <span>Within 30 days</span>
         </div>
     </div>
 </div>
 
 <!-- Alert Widgets Row -->
-<MudGrid Class="mb-6">
+<div class="alert-grid">
     <!-- Low Stock Alerts -->
-    <MudItem xs="12" md="6">
-        <div class="df-alert-card animate-fade-in-up animate-delay-2">
-            <div class="df-alert-header">
-                <div class="df-alert-title">
-                    <div class="df-alert-title-icon warning">
-                        <MudIcon Icon="@Icons.Material.Filled.Inventory" />
-                    </div>
-                    <span>Low Stock Alerts</span>
-                </div>
-                <span class="df-alert-count warning">12 Items</span>
+    <div class="alert-card">
+        <div class="alert-header">
+            <div class="alert-icon alert-icon--warning">
+                <MudIcon Icon="@Icons.Material.Filled.Inventory" Size="Size.Small" />
             </div>
-            <div class="df-alert-body">
-                <div class="df-alert-item">
-                    <div class="df-alert-item-info">
-                        <h4>Paracetamol 500mg</h4>
-                        <p>Current: 45 units | Reorder level: 100</p>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div class="df-progress-bar">
-                            <div class="df-progress-bar-fill warning" style="width: 45%;"></div>
-                        </div>
-                        <span class="df-alert-item-badge warning">45%</span>
-                    </div>
-                </div>
-                <div class="df-alert-item">
-                    <div class="df-alert-item-info">
-                        <h4>Amoxicillin 250mg</h4>
-                        <p>Current: 30 units | Reorder level: 120</p>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div class="df-progress-bar">
-                            <div class="df-progress-bar-fill critical" style="width: 25%;"></div>
-                        </div>
-                        <span class="df-alert-item-badge critical">25%</span>
-                    </div>
-                </div>
-                <div class="df-alert-item">
-                    <div class="df-alert-item-info">
-                        <h4>Ibuprofen 400mg</h4>
-                        <p>Current: 55 units | Reorder level: 100</p>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div class="df-progress-bar">
-                            <div class="df-progress-bar-fill warning" style="width: 55%;"></div>
-                        </div>
-                        <span class="df-alert-item-badge warning">55%</span>
-                    </div>
-                </div>
-            </div>
-            <div class="df-alert-footer">
-                <a href="/inventory/stock-levels" class="df-alert-link">
-                    View All Low Stock Items
-                    <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
-                </a>
+            <div class="alert-title-group">
+                <h3 class="alert-title">Low Stock Alerts</h3>
+                <span class="alert-badge">12 Items</span>
             </div>
         </div>
-    </MudItem>
+        <div class="alert-items">
+            <!-- Alert Item 1 -->
+            <div class="alert-item alert-item--warning">
+                <div class="alert-item-header">
+                    <h4 class="alert-item-title">Paracetamol 500mg</h4>
+                    <span class="alert-item-value">45%</span>
+                </div>
+                <p class="alert-item-meta">Current: 45 units | Reorder: 100</p>
+                <div class="alert-item-bar">
+                    <div class="alert-item-fill" style="width: 45%;"></div>
+                </div>
+            </div>
+
+            <!-- Alert Item 2 -->
+            <div class="alert-item alert-item--critical">
+                <div class="alert-item-header">
+                    <h4 class="alert-item-title">Amoxicillin 250mg</h4>
+                    <span class="alert-item-value">25%</span>
+                </div>
+                <p class="alert-item-meta">Current: 30 units | Reorder: 120</p>
+                <div class="alert-item-bar">
+                    <div class="alert-item-fill" style="width: 25%;"></div>
+                </div>
+            </div>
+
+            <!-- Alert Item 3 -->
+            <div class="alert-item alert-item--warning">
+                <div class="alert-item-header">
+                    <h4 class="alert-item-title">Ibuprofen 400mg</h4>
+                    <span class="alert-item-value">55%</span>
+                </div>
+                <p class="alert-item-meta">Current: 55 units | Reorder: 100</p>
+                <div class="alert-item-bar">
+                    <div class="alert-item-fill" style="width: 55%;"></div>
+                </div>
+            </div>
+        </div>
+        <a href="/inventory/stock-levels" class="alert-action">
+            View All Low Stock Items
+            <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+        </a>
+    </div>
 
     <!-- Expiry Alerts -->
-    <MudItem xs="12" md="6">
-        <div class="df-alert-card animate-fade-in-up animate-delay-3">
-            <div class="df-alert-header">
-                <div class="df-alert-title">
-                    <div class="df-alert-title-icon danger">
-                        <MudIcon Icon="@Icons.Material.Filled.EventBusy" />
-                    </div>
-                    <span>Expiry Alerts</span>
-                </div>
-                <span class="df-alert-count danger">5 Batches</span>
+    <div class="alert-card">
+        <div class="alert-header">
+            <div class="alert-icon alert-icon--danger">
+                <MudIcon Icon="@Icons.Material.Filled.EventBusy" Size="Size.Small" />
             </div>
-            <div class="df-alert-body">
-                <div class="df-alert-item">
-                    <div class="df-alert-item-info">
-                        <h4>Metformin 500mg</h4>
-                        <p>Batch: MET2024-001 | Qty: 120 units</p>
-                    </div>
-                    <span class="df-alert-item-badge critical">15 days</span>
-                </div>
-                <div class="df-alert-item">
-                    <div class="df-alert-item-info">
-                        <h4>Ciprofloxacin 500mg</h4>
-                        <p>Batch: CIP2024-003 | Qty: 80 units</p>
-                    </div>
-                    <span class="df-alert-item-badge warning">22 days</span>
-                </div>
-                <div class="df-alert-item">
-                    <div class="df-alert-item-info">
-                        <h4>Aspirin 75mg</h4>
-                        <p>Batch: ASP2024-002 | Qty: 200 units</p>
-                    </div>
-                    <span class="df-alert-item-badge warning">28 days</span>
-                </div>
-            </div>
-            <div class="df-alert-footer">
-                <a href="/inventory" class="df-alert-link">
-                    View All Expiring Batches
-                    <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
-                </a>
+            <div class="alert-title-group">
+                <h3 class="alert-title">Expiry Alerts</h3>
+                <span class="alert-badge">5 Batches</span>
             </div>
         </div>
-    </MudItem>
-</MudGrid>
+        <div class="alert-items">
+            <!-- Expiry Item 1 -->
+            <div class="alert-item alert-item--critical-item">
+                <h4 class="alert-item-title">Metformin 500mg</h4>
+                <p class="alert-item-meta">Batch: MET2024-001 | Qty: 120 units</p>
+                <span class="alert-item-badge alert-item-badge--critical">15 days</span>
+            </div>
+
+            <!-- Expiry Item 2 -->
+            <div class="alert-item alert-item--warning-item">
+                <h4 class="alert-item-title">Ciprofloxacin 500mg</h4>
+                <p class="alert-item-meta">Batch: CIP2024-003 | Qty: 80 units</p>
+                <span class="alert-item-badge alert-item-badge--warning">22 days</span>
+            </div>
+
+            <!-- Expiry Item 3 -->
+            <div class="alert-item alert-item--warning-item">
+                <h4 class="alert-item-title">Aspirin 75mg</h4>
+                <p class="alert-item-meta">Batch: ASP2024-002 | Qty: 200 units</p>
+                <span class="alert-item-badge alert-item-badge--warning">28 days</span>
+            </div>
+        </div>
+        <a href="/inventory" class="alert-action">
+            View All Expiring Batches
+            <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+        </a>
+    </div>
+</div>
 
 <!-- Sales Chart and Activity Row -->
-<MudGrid>
-    <!-- Sales Chart -->
-    <MudItem xs="12" lg="8">
-        <div class="df-chart-card animate-fade-in-up animate-delay-3">
-            <div class="df-chart-header">
-                <span class="df-chart-title">Sales Trend</span>
-                <div class="df-chart-toggle-group">
-                    <button class="df-chart-toggle @(_chartDays == 7 ? "active" : "")" @onclick="@(() => LoadChartAsync(7))">7D</button>
-                    <button class="df-chart-toggle @(_chartDays == 30 ? "active" : "")" @onclick="@(() => LoadChartAsync(30))">30D</button>
-                    <button class="df-chart-toggle @(_chartDays == 90 ? "active" : "")" @onclick="@(() => LoadChartAsync(90))">90D</button>
-                </div>
-            </div>
-            <div class="df-chart-body">
-                @if (_chartLoading)
-                {
-                    <div class="df-chart-placeholder">
-                        <MudProgressCircular Indeterminate="true" Size="Size.Large" />
-                    </div>
-                }
-                else if (_salesTrend != null && _salesTrend.Labels.Length > 0)
-                {
-                    <MudChart ChartType="ChartType.Line"
-                              ChartSeries="@_chartSeries"
-                              XAxisLabels="@_salesTrend.Labels"
-                              Width="100%" Height="250px"
-                              ChartOptions="@_chartOptions" />
-                }
-                else
-                {
-                    <div class="df-chart-placeholder">
-                        <MudIcon Icon="@Icons.Material.Filled.ShowChart" Class="df-chart-placeholder-icon" />
-                        <span class="df-chart-placeholder-text">No sales data for this period</span>
-                    </div>
-                }
-                <div class="df-chart-stats">
-                    <div class="df-chart-stat">
-                        <div class="df-chart-stat-label">Total (@_chartDays d)</div>
-                        <div class="df-chart-stat-value">SSP @(_salesTrend?.TotalAmount.ToString("N0") ?? "0")</div>
-                    </div>
-                    <div class="df-chart-stat">
-                        <div class="df-chart-stat-label">Daily Average</div>
-                        <div class="df-chart-stat-value">SSP @(_salesTrend?.DailyAverage.ToString("N0") ?? "0")</div>
-                    </div>
-                    <div class="df-chart-stat">
-                        <div class="df-chart-stat-label">Best Day</div>
-                        <div class="df-chart-stat-value">SSP @(_salesTrend?.BestDay.ToString("N0") ?? "0")</div>
-                    </div>
-                </div>
+<div class="content-grid">
+    <!-- Sales Chart (2/3 width) -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3 class="chart-title">Sales Trend</h3>
+            <div class="chart-toggles">
+                <button class="toggle-btn @(_chartDays == 7 ? "toggle-btn--active" : "")" @onclick="@(() => LoadChartAsync(7))">7D</button>
+                <button class="toggle-btn @(_chartDays == 30 ? "toggle-btn--active" : "")" @onclick="@(() => LoadChartAsync(30))">30D</button>
+                <button class="toggle-btn @(_chartDays == 90 ? "toggle-btn--active" : "")" @onclick="@(() => LoadChartAsync(90))">90D</button>
             </div>
         </div>
-    </MudItem>
+        <div class="chart-content">
+            @if (_chartLoading)
+            {
+                <div class="chart-loading">
+                    <MudProgressCircular Size="Size.Medium" Indeterminate="true" Color="Color.Primary" />
+                    <span>Loading chart data...</span>
+                </div>
+            }
+            else if (_salesTrend != null && _salesTrend.Labels.Length > 0)
+            {
+                <MudChart ChartType="ChartType.Line"
+                          ChartSeries="@_chartSeries"
+                          XAxisLabels="@_salesTrend.Labels"
+                          Width="100%" Height="250px"
+                          ChartOptions="@_chartOptions" />
 
-    <!-- Recent Activity -->
-    <MudItem xs="12" lg="4">
-        <div class="df-activity-card animate-fade-in-up animate-delay-4">
-            <div class="df-activity-header">
-                <div class="df-activity-header-icon">
-                    <MudIcon Icon="@Icons.Material.Filled.Timeline" Size="Size.Small" />
-                </div>
-                <span class="df-activity-title">Recent Activity</span>
-            </div>
-            <div class="df-activity-body">
-                <div class="df-timeline">
-                    <div class="df-timeline-item">
-                        <div class="df-timeline-dot success"></div>
-                        <div class="df-timeline-content">
-                            <h4>Sale #1234 completed</h4>
-                            <p>2 minutes ago</p>
-                        </div>
+                <div class="chart-stats">
+                    <div class="chart-stat">
+                        <div class="chart-stat-label">Total (@_chartDays days)</div>
+                        <div class="chart-stat-value">SSP @(_salesTrend?.TotalAmount.ToString("N0") ?? "0")</div>
                     </div>
-                    <div class="df-timeline-item">
-                        <div class="df-timeline-dot info"></div>
-                        <div class="df-timeline-content">
-                            <h4>Stock received from ABC Pharma</h4>
-                            <p>1 hour ago</p>
-                        </div>
+                    <div class="chart-stat">
+                        <div class="chart-stat-label">Daily Average</div>
+                        <div class="chart-stat-value">SSP @(_salesTrend?.DailyAverage.ToString("N0") ?? "0")</div>
                     </div>
-                    <div class="df-timeline-item">
-                        <div class="df-timeline-dot warning"></div>
-                        <div class="df-timeline-content">
-                            <h4>Low stock alert: Paracetamol</h4>
-                            <p>3 hours ago</p>
-                        </div>
-                    </div>
-                    <div class="df-timeline-item">
-                        <div class="df-timeline-dot primary"></div>
-                        <div class="df-timeline-content">
-                            <h4>Supplier request sent to XYZ Ltd</h4>
-                            <p>5 hours ago</p>
-                        </div>
-                    </div>
-                    <div class="df-timeline-item">
-                        <div class="df-timeline-dot success"></div>
-                        <div class="df-timeline-content">
-                            <h4>Inventory count completed</h4>
-                            <p>Yesterday</p>
-                        </div>
+                    <div class="chart-stat">
+                        <div class="chart-stat-label">Best Day</div>
+                        <div class="chart-stat-value">SSP @(_salesTrend?.BestDay.ToString("N0") ?? "0")</div>
                     </div>
                 </div>
-            </div>
-            <div class="df-activity-footer">
-                <a href="/activity" class="df-alert-link">
-                    View All Activity
-                    <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
-                </a>
-            </div>
-        </div>
-    </MudItem>
-</MudGrid>
-
-<!-- Floating Action Button (Mobile) -->
-<div class="df-fab-container d-lg-none @(_fabOpen ? "open" : "")">
-    <div class="df-fab-menu">
-        <div class="df-fab-item">
-            <span class="df-fab-item-label">New Sale</span>
-            <button class="df-fab-item-btn">
-                <MudIcon Icon="@Icons.Material.Filled.PointOfSale" Size="Size.Small" />
-            </button>
-        </div>
-        <div class="df-fab-item">
-            <span class="df-fab-item-label">New Drug</span>
-            <button class="df-fab-item-btn">
-                <MudIcon Icon="@Icons.Material.Filled.Medication" Size="Size.Small" />
-            </button>
-        </div>
-        <div class="df-fab-item">
-            <span class="df-fab-item-label">Receive Stock</span>
-            <button class="df-fab-item-btn">
-                <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Size="Size.Small" />
-            </button>
+            }
+            else
+            {
+                <div class="chart-empty">
+                    <div class="chart-empty-icon">
+                        <MudIcon Icon="@Icons.Material.Filled.ShowChart" Size="Size.Large" />
+                    </div>
+                    <div class="chart-empty-title">No Sales Data</div>
+                    <div class="chart-empty-text">No sales data available for this period</div>
+                </div>
+            }
         </div>
     </div>
-    <button class="df-fab-main" @onclick="ToggleFab">
-        <MudIcon Icon="@(_fabOpen ? Icons.Material.Filled.Close : Icons.Material.Filled.Add)" />
-    </button>
+
+    <!-- Recent Activity (1/3 width) -->
+    <div class="activity-card">
+        <div class="activity-header">
+            <div class="activity-icon">
+                <MudIcon Icon="@Icons.Material.Filled.Timeline" Size="Size.Small" />
+            </div>
+            <h3 class="activity-title">Recent Activity</h3>
+        </div>
+        <div class="activity-timeline">
+            <!-- Timeline Item 1 — recent, pulse dot -->
+            <div class="timeline-item timeline-item--recent">
+                <div class="timeline-marker">
+                    <div class="timeline-dot timeline-dot--success"></div>
+                </div>
+                <div class="timeline-content">
+                    <h4 class="timeline-title">Sale #1234 completed</h4>
+                    <p class="timeline-time">2 minutes ago</p>
+                </div>
+            </div>
+
+            <!-- Timeline Item 2 -->
+            <div class="timeline-item">
+                <div class="timeline-marker">
+                    <div class="timeline-dot timeline-dot--primary"></div>
+                </div>
+                <div class="timeline-content">
+                    <h4 class="timeline-title">Stock received from ABC Pharma</h4>
+                    <p class="timeline-time">1 hour ago</p>
+                </div>
+            </div>
+
+            <!-- Timeline Item 3 -->
+            <div class="timeline-item">
+                <div class="timeline-marker">
+                    <div class="timeline-dot timeline-dot--warning"></div>
+                </div>
+                <div class="timeline-content">
+                    <h4 class="timeline-title">Low stock alert: Paracetamol</h4>
+                    <p class="timeline-time">3 hours ago</p>
+                </div>
+            </div>
+
+            <!-- Timeline Item 4 -->
+            <div class="timeline-item">
+                <div class="timeline-marker">
+                    <div class="timeline-dot timeline-dot--primary"></div>
+                </div>
+                <div class="timeline-content">
+                    <h4 class="timeline-title">Supplier request sent to XYZ Ltd</h4>
+                    <p class="timeline-time">5 hours ago</p>
+                </div>
+            </div>
+
+            <!-- Timeline Item 5 (last — no line) -->
+            <div class="timeline-item timeline-item--last">
+                <div class="timeline-marker">
+                    <div class="timeline-dot timeline-dot--success"></div>
+                </div>
+                <div class="timeline-content">
+                    <h4 class="timeline-title">Inventory count completed</h4>
+                    <p class="timeline-time">Yesterday</p>
+                </div>
+            </div>
+        </div>
+        <a href="/activity" class="activity-action">
+            View All Activity
+            <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+        </a>
+    </div>
 </div>
 
 @code {
@@ -417,7 +374,7 @@
 
     private string GetGreeting()
     {
-        var hour = DateTime.Now.Hour;
+        var hour = DateTime.UtcNow.Hour;
         if (hour < 12)
             return "Good morning";
         if (hour < 17)
@@ -430,3 +387,778 @@
         _fabOpen = !_fabOpen;
     }
 }
+
+<style>
+    /* ═══════════════════════════════════════════════════════════════════════
+       DASHBOARD STYLES — Clinical Precision Aesthetic
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    /* Hero Section */
+    .dash-hero {
+        position: relative;
+        border-radius: 1rem;
+        overflow: hidden;
+        margin-bottom: 2rem;
+        border: 1px solid var(--tw-color-border-light, #F1F5F9);
+        background: linear-gradient(135deg, rgba(12, 133, 153, 0.02) 0%, transparent 100%),
+                    var(--tw-color-surface, #ffffff);
+    }
+
+    .dash-hero-accent {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent 0%, var(--tw-color-primary-500, #0C8599) 40%, var(--tw-color-accent-400, #34D399) 60%, transparent 100%);
+        transform: scaleX(1);
+    }
+
+    .dash-hero-body {
+        position: relative;
+        padding: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .dash-hero-content {
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .dash-hero-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.8125rem;
+        color: var(--tw-color-text-muted, #94A3B8);
+        margin-bottom: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .dash-hero-title {
+        font-family: Georgia, 'Garamond Pro', serif;
+        font-size: 2rem;
+        font-weight: 400;
+        letter-spacing: -0.025em;
+        line-height: 1.2;
+        color: var(--tw-color-text, #1E293B);
+        margin: 0 0 0.5rem;
+    }
+
+    .name-accent {
+        background: linear-gradient(135deg, var(--tw-color-primary-500, #0C8599) 0%, var(--tw-color-accent-400, #34D399) 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 500;
+    }
+
+    .dash-hero-subtitle {
+        font-size: 0.9375rem;
+        color: var(--tw-color-text-secondary, #64748B);
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    .dash-hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1.25rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--tw-color-border, #E2E8F0);
+        background: var(--tw-color-surface, #ffffff);
+        color: var(--tw-color-text, #1E293B);
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .action-btn:hover {
+        border-color: var(--tw-color-primary-300, #5AC0D1);
+        background: var(--tw-color-primary-50, #E6F7F9);
+        color: var(--tw-color-primary-600, #0C8599);
+    }
+
+    .action-btn--primary {
+        border-color: var(--tw-color-primary-500, #0C8599);
+        background: var(--tw-color-primary-500, #0C8599);
+        color: white;
+    }
+
+    .action-btn--primary:hover {
+        background: var(--tw-color-primary-600, #086A8C);
+        border-color: var(--tw-color-primary-600, #086A8C);
+    }
+
+    /* KPI Cards Grid */
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .kpi-card {
+        padding: 1.5rem;
+        border-radius: 0.875rem;
+        border: 1px solid var(--tw-color-border, #E2E8F0);
+        background: var(--tw-color-surface, #ffffff);
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .kpi-card:hover {
+        border-color: var(--tw-color-border-light, #CBD5E1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .kpi-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .kpi-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .kpi-card--primary .kpi-icon {
+        background: var(--tw-color-primary-100, #CFE9F0);
+        color: var(--tw-color-primary-600, #0C8599);
+    }
+
+    .kpi-card--accent .kpi-icon {
+        background: var(--tw-color-accent-100, #CCFBF1);
+        color: var(--tw-color-accent-600, #0D9488);
+    }
+
+    .kpi-card--warning .kpi-icon {
+        background: rgb(251, 191, 36, 0.1);
+        color: #FBBF24;
+    }
+
+    .kpi-card--danger .kpi-icon {
+        background: rgb(239, 68, 68, 0.1);
+        color: #EF4444;
+    }
+
+    .kpi-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+        color: var(--tw-color-text-muted, #94A3B8);
+    }
+
+    .kpi-value {
+        font-family: 'Monaco', 'Courier New', monospace;
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: var(--tw-color-text, #1E293B);
+        letter-spacing: -0.015em;
+        line-height: 1;
+    }
+
+    .kpi-delta {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-size: 0.8125rem;
+        color: var(--tw-color-text-muted, #94A3B8);
+    }
+
+    .kpi-delta--positive {
+        color: #10B981;
+    }
+
+    .kpi-delta--attention {
+        color: #EF4444;
+    }
+
+    .kpi-delta--critical {
+        color: #EF4444;
+    }
+
+    /* Alert Cards */
+    .alert-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .alert-card {
+        padding: 1.5rem;
+        border-radius: 0.875rem;
+        border: 1px solid var(--tw-color-border, #E2E8F0);
+        background: var(--tw-color-surface, #ffffff);
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .alert-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .alert-icon {
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 1rem;
+        position: relative;
+    }
+
+    .alert-icon--warning {
+        background: rgb(251, 191, 36, 0.1);
+        color: #FBBF24;
+    }
+
+    .alert-icon--danger {
+        background: rgb(239, 68, 68, 0.1);
+        color: #EF4444;
+    }
+
+    .alert-icon::after {
+        content: '';
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;
+        background: currentColor;
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    .alert-title-group {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .alert-title {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--tw-color-text, #1E293B);
+    }
+
+    .alert-badge {
+        display: inline-block;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.375rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: var(--tw-color-muted, #F1F5F9);
+        color: var(--tw-color-text-muted, #94A3B8);
+    }
+
+    .alert-items {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .alert-item {
+        padding: 1rem;
+        border-radius: 0.5rem;
+        background: var(--tw-color-muted, #F8FAFC);
+        border-left: 3px solid #E2E8F0;
+        transition: all 0.2s ease;
+    }
+
+    .alert-item:hover {
+        transform: translateX(4px);
+    }
+
+    .alert-item--warning {
+        border-left-color: #FBBF24;
+    }
+
+    .alert-item--critical {
+        border-left-color: #EF4444;
+    }
+
+    .alert-item--critical-item {
+        border-left: 3px solid #EF4444;
+    }
+
+    .alert-item--warning-item {
+        border-left: 3px solid #FBBF24;
+    }
+
+    .alert-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.5rem;
+    }
+
+    .alert-item-title {
+        margin: 0;
+        font-size: 0.9375rem;
+        font-weight: 600;
+        color: var(--tw-color-text, #1E293B);
+    }
+
+    .alert-item-value {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.25rem;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        background: rgba(12, 133, 153, 0.1);
+        color: var(--tw-color-primary-600, #0C8599);
+    }
+
+    .alert-item-meta {
+        margin: 0;
+        font-size: 0.8125rem;
+        color: var(--tw-color-text-muted, #94A3B8);
+    }
+
+    .alert-item-bar {
+        height: 0.5rem;
+        border-radius: 9999px;
+        background: var(--tw-color-border, #E2E8F0);
+        overflow: hidden;
+        margin-top: 0.625rem;
+    }
+
+    .alert-item-fill {
+        height: 100%;
+        border-radius: 9999px;
+        background-color: currentColor;
+        transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .alert-item-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-top: 0.5rem;
+    }
+
+    .alert-item-badge--warning {
+        background: rgb(251, 191, 36, 0.1);
+        color: #FBBF24;
+    }
+
+    .alert-item-badge--critical {
+        background: rgb(239, 68, 68, 0.1);
+        color: #EF4444;
+    }
+
+    .alert-action {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--tw-color-primary-600, #0C8599);
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border-top: 1px solid var(--tw-color-border, #E2E8F0);
+        margin-top: 0.5rem;
+        margin-left: -1.5rem;
+        margin-right: -1.5rem;
+        margin-bottom: -1.5rem;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+
+    .alert-action:hover {
+        background: var(--tw-color-primary-50, #E6F7F9);
+        color: var(--tw-color-primary-700, #0A6B87);
+    }
+
+    /* Chart Section */
+    .content-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    @@media (max-width: 1024px) {
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .chart-card,
+    .activity-card {
+        padding: 1.5rem;
+        border-radius: 0.875rem;
+        border: 1px solid var(--tw-color-border, #E2E8F0);
+        background: var(--tw-color-surface, #ffffff);
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    .chart-header,
+    .activity-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .chart-title,
+    .activity-title {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--tw-color-text, #1E293B);
+    }
+
+    .activity-header {
+        justify-content: flex-start;
+        gap: 0.75rem;
+    }
+
+    .activity-icon {
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(12, 133, 153, 0.1);
+        color: var(--tw-color-primary-600, #0C8599);
+        flex-shrink: 0;
+    }
+
+    .chart-toggles {
+        display: flex;
+        gap: 0.25rem;
+        background: var(--tw-color-muted, #F8FAFC);
+        padding: 0.25rem;
+        border-radius: 0.5rem;
+    }
+
+    .toggle-btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 0.375rem;
+        background: transparent;
+        color: var(--tw-color-text-muted, #94A3B8);
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .toggle-btn:hover {
+        color: var(--tw-color-text-secondary, #64748B);
+    }
+
+    .toggle-btn--active {
+        background: var(--tw-color-surface, #ffffff);
+        color: var(--tw-color-primary-600, #0C8599);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .chart-content {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    .chart-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2.5rem 1rem;
+        gap: 0.75rem;
+        color: var(--tw-color-text-muted, #94A3B8);
+        font-size: 0.875rem;
+    }
+
+    .chart-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--tw-color-border, #E2E8F0);
+    }
+
+    @@media (max-width: 640px) {
+        .chart-stats {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .chart-stat {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .chart-stat-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+        color: var(--tw-color-text-muted, #94A3B8);
+    }
+
+    .chart-stat-value {
+        font-family: 'Monaco', 'Courier New', monospace;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--tw-color-text, #1E293B);
+    }
+
+    .chart-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 1rem;
+        text-align: center;
+        gap: 0.75rem;
+    }
+
+    .chart-empty-icon {
+        width: 3.5rem;
+        height: 3.5rem;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--tw-color-muted, #F8FAFC);
+        color: var(--tw-color-text-muted, #94A3B8);
+        margin-bottom: 0.75rem;
+    }
+
+    .chart-empty-title {
+        font-size: 0.9375rem;
+        font-weight: 600;
+        color: var(--tw-color-text, #1E293B);
+    }
+
+    .chart-empty-text {
+        font-size: 0.8125rem;
+        color: var(--tw-color-text-muted, #94A3B8);
+    }
+
+    /* Activity Timeline */
+    .activity-timeline {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .timeline-item {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem 0;
+        position: relative;
+        transition: all 0.2s ease;
+    }
+
+    .timeline-item:not(.timeline-item--last)::after {
+        content: '';
+        position: absolute;
+        left: 1rem;
+        top: 2.75rem;
+        bottom: -1rem;
+        width: 1px;
+        background: var(--tw-color-border, #E2E8F0);
+    }
+
+    .timeline-item--last::after {
+        display: none;
+    }
+
+    .timeline-marker {
+        width: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 1;
+    }
+
+    .timeline-dot {
+        width: 0.75rem;
+        height: 0.75rem;
+        border-radius: 50%;
+        background: var(--tw-color-border, #E2E8F0);
+    }
+
+    .timeline-dot--success {
+        background: #10B981;
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    .timeline-dot--primary {
+        background: var(--tw-color-primary-500, #0C8599);
+    }
+
+    .timeline-dot--warning {
+        background: #FBBF24;
+    }
+
+    .timeline-content {
+        flex: 1;
+        padding-top: 0.25rem;
+    }
+
+    .timeline-title {
+        margin: 0;
+        font-size: 0.9375rem;
+        font-weight: 600;
+        color: var(--tw-color-text, #1E293B);
+    }
+
+    .timeline-time {
+        margin: 0.25rem 0 0;
+        font-size: 0.8125rem;
+        color: var(--tw-color-text-muted, #94A3B8);
+    }
+
+    .activity-action {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--tw-color-primary-600, #0C8599);
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border-top: 1px solid var(--tw-color-border, #E2E8F0);
+        margin-top: 0.5rem;
+        margin-left: -1.5rem;
+        margin-right: -1.5rem;
+        margin-bottom: -1.5rem;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+
+    .activity-action:hover {
+        background: var(--tw-color-primary-50, #E6F7F9);
+        color: var(--tw-color-primary-700, #0A6B87);
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .dash-hero-body {
+            padding: 1.5rem;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .dash-hero-title {
+            font-size: 1.5rem;
+        }
+        .kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .alert-grid {
+            grid-template-columns: 1fr;
+        }
+        .chart-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+
+    @@media (max-width: 640px) {
+        .kpi-grid {
+            grid-template-columns: 1fr;
+        }
+        .action-btn {
+            font-size: 0.8125rem;
+            padding: 0.5rem 1rem;
+        }
+    }
+
+    /* Dark Mode Support */
+    :global(.dark) .dash-hero {
+        background: linear-gradient(135deg, rgba(20, 184, 166, 0.05) 0%, transparent 100%),
+                    var(--tw-color-surface, #1C1917);
+        border-color: var(--tw-color-border-dark, #2E323B);
+    }
+
+    :global(.dark) .dash-hero-title {
+        color: var(--tw-color-text, #F8FAFC);
+    }
+
+    :global(.dark) .kpi-card,
+    :global(.dark) .alert-card,
+    :global(.dark) .chart-card,
+    :global(.dark) .activity-card {
+        background: var(--tw-color-surface, #1C1917);
+        border-color: var(--tw-color-border-dark, #2E323B);
+    }
+
+    :global(.dark) .action-btn {
+        background: var(--tw-color-surface, #1C1917);
+        border-color: var(--tw-color-border-dark, #2E323B);
+        color: var(--tw-color-text, #F8FAFC);
+    }
+
+    :global(.dark) .toggle-btn,
+    :global(.dark) .chart-stat-value,
+    :global(.dark) .kpi-value {
+        color: var(--tw-color-text, #F8FAFC);
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.5;
+        }
+    }
+</style>

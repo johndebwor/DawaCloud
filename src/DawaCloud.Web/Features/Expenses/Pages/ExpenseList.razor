@@ -1,0 +1,371 @@
+@page "/finance/expenses"
+@using MudBlazor
+@using MediatR
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using DawaCloud.Web.Features.Expenses.Queries
+@using DawaCloud.Web.Features.Expenses.Commands
+@using DawaCloud.Web.Features.Expenses.Components
+@using DawaCloud.Web.Features.Expenses.Services
+@using DawaCloud.Web.Data.Entities
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Web
+@attribute [Authorize(Policy = "RequireFinanceAccess")]
+@inject IMediator Mediator
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JSRuntime
+@inject ExpenseExportService ExpenseExportService
+
+<PageTitle>DawaCloud | Expenses</PageTitle>
+
+<!-- Hero Section -->
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">Expense Management</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Track, approve and manage business expenses</p>
+        </div>
+        <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-3">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Category"
+                       OnClick="ManageCategories" Size="Size.Small">
+                Categories
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download"
+                       OnClick="ExportExpenses" Size="Size.Small" Disabled="@(_expenses.Count == 0)">
+                Export
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="@(() => NavigationManager.NavigateTo("/finance/expenses/new"))" Size="Size.Small">
+                Add Expense
+            </MudButton>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 lg:tw:grid-cols-4 tw:gap-4 tw:mb-6">
+    <div class="dc-kpi animate-fade-in-up animate-delay-1">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-primary-50 tw:text-primary-600">
+                <MudIcon Icon="@Icons.Material.Filled.AccountBalanceWallet" />
+            </div>
+            <div>
+                <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide">Total Expenses</div>
+                <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-0.5 tw:font-display">@_totalAmount.ToString("N0")</div>
+            </div>
+        </div>
+    </div>
+    <div class="dc-kpi animate-fade-in-up animate-delay-2">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-warning-50 tw:text-warning">
+                <MudIcon Icon="@Icons.Material.Filled.HourglassTop" />
+            </div>
+            <div>
+                <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide">Pending Approval</div>
+                <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-0.5 tw:font-display">@_pendingCount</div>
+            </div>
+        </div>
+    </div>
+    <div class="dc-kpi animate-fade-in-up animate-delay-3">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-success-50 tw:text-success">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+            </div>
+            <div>
+                <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide">Approved</div>
+                <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-0.5 tw:font-display">@_approvedAmount.ToString("N0")</div>
+            </div>
+        </div>
+    </div>
+    <div class="dc-kpi animate-fade-in-up animate-delay-4">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-warning-50 tw:text-warning">
+                <MudIcon Icon="@Icons.Material.Filled.Pending" />
+            </div>
+            <div>
+                <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide">Pending Amount</div>
+                <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-0.5 tw:font-display">@_pendingAmount.ToString("N0")</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<MudPaper Elevation="0" Class="pa-4 mb-4 dc-card animate-fade-in-up animate-delay-5">
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="3">
+            <MudDateRangePicker @bind-DateRange="_dateRange" Label="Date Range" Variant="Variant.Outlined"
+                                Dense="true" Clearable="true" @bind-DateRange:after="@(() => LoadExpenses())" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudSelect T="int?" @bind-Value="_selectedCategoryId" Label="Category" Variant="Variant.Outlined"
+                       Dense="true" Clearable="true" @bind-Value:after="OnCategoryFilterChanged">
+                @foreach (var cat in _categories)
+                {
+                    <MudSelectItem T="int?" Value="@cat.Id">@cat.Name</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudSelect T="ExpenseStatus?" @bind-Value="_selectedStatus" Label="Status" Variant="Variant.Outlined"
+                       Dense="true" Clearable="true" @bind-Value:after="OnStatusFilterChanged2">
+                <MudSelectItem T="ExpenseStatus?" Value="@ExpenseStatus.Pending">Pending</MudSelectItem>
+                <MudSelectItem T="ExpenseStatus?" Value="@ExpenseStatus.Approved">Approved</MudSelectItem>
+                <MudSelectItem T="ExpenseStatus?" Value="@ExpenseStatus.Rejected">Rejected</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudTextField @bind-Value="_searchTerm" Label="Search" Variant="Variant.Outlined" Dense="true"
+                          Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
+                          OnKeyUp="OnSearchKeyUp" Clearable="true" OnClearButtonClick="OnSearchCleared" />
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+<!-- Expenses Table -->
+<MudPaper Elevation="0" Class="dc-card tw:p-0 tw:overflow-hidden animate-fade-in-up animate-delay-6">
+    @if (_loading)
+    {
+        <div class="d-flex justify-center pa-8">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        </div>
+    }
+    else if (_expenses.Count == 0)
+    {
+        <div class="d-flex flex-column align-center justify-center pa-8" style="min-height: 200px;">
+            <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Large" Style="color: var(--tw-color-text-secondary); font-size: 4rem;" />
+            <MudText Typo="Typo.h6" Class="mt-4" Style="color: var(--tw-color-text-secondary);">No expenses found</MudText>
+            <MudText Typo="Typo.body2" Style="color: var(--tw-color-text-secondary);">Add your first expense to get started</MudText>
+        </div>
+    }
+    else
+    {
+        <MudTable Items="@_expenses" Hover="true" Striped="false" Dense="true" FixedHeader="true">
+            <HeaderContent>
+                <MudTh>Date</MudTh>
+                <MudTh>Reference</MudTh>
+                <MudTh>Category</MudTh>
+                <MudTh>Description</MudTh>
+                <MudTh>Vendor</MudTh>
+                <MudTh Style="text-align: right;">Amount</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh Style="text-align: center;">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Date.ToString("MMM dd, yyyy")</MudTd>
+                <MudTd>
+                    <MudText Typo="Typo.body2" Style="font-family: monospace; font-weight: 600;">@context.ReferenceNumber</MudText>
+                </MudTd>
+                <MudTd>
+                    <MudChip T="string" Size="Size.Small" Style="@($"background: {context.CategoryColor}20; color: {context.CategoryColor};")">
+                        @context.CategoryName
+                    </MudChip>
+                </MudTd>
+                <MudTd>@context.Description</MudTd>
+                <MudTd>@(context.VendorName ?? "—")</MudTd>
+                <MudTd Style="text-align: right; font-weight: 600;">
+                    @context.Amount.ToString("N2") @(context.CurrencyCode ?? "")
+                </MudTd>
+                <MudTd>
+                    <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">
+                        @context.Status.ToString()
+                    </MudChip>
+                </MudTd>
+                <MudTd Style="text-align: center;">
+                    <MudMenu Icon="@Icons.Material.Filled.MoreVert" Dense="true" Size="Size.Small">
+                        @if (context.Status == ExpenseStatus.Pending)
+                        {
+                            <MudMenuItem Icon="@Icons.Material.Filled.Edit" OnClick="@(() => EditExpense(context.Id))">
+                                Edit
+                            </MudMenuItem>
+                            <MudMenuItem Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success"
+                                         OnClick="@(() => ApproveExpense(context.Id))">
+                                Approve
+                            </MudMenuItem>
+                            <MudMenuItem Icon="@Icons.Material.Filled.Cancel" IconColor="Color.Error"
+                                         OnClick="@(() => RejectExpense(context.Id))">
+                                Reject
+                            </MudMenuItem>
+                        }
+                        <MudMenuItem Icon="@Icons.Material.Filled.Delete" IconColor="Color.Error"
+                                     OnClick="@(() => DeleteExpense(context.Id, context.ReferenceNumber))">
+                            Delete
+                        </MudMenuItem>
+                    </MudMenu>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudPaper>
+
+@code {
+    private bool _loading = true;
+    private List<ExpenseDto> _expenses = new();
+    private List<ExpenseCategoryDto> _categories = new();
+
+    private decimal _totalAmount;
+    private decimal _pendingAmount;
+    private decimal _approvedAmount;
+    private int _pendingCount;
+
+    // Filters
+    private DateRange? _dateRange;
+    private int? _selectedCategoryId;
+    private ExpenseStatus? _selectedStatus;
+    private string? _searchTerm;
+
+    private string _currentUserName = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _currentUserName = authState.User.Identity?.Name ?? "Unknown";
+
+        await LoadCategories();
+        await LoadExpenses();
+    }
+
+    private async Task LoadCategories()
+    {
+        _categories = await Mediator.Send(new GetExpenseCategoriesQuery());
+    }
+
+    private async Task LoadExpenses()
+    {
+        _loading = true;
+        StateHasChanged();
+
+        var result = await Mediator.Send(new GetExpensesQuery(
+            DateFrom: _dateRange?.Start,
+            DateTo: _dateRange?.End,
+            CategoryId: _selectedCategoryId,
+            Status: _selectedStatus,
+            SearchTerm: _searchTerm
+        ));
+
+        _expenses = result.Items;
+        _totalAmount = result.TotalAmount;
+        _pendingAmount = result.PendingAmount;
+        _approvedAmount = result.ApprovedAmount;
+        _pendingCount = result.PendingCount;
+
+        _loading = false;
+        StateHasChanged();
+    }
+
+    private async Task OnFilterChanged(DateRange? range)
+    {
+        _dateRange = range;
+        await LoadExpenses();
+    }
+
+    private async Task OnCategoryFilterChanged()
+    {
+        await LoadExpenses();
+    }
+
+    private async Task OnStatusFilterChanged2()
+    {
+        await LoadExpenses();
+    }
+
+    private async Task OnSearchKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+            await LoadExpenses();
+    }
+
+    private async Task OnSearchCleared()
+    {
+        _searchTerm = null;
+        await LoadExpenses();
+    }
+
+    private void EditExpense(int id)
+    {
+        NavigationManager.NavigateTo($"/finance/expenses/{id}/edit");
+    }
+
+    private async Task ApproveExpense(int id)
+    {
+        var result = await Mediator.Send(new ApproveExpenseCommand(id, true, _currentUserName));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Expense approved", Severity.Success);
+            await LoadExpenses();
+        }
+        else
+        {
+            Snackbar.Add(result.Error ?? "Failed to approve", Severity.Error);
+        }
+    }
+
+    private async Task RejectExpense(int id)
+    {
+        var result = await Mediator.Send(new ApproveExpenseCommand(id, false, _currentUserName));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Expense rejected", Severity.Warning);
+            await LoadExpenses();
+        }
+        else
+        {
+            Snackbar.Add(result.Error ?? "Failed to reject", Severity.Error);
+        }
+    }
+
+    private async Task DeleteExpense(int id, string reference)
+    {
+        var confirm = await DialogService.ShowMessageBox(
+            "Delete Expense",
+            $"Are you sure you want to delete expense {reference}?",
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (confirm == true)
+        {
+            var result = await Mediator.Send(new DeleteExpenseCommand(id));
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Expense deleted", Severity.Success);
+                await LoadExpenses();
+            }
+            else
+            {
+                Snackbar.Add(result.Error ?? "Failed to delete", Severity.Error);
+            }
+        }
+    }
+
+    private async Task ManageCategories()
+    {
+        var dialog = await DialogService.ShowAsync<ExpenseCategoryDialog>("Expense Category",
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await LoadCategories();
+            await LoadExpenses();
+        }
+    }
+
+    private async Task ExportExpenses()
+    {
+        var bytes = ExpenseExportService.ExportToExcel(_expenses);
+        var fileName = $"Expenses_{DateTime.UtcNow:yyyyMMdd}.xlsx";
+        var base64 = Convert.ToBase64String(bytes);
+        await JSRuntime.InvokeVoidAsync("downloadFile", fileName, base64, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    }
+
+    private Color GetStatusColor(ExpenseStatus status) => status switch
+    {
+        ExpenseStatus.Pending => Color.Warning,
+        ExpenseStatus.Approved => Color.Success,
+        ExpenseStatus.Rejected => Color.Error,
+        ExpenseStatus.Voided => Color.Default,
+        _ => Color.Default
+    };
+}

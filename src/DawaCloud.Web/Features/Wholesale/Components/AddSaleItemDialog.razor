@@ -51,7 +51,7 @@
                                             Expires: @batch.ExpiryDate.ToString("dd MMM yyyy") | Available: @batch.CurrentQuantity units
                                         </MudText>
                                     </div>
-                                    @if (batch.ExpiryDate <= DateTime.Now.AddDays(90))
+                                    @if (batch.ExpiryDate <= DateTime.UtcNow.AddDays(90))
                                     {
                                         <MudChip T="string" Size="Size.Small" Color="Color.Warning">Expiring Soon</MudChip>
                                     }
@@ -229,7 +229,7 @@
 
     private Color GetExpiryColor(DateTime expiryDate)
     {
-        var daysToExpiry = (expiryDate - DateTime.Now).Days;
+        var daysToExpiry = (expiryDate - DateTime.UtcNow).Days;
 
         if (daysToExpiry < 0)
             return Color.Error;

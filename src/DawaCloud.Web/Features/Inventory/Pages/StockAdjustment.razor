@@ -1,6 +1,8 @@
 @page "/inventory/adjustments/new"
 @using MudBlazor
 @using DawaCloud.Web.Features.Inventory.Commands
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "RequireInventoryAccess")]
 @using DawaCloud.Web.Features.Inventory.Queries
 @using FV = FluentValidation
 @using MediatR
@@ -12,16 +14,16 @@
 <PageTitle>Stock Adjustment - DawaCloud</PageTitle>
 
 <!-- Hero Section -->
-<div class="df-hero animate-fade-in-up">
-    <div class="df-hero-content">
-        <div class="df-hero-text">
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex tw:items-center tw:flex-1">
             <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
                            OnClick="@(() => Navigation.NavigateTo("/inventory/movements"))"
                            Title="Back to Movements"
                            Class="mr-2" />
             <div>
-                <h1>Stock Adjustment</h1>
-                <p>Add or remove stock with reason tracking</p>
+                <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">Stock Adjustment</h1>
+                <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Add or remove stock with reason tracking</p>
             </div>
         </div>
     </div>
@@ -29,16 +31,15 @@
 
 <MudGrid Class="mt-4">
     <MudItem xs="12" md="8">
-        <div class="df-alert-card animate-fade-in-up animate-delay-1">
-            <div class="df-alert-header">
-                <div class="df-alert-title">
-                    <div class="df-alert-title-icon primary">
-                        <MudIcon Icon="@Icons.Material.Filled.Tune" />
+        <div class="dc-card animate-fade-in-up animate-delay-1">
+            <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                <div class="tw:flex tw:items-center tw:gap-3">
+                    <div class="dc-icon-box tw:bg-primary-50">
+                        <MudIcon Icon="@Icons.Material.Filled.Tune" Style="color: var(--tw-color-primary-600);" />
                     </div>
-                    <span>Adjustment Details</span>
+                    <span class="tw:text-lg tw:font-semibold tw:text-text tw:m-0 tw:font-display">Adjustment Details</span>
                 </div>
             </div>
-            <div class="df-alert-body">
                 <MudForm @ref="_form" @bind-IsValid="@_isValid">
                     <MudGrid>
 
@@ -161,21 +162,19 @@
                         </MudItem>
                     </MudGrid>
                 </MudForm>
-            </div>
         </div>
     </MudItem>
 
     <MudItem xs="12" md="4">
-        <div class="df-alert-card animate-fade-in-up animate-delay-2 mb-4">
-            <div class="df-alert-header">
-                <div class="df-alert-title">
-                    <div class="df-alert-title-icon info">
-                        <MudIcon Icon="@Icons.Material.Filled.Lightbulb" />
+        <div class="dc-card animate-fade-in-up animate-delay-2 mb-4">
+            <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                <div class="tw:flex tw:items-center tw:gap-3">
+                    <div class="dc-icon-box tw:bg-info/10">
+                        <MudIcon Icon="@Icons.Material.Filled.Lightbulb" Style="color: var(--tw-color-info);" />
                     </div>
-                    <span>Guidelines</span>
+                    <span class="tw:text-lg tw:font-semibold tw:text-text tw:m-0 tw:font-display">Guidelines</span>
                 </div>
             </div>
-            <div class="df-alert-body">
                 <MudList T="string" Dense="true">
                     <MudListItem T="string" Icon="@Icons.Material.Filled.Info" IconColor="Color.Info">
                         <MudText Typo="Typo.body2">Select the batch to adjust</MudText>
@@ -193,40 +192,37 @@
                         <MudText Typo="Typo.body2">All adjustments are audited</MudText>
                     </MudListItem>
                 </MudList>
-            </div>
         </div>
 
         @if (_selectedBatch != null)
         {
-            <div class="df-alert-card animate-fade-in-up animate-delay-3">
-                <div class="df-alert-header">
-                    <div class="df-alert-title">
-                        <div class="df-alert-title-icon success">
-                            <MudIcon Icon="@Icons.Material.Filled.Inventory2" />
+            <div class="dc-card animate-fade-in-up animate-delay-3">
+                <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                    <div class="tw:flex tw:items-center tw:gap-3">
+                        <div class="dc-icon-box tw:bg-success/10">
+                            <MudIcon Icon="@Icons.Material.Filled.Inventory2" Style="color: var(--tw-color-success);" />
                         </div>
-                        <span>Batch Information</span>
+                        <span class="tw:text-lg tw:font-semibold tw:text-text tw:m-0 tw:font-display">Batch Information</span>
                     </div>
                 </div>
-                <div class="df-alert-body">
-                    <MudList T="string" Dense="true">
-                        <MudListItem T="string">
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">Drug</MudText>
-                            <MudText Typo="Typo.body2" Class="fw-bold">@_selectedBatch.DrugName</MudText>
-                        </MudListItem>
-                        <MudListItem T="string">
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">Batch Number</MudText>
-                            <MudText Typo="Typo.body2">@_selectedBatch.BatchNumber</MudText>
-                        </MudListItem>
-                        <MudListItem T="string">
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">Current Stock</MudText>
-                            <MudText Typo="Typo.body2">@_selectedBatch.CurrentQuantity units</MudText>
-                        </MudListItem>
-                        <MudListItem T="string">
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">Status</MudText>
-                            <MudChip T="string" Size="Size.Small">@_selectedBatch.Status</MudChip>
-                        </MudListItem>
-                    </MudList>
-                </div>
+                <MudList T="string" Dense="true">
+                    <MudListItem T="string">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Drug</MudText>
+                        <MudText Typo="Typo.body2" Class="fw-bold">@_selectedBatch.DrugName</MudText>
+                    </MudListItem>
+                    <MudListItem T="string">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Batch Number</MudText>
+                        <MudText Typo="Typo.body2">@_selectedBatch.BatchNumber</MudText>
+                    </MudListItem>
+                    <MudListItem T="string">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Current Stock</MudText>
+                        <MudText Typo="Typo.body2">@_selectedBatch.CurrentQuantity units</MudText>
+                    </MudListItem>
+                    <MudListItem T="string">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Status</MudText>
+                        <MudChip T="string" Size="Size.Small">@_selectedBatch.Status</MudChip>
+                    </MudListItem>
+                </MudList>
             </div>
         }
     </MudItem>

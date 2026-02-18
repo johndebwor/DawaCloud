@@ -2,6 +2,8 @@
 @page "/procurement/requests/{Id:int}"
 @using MudBlazor
 @using MediatR
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "RequireInventoryAccess")]
 @using DawaCloud.Web.Data
 @using DawaCloud.Web.Features.Procurement.Commands
 @using DawaCloud.Web.Features.Procurement.Components
@@ -15,21 +17,15 @@
 
 <PageTitle>@(_isViewMode ? "Request Details" : "New Drug Request") - DawaCloud</PageTitle>
 
-<div class="mb-4">
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
     <MudBreadcrumbs Items="_breadcrumbItems" Class="mb-4" />
-
-    <div class="d-flex justify-space-between align-center mb-4">
-        <div>
-            <MudText Typo="Typo.h4" Class="mb-1">@(_isViewMode ? $"Request #{_request.RequestNumber}" : "New Drug Request")</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">
-                @(_isViewMode ? "View request details" : "Create a new procurement request")
-            </MudText>
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">@(_isViewMode ? $"Request #{_request.RequestNumber}" : "New Drug Request")</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">@(_isViewMode ? "View request details" : "Create a new procurement request")</p>
         </div>
-        <div class="d-flex gap-2">
-            <MudButton Variant="Variant.Outlined"
-                       Color="Color.Default"
-                       StartIcon="@Icons.Material.Filled.ArrowBack"
-                       Href="/procurement/requests">
+        <div class="tw:flex tw:gap-2">
+            <MudButton Variant="Variant.Outlined" Color="Color.Default" Href="/procurement/requests" StartIcon="@Icons.Material.Filled.ArrowBack">
                 Back to List
             </MudButton>
             @if (_isViewMode && _request.Status == "PendingApproval")
@@ -49,10 +45,13 @@
             }
         </div>
     </div>
+</div>
+
+<div>
 
     <MudGrid>
         <MudItem xs="12" md="8">
-            <MudPaper Elevation="2" Class="pa-6">
+            <MudPaper Elevation="0" Class="pa-6 dc-card animate-fade-in-up animate-delay-1">
                 @if (_isViewMode)
                 {
                     <!-- View Mode -->
@@ -147,7 +146,7 @@
 
         <MudItem xs="12" md="4">
             <!-- Summary Card -->
-            <MudPaper Elevation="2" Class="pa-4 mb-4">
+            <MudPaper Elevation="0" Class="pa-4 dc-card tw:mb-4 animate-fade-in-up animate-delay-1">
                 <MudText Typo="Typo.h6" Class="mb-3">Summary</MudText>
                 <div class="d-flex flex-column gap-2">
                     <div class="d-flex justify-space-between">
@@ -254,7 +253,7 @@
         {
             Id = Id ?? 0,
             RequestNumber = "REQ-2024-0015",
-            RequestDate = DateTime.Now.AddDays(-2),
+            RequestDate = DateTime.UtcNow.AddDays(-2),
             SupplierName = "ABC Pharmaceuticals Ltd",
             Status = "PendingApproval",
             TotalAmount = 125000
@@ -337,16 +336,50 @@
 
     private async Task ApproveRequest()
     {
-        await Task.Delay(500);
-        Snackbar.Add("Request approved", Severity.Success);
-        Navigation.NavigateTo("/procurement/requests");
+        if (Id == null) return;
+        try
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var request = await db.DrugRequests.FindAsync(Id.Value);
+            if (request != null)
+            {
+                request.Status = Data.Entities.DrugRequestStatus.Approved;
+                request.ApprovedAt = DateTime.UtcNow;
+                request.ApprovedBy = "Admin";
+                await db.SaveChangesAsync();
+                Snackbar.Add("Request approved successfully", Severity.Success);
+                Navigation.NavigateTo("/procurement/requests");
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error approving request: {ex.Message}", Severity.Error);
+        }
     }
 
     private async Task RejectRequest()
     {
-        await Task.Delay(500);
-        Snackbar.Add("Request rejected", Severity.Warning);
-        Navigation.NavigateTo("/procurement/requests");
+        if (Id == null) return;
+        try
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var request = await db.DrugRequests.FindAsync(Id.Value);
+            if (request != null)
+            {
+                request.Status = Data.Entities.DrugRequestStatus.Rejected;
+                request.ApprovedAt = DateTime.UtcNow;
+                request.ApprovedBy = "Admin";
+                await db.SaveChangesAsync();
+                Snackbar.Add("Request rejected", Severity.Warning);
+                Navigation.NavigateTo("/procurement/requests");
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error rejecting request: {ex.Message}", Severity.Error);
+        }
     }
 
     private Color GetStatusColor(string status) => status switch

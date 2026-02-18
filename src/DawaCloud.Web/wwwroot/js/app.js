@@ -1,3 +1,25 @@
+// Theme Manager — Dark/Light mode toggle with localStorage persistence
+window.themeManager = {
+    isDark: function() {
+        return document.documentElement.classList.contains('dark');
+    },
+    setTheme: function(isDark) {
+        // Add transitioning class for smooth theme switch
+        document.documentElement.classList.add('theme-transitioning');
+        document.documentElement.classList.toggle('dark', isDark);
+        localStorage.setItem('dawacloud-theme', isDark ? 'dark' : 'light');
+        // Remove transitioning class after animation completes
+        setTimeout(function() {
+            document.documentElement.classList.remove('theme-transitioning');
+        }, 350);
+    },
+    getPreference: function() {
+        var saved = localStorage.getItem('dawacloud-theme');
+        if (saved) return saved;
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+};
+
 // DawaFlow JavaScript Functions
 
 // Print functionality
@@ -227,6 +249,16 @@ window.downloadFile = function (fileName, base64Content, contentType) {
     } catch (error) {
         console.error('Error downloading file:', error);
         alert('Failed to download file. Please try again.');
+    }
+};
+
+// Scroll to element by ID
+window.scrollToElement = function (elementId) {
+    var element = document.getElementById(elementId);
+    if (element) {
+        setTimeout(function () {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
     }
 };
 

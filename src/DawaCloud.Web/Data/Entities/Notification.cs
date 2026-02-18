@@ -31,6 +31,10 @@ public class NotificationTemplate : BaseAuditableEntity
     public string Subject { get; set; } = string.Empty;
     public string Body { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
+
+    // Localization fields
+    public string Locale { get; set; } = "en-US";
+    public string? VariablePlaceholders { get; set; } // JSON array: ["{{ProductName}}", "{{Quantity}}"]
 }
 
 public enum NotificationType

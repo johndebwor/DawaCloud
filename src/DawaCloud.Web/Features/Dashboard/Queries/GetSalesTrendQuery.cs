@@ -30,12 +30,14 @@ public class GetSalesTrendQueryHandler : IRequestHandler<GetSalesTrendQuery, Sal
         var endDate = DateTime.UtcNow.Date;
 
         var retailByDay = await _context.RetailSales
+            .AsNoTracking()
             .Where(s => s.SaleDate >= startDate && s.SaleDate <= endDate.AddDays(1))
             .GroupBy(s => s.SaleDate.Date)
             .Select(g => new { Date = g.Key, Total = g.Sum(s => s.TotalAmount) })
             .ToDictionaryAsync(x => x.Date, x => x.Total, ct);
 
         var wholesaleByDay = await _context.WholesaleSales
+            .AsNoTracking()
             .Where(s => s.SaleDate >= startDate && s.SaleDate <= endDate.AddDays(1))
             .GroupBy(s => s.SaleDate.Date)
             .Select(g => new { Date = g.Key, Total = g.Sum(s => s.TotalAmount) })

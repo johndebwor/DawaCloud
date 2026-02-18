@@ -1,0 +1,337 @@
+@page "/hr/departments"
+@using MudBlazor
+@using DawaCloud.Web.Features.HR.Queries
+@using DawaCloud.Web.Features.HR.Commands
+@using DawaCloud.Web.Data.Entities
+@using MediatR
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "RequireHrAccess")]
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<PageTitle>DawaCloud | Departments</PageTitle>
+
+<!-- Hero Section -->
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">Departments</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Organize your team structure</p>
+        </div>
+        <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-3">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="ShowAddForm" Size="Size.Small">
+                Add Department
+            </MudButton>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 lg:tw:grid-cols-3 tw:gap-4 tw:mb-6">
+    <div class="dc-kpi animate-fade-in-up animate-delay-1">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-primary-50">
+                <MudIcon Icon="@Icons.Material.Filled.Business" Style="color: var(--tw-color-primary-600);" />
+            </div>
+            <div>
+                <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide">Total Departments</div>
+                <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-0.5 tw:font-display">@_departments.Count</div>
+            </div>
+        </div>
+    </div>
+    <div class="dc-kpi animate-fade-in-up animate-delay-2">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-success-50 tw:text-success">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+            </div>
+            <div>
+                <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide">Active</div>
+                <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-0.5 tw:font-display">@_departments.Count(d => d.IsActive)</div>
+            </div>
+        </div>
+    </div>
+    <div class="dc-kpi animate-fade-in-up animate-delay-3">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-info-50 tw:text-info">
+                <MudIcon Icon="@Icons.Material.Filled.People" />
+            </div>
+            <div>
+                <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide">Total Employees</div>
+                <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-0.5 tw:font-display">@_departments.Sum(d => d.EmployeeCount)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Inline Add/Edit Form -->
+@if (_showForm)
+{
+    <MudPaper Elevation="0" Class="pa-5 mb-4 dc-card animate-fade-in-up">
+        <div class="tw:flex tw:items-center tw:justify-between tw:mb-4">
+            <MudText Typo="Typo.h6" Class="tw:font-bold">
+                @(_editingId.HasValue ? "Edit Department" : "New Department")
+            </MudText>
+            <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="CancelForm" />
+        </div>
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <MudTextField @bind-Value="_formName" Label="Department Name" Variant="Variant.Outlined"
+                              Required="true" Dense="true" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField @bind-Value="_formDescription" Label="Description" Variant="Variant.Outlined"
+                              Dense="true" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudSelect T="int?" @bind-Value="_formHeadEmployeeId" Label="Head Employee" Variant="Variant.Outlined"
+                           Dense="true" Clearable="true">
+                    @foreach (var emp in _employees)
+                    {
+                        <MudSelectItem T="int?" Value="@emp.Id">@emp.FirstName @emp.LastName</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudSwitch @bind-Value="_formIsActive" Label="Active" Color="Color.Primary" Class="tw:mt-2" />
+            </MudItem>
+            <MudItem xs="12">
+                <div class="tw:flex tw:gap-3 tw:justify-end">
+                    <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="CancelForm" Size="Size.Small">
+                        Cancel
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveDepartment"
+                               Disabled="@(string.IsNullOrWhiteSpace(_formName))" Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.Save">
+                        @(_editingId.HasValue ? "Update" : "Create")
+                    </MudButton>
+                </div>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+}
+
+<!-- Departments Table -->
+<MudPaper Elevation="0" Class="dc-card tw:p-0 tw:overflow-hidden animate-fade-in-up animate-delay-4">
+    @if (_loading)
+    {
+        <div class="d-flex justify-center pa-8">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        </div>
+    }
+    else if (_departments.Count == 0)
+    {
+        <div class="d-flex flex-column align-center justify-center pa-8" style="min-height: 200px;">
+            <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" Style="color: var(--tw-color-text-secondary); font-size: 4rem;" />
+            <MudText Typo="Typo.h6" Class="mt-4" Style="color: var(--tw-color-text-secondary);">No departments found</MudText>
+            <MudText Typo="Typo.body2" Style="color: var(--tw-color-text-secondary);">Create your first department to organize your team</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="ShowAddForm">
+                Add Department
+            </MudButton>
+        </div>
+    }
+    else
+    {
+        <div class="pa-4">
+            <MudTextField @bind-Value="_searchTerm" Label="Search departments" Variant="Variant.Outlined"
+                          Dense="true" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
+                          DebounceInterval="300" OnDebounceIntervalElapsed="OnSearchChanged"
+                          Clearable="true" OnClearButtonClick="OnSearchCleared" />
+        </div>
+        <MudTable Items="@_filteredDepartments" Hover="true" Striped="false" Dense="true" FixedHeader="true">
+            <HeaderContent>
+                <MudTh>Name</MudTh>
+                <MudTh>Description</MudTh>
+                <MudTh>Head Employee</MudTh>
+                <MudTh Style="text-align: center;">Employees</MudTh>
+                <MudTh Style="text-align: center;">Status</MudTh>
+                <MudTh Style="text-align: center;">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>
+                    <MudText Typo="Typo.body2" Class="tw:font-semibold">@context.Name</MudText>
+                </MudTd>
+                <MudTd>
+                    <MudText Typo="Typo.body2" Class="tw:text-text-secondary">@(context.Description ?? "—")</MudText>
+                </MudTd>
+                <MudTd>
+                    @if (!string.IsNullOrEmpty(context.HeadEmployeeName))
+                    {
+                        <div class="tw:flex tw:items-center tw:gap-2">
+                            <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" Class="tw:text-text-secondary" />
+                            <MudText Typo="Typo.body2">@context.HeadEmployeeName</MudText>
+                        </div>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Class="tw:text-text-secondary">—</MudText>
+                    }
+                </MudTd>
+                <MudTd Style="text-align: center;">
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">
+                        @context.EmployeeCount
+                    </MudChip>
+                </MudTd>
+                <MudTd Style="text-align: center;">
+                    <MudChip T="string" Size="Size.Small"
+                             Color="@(context.IsActive ? Color.Success : Color.Default)">
+                        @(context.IsActive ? "Active" : "Inactive")
+                    </MudChip>
+                </MudTd>
+                <MudTd Style="text-align: center;">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                   OnClick="@(() => ShowEditForm(context))" Title="Edit" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                   OnClick="@(() => DeleteDepartment(context.Id, context.Name))" Title="Delete" />
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudPaper>
+
+@code {
+    private bool _loading = true;
+    private List<DepartmentDto> _departments = new();
+    private List<EmployeeDto> _employees = new();
+    private string? _searchTerm;
+
+    // Form state
+    private bool _showForm;
+    private int? _editingId;
+    private string _formName = string.Empty;
+    private string? _formDescription;
+    private int? _formHeadEmployeeId;
+    private bool _formIsActive = true;
+
+    private IEnumerable<DepartmentDto> _filteredDepartments => string.IsNullOrWhiteSpace(_searchTerm)
+        ? _departments
+        : _departments.Where(d =>
+            d.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            (d.Description != null && d.Description.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+            (d.HeadEmployeeName != null && d.HeadEmployeeName.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase)));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEmployees();
+        await LoadDepartments();
+    }
+
+    private async Task LoadDepartments()
+    {
+        _loading = true;
+        _departments = await Mediator.Send(new GetDepartmentsQuery());
+        _loading = false;
+    }
+
+    private async Task LoadEmployees()
+    {
+        _employees = await Mediator.Send(new GetEmployeesQuery(Status: EmploymentStatus.Active));
+    }
+
+    private void ShowAddForm()
+    {
+        _editingId = null;
+        _formName = string.Empty;
+        _formDescription = null;
+        _formHeadEmployeeId = null;
+        _formIsActive = true;
+        _showForm = true;
+    }
+
+    private void ShowEditForm(DepartmentDto department)
+    {
+        _editingId = department.Id;
+        _formName = department.Name;
+        _formDescription = department.Description;
+        _formHeadEmployeeId = null;
+        _formIsActive = department.IsActive;
+        _showForm = true;
+    }
+
+    private void CancelForm()
+    {
+        _showForm = false;
+        _editingId = null;
+    }
+
+    private async Task SaveDepartment()
+    {
+        if (string.IsNullOrWhiteSpace(_formName))
+            return;
+
+        if (_editingId.HasValue)
+        {
+            var result = await Mediator.Send(new UpdateDepartmentCommand(
+                Id: _editingId.Value,
+                Name: _formName.Trim(),
+                Description: _formDescription?.Trim(),
+                HeadEmployeeId: _formHeadEmployeeId,
+                IsActive: _formIsActive));
+
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Department updated successfully", Severity.Success);
+                _showForm = false;
+                _editingId = null;
+                await LoadDepartments();
+            }
+            else
+            {
+                Snackbar.Add(result.Error ?? "Failed to update department", Severity.Error);
+            }
+        }
+        else
+        {
+            var result = await Mediator.Send(new CreateDepartmentCommand(
+                Name: _formName.Trim(),
+                Description: _formDescription?.Trim(),
+                HeadEmployeeId: _formHeadEmployeeId));
+
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Department created successfully", Severity.Success);
+                _showForm = false;
+                await LoadDepartments();
+            }
+            else
+            {
+                Snackbar.Add(result.Error ?? "Failed to create department", Severity.Error);
+            }
+        }
+    }
+
+    private async Task DeleteDepartment(int id, string name)
+    {
+        var confirm = await DialogService.ShowMessageBox(
+            "Delete Department",
+            $"Are you sure you want to delete \"{name}\"? This action cannot be undone.",
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (confirm == true)
+        {
+            var result = await Mediator.Send(new DeleteDepartmentCommand(id));
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Department deleted successfully", Severity.Success);
+                await LoadDepartments();
+            }
+            else
+            {
+                Snackbar.Add(result.Error ?? "Failed to delete department", Severity.Error);
+            }
+        }
+    }
+
+    private void OnSearchChanged(string? value)
+    {
+        _searchTerm = value;
+        StateHasChanged();
+    }
+
+    private void OnSearchCleared()
+    {
+        _searchTerm = null;
+        StateHasChanged();
+    }
+}

@@ -5,9 +5,12 @@
 @using DawaCloud.Web.Infrastructure.Identity
 @using Microsoft.AspNetCore.Localization
 @using DawaCloud.Web.Components.Shared
+@using DawaCloud.Web.Shared.Extensions
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IHttpContextAccessor HttpContextAccessor
+@inject DawaCloud.Web.Services.ThemeService ThemeService
+@implements IDisposable
 
 @{
     var culture = HttpContextAccessor.HttpContext?.Features
@@ -16,134 +19,138 @@
     var direction = isRtl ? "rtl" : "ltr";
 }
 
+<MudThemeProvider Theme="@_theme" IsDarkMode="@_isDarkMode" />
+
 <div dir="@direction" class="@(isRtl ? "rtl-layout" : "")">
-<MudLayout Class="df-layout">
-    <!-- Enhanced App Bar -->
-    <MudAppBar Elevation="0" Dense="false" Class="df-appbar">
-        <!-- Logo Section -->
-        <div class="df-logo" @onclick="NavigateHome">
-            <div class="df-logo-icon">
-                <img src="images/logo-icon.svg" alt="DawaCloud" style="width:24px;height:24px;" />
+<MudLayout>
+    <!-- AppBar -->
+    <MudAppBar Elevation="0" Dense="false" Class="medical-appbar">
+        <div class="medical-appbar-accent"></div>
+        <div class="medical-appbar-content">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                           Color="Color.Inherit"
+                           Edge="Edge.Start"
+                           Class="medical-menu-btn"
+                           OnClick="@(() => _drawerOpen = !_drawerOpen)" />
+
+            <!-- Logo -->
+            <div class="medical-logo" @onclick="NavigateHome">
+                <div class="medical-logo-mark">
+                    <svg viewBox="0 0 32 32" fill="none" class="medical-logo-icon">
+                        <rect x="12" y="2" width="8" height="28" rx="3" fill="url(#medicalCross)"/>
+                        <rect x="2" y="12" width="28" height="8" rx="3" fill="url(#medicalCross)"/>
+                        <defs>
+                            <linearGradient id="medicalCross" x1="0" y1="0" x2="32" y2="32">
+                                <stop offset="0%" stop-color="#0C8599"/>
+                                <stop offset="100%" stop-color="#10B981"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div class="medical-logo-label">
+                    <span class="medical-logo-text">DawaCloud</span>
+                    <span class="medical-logo-tag">Pharmacy</span>
+                </div>
             </div>
-            <span class="df-logo-text">DawaCloud</span>
-        </div>
 
-        <MudSpacer />
+            <div class="medical-spacer"></div>
 
-        <!-- Enhanced Search Field -->
-        <div class="df-search-container d-none d-md-flex" @onclick="@(() => { _commandSearch = string.Empty; _showCommandPalette = true; })" style="cursor: pointer;">
-            <MudIcon Icon="@Icons.Material.Filled.Search" Class="df-search-icon" Size="Size.Small" />
-            <span class="df-search-field" style="line-height: 1.5; color: var(--df-text-tertiary);">Search drugs, actions, reports...</span>
-            <div class="df-search-shortcut">
-                <span>Ctrl</span>
-                <span>K</span>
+            <!-- Search trigger -->
+            <div class="medical-search"
+                 @onclick="@(() => { _commandSearch = string.Empty; _showCommandPalette = true; })">
+                <div class="medical-search-icon">
+                    <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
+                </div>
+                <span>Search commands, drugs...</span>
+                <kbd class="medical-search-kbd">Ctrl+K</kbd>
             </div>
-        </div>
 
-        <MudSpacer />
+            <!-- Mobile search icon -->
+            <MudIconButton Icon="@Icons.Material.Filled.Search"
+                           Color="Color.Inherit"
+                           Class="medical-mobile-search"
+                           OnClick="@(() => { _commandSearch = string.Empty; _showCommandPalette = true; })" />
 
-        <!-- Mobile Search Icon -->
-        <MudIconButton Icon="@Icons.Material.Filled.Search"
-                       Color="Color.Default"
-                       Class="d-md-none" />
+            <div class="medical-toolbar-divider"></div>
 
-        <!-- Notification Button -->
-        <div class="df-notification-btn" @onclick="ToggleNotifications">
-            <MudIcon Icon="@Icons.Material.Filled.Notifications" Size="Size.Small" />
-            @if (_notificationCount > 0)
-            {
-                <span class="df-notification-badge">@(_notificationCount > 9 ? "9+" : _notificationCount.ToString())</span>
-            }
-        </div>
+            <!-- Dark Mode Toggle -->
+            <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
+                           Color="Color.Inherit"
+                           Class="medical-toolbar-btn"
+                           OnClick="ToggleTheme"
+                           Title="@(_isDarkMode ? "Switch to light mode" : "Switch to dark mode")" />
 
-        <!-- User Menu -->
-        <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
-            <ActivatorContent>
-                <div class="df-user-menu">
-                    <div class="df-user-avatar">
-                        @_userInitials
+            <!-- Notifications -->
+            <MudIconButton Icon="@Icons.Material.Filled.NotificationsNone"
+                           Color="Color.Inherit"
+                           Class="medical-toolbar-btn"
+                           OnClick="ToggleNotifications">
+                @if (_notificationCount > 0)
+                {
+                    <MudBadge Content="@_notificationCount" Color="Color.Error" Overlap="true" />
+                }
+            </MudIconButton>
+
+            <!-- User Menu -->
+            <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+                <ActivatorContent>
+                    <div class="medical-user-chip">
+                        <div class="medical-user-avatar">
+                            @_userInitials
+                        </div>
+                        <div class="medical-user-chip-info">
+                            <span class="medical-user-chip-name">@_userName</span>
+                            <span class="medical-user-chip-role">@_userRole</span>
+                        </div>
+                        <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" Style="color: var(--tw-color-text-muted); margin-left: 2px;" />
                     </div>
-                    <div class="df-user-info d-none d-lg-block">
-                        <div class="df-user-name">@_userName</div>
-                        <div class="df-user-role">@_userRole</div>
+                </ActivatorContent>
+                <ChildContent>
+                    <MudMenuItem Disabled="true">
+                        <div class="medical-user-info">
+                            <div class="medical-user-name">@_userName</div>
+                            <div class="medical-user-email">@_userEmail</div>
+                        </div>
+                    </MudMenuItem>
+                    <MudDivider />
+                    <MudMenuItem Icon="@Icons.Material.Filled.Person" OnClick="NavigateToProfile">
+                        My Profile
+                    </MudMenuItem>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Settings" OnClick="NavigateToSettings">
+                        Settings
+                    </MudMenuItem>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Help" OnClick="NavigateToHelp">
+                        Help & Support
+                    </MudMenuItem>
+                    <MudDivider />
+                    <div style="padding: 8px 12px;">
+                        <LanguageSelector />
                     </div>
-                    <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown"
-                             Size="Size.Small"
-                             Class="d-none d-lg-block"
-                             Style="color: var(--df-text-tertiary);" />
-                </div>
-            </ActivatorContent>
-            <ChildContent>
-                <div style="padding: 16px; background: var(--df-gradient-primary); color: white; min-width: 200px;">
-                    <div style="font-weight: 600;">@_userName</div>
-                    <div style="font-size: 0.8rem; opacity: 0.85;">@_userEmail</div>
-                </div>
-                <MudDivider />
-                <MudMenuItem Icon="@Icons.Material.Filled.Person" IconColor="Color.Default" OnClick="NavigateToProfile">
-                    My Profile
-                </MudMenuItem>
-                <MudMenuItem Icon="@Icons.Material.Filled.Settings" IconColor="Color.Default" OnClick="NavigateToSettings">
-                    Settings
-                </MudMenuItem>
-                <MudMenuItem Icon="@Icons.Material.Filled.Help" IconColor="Color.Default" OnClick="NavigateToHelp">
-                    Help & Support
-                </MudMenuItem>
-                <MudDivider />
-                <div style="padding: 12px 16px;">
-                    <LanguageSelector />
-                </div>
-                <MudDivider />
-                <MudMenuItem Icon="@Icons.Material.Filled.Logout" IconColor="Color.Error" OnClick="HandleSignOut">
-                    Sign Out
-                </MudMenuItem>
-            </ChildContent>
-        </MudMenu>
+                    <MudDivider />
+                    <MudMenuItem Icon="@Icons.Material.Filled.Logout" IconColor="Color.Error" OnClick="HandleSignOut">
+                        Sign Out
+                    </MudMenuItem>
+                </ChildContent>
+            </MudMenu>
+        </div>
     </MudAppBar>
 
-    <!-- Enhanced Navigation Drawer -->
-    <MudDrawer Open="@(_drawerOpen || _drawerHovered)"
-               OpenChanged="@(val => { if (!_drawerHovered) _drawerOpen = val; })"
+    <!-- Navigation Drawer -->
+    <MudDrawer @bind-Open="_drawerOpen"
                Elevation="0"
-               Variant="@DrawerVariant.Mini"
                ClipMode="DrawerClipMode.Always"
                Width="260px"
-               MiniWidth="80px"
-               Class="df-drawer"
-               @onmouseenter="OnDrawerMouseEnter"
-               @onmouseleave="OnDrawerMouseLeave">
-        <div class="d-flex flex-column" style="height: 100%;">
-            <!-- Drawer Header -->
-            <div class="df-drawer-header">
-                @if (NavExpanded)
-                {
-                    <span style="font-weight: 600; color: var(--df-text-primary);">Navigation</span>
-                }
-                <MudIconButton Icon="@(NavExpanded ? Icons.Material.Filled.ChevronLeft : Icons.Material.Filled.Menu)"
-                               Color="Color.Default"
-                               OnClick="ToggleDrawer"
-                               Size="Size.Small"
-                               Style="margin-left: auto;" />
-            </div>
-
+               Class="medical-drawer">
+        <div class="medical-drawer-content">
             <!-- Navigation Menu -->
-            <div class="df-nav-section" style="flex: 1; overflow-y: auto;">
+            <MudNavMenu Class="medical-nav-menu">
                 <!-- Dashboard -->
-                <MudNavMenu>
-                    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard" Class="df-nav-primary">
-                        Dashboard
-                    </MudNavLink>
-                </MudNavMenu>
+                <MudNavLink Href="/dashboard" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">
+                    Dashboard
+                </MudNavLink>
 
                 <!-- Pharmacy -->
-                @if (NavExpanded)
-                {
-                    <div class="df-nav-section-title">
-                        <MudIcon Icon="@Icons.Material.Filled.LocalPharmacy" Size="Size.Small" Style="margin-right: 8px;" />
-                        Pharmacy
-                    </div>
-                }
-
-                <MudNavMenu>
+                <MudNavGroup Title="Pharmacy" Icon="@Icons.Material.Filled.LocalPharmacy" Expanded="true">
                     <MudNavLink Href="/drugs" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Medication">
                         Drugs
                     </MudNavLink>
@@ -153,61 +160,37 @@
                     <MudNavLink Href="/batches" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.QrCode2">
                         Batches
                     </MudNavLink>
-                </MudNavMenu>
+                </MudNavGroup>
 
                 <!-- Inventory -->
-                @if (NavExpanded)
-                {
-                    <div class="df-nav-section-title">
-                        <MudIcon Icon="@Icons.Material.Filled.Warehouse" Size="Size.Small" Style="margin-right: 8px;" />
-                        Inventory
-                    </div>
-                }
-
-                <MudNavMenu>
-                    <MudNavLink Href="/inventory/stock-levels" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Inventory2">
+                <MudNavGroup Title="Inventory" Icon="@Icons.Material.Filled.Warehouse">
+                    <MudNavLink Href="/inventory/stock-levels" Icon="@Icons.Material.Filled.Inventory2">
                         Stock Levels
                     </MudNavLink>
-                    <MudNavLink Href="/inventory/movements" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.LocalShipping">
-                        Stock Movements
+                    <MudNavLink Href="/inventory/movements" Icon="@Icons.Material.Filled.LocalShipping">
+                        Movements
                     </MudNavLink>
-                    <MudNavLink Href="/inventory/stock-counts" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Checklist">
+                    <MudNavLink Href="/inventory/stock-counts" Icon="@Icons.Material.Filled.Checklist">
                         Stock Counts
                     </MudNavLink>
-                    <MudNavLink Href="/inventory/adjustments/new" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Tune">
+                    <MudNavLink Href="/inventory/adjustments/new" Icon="@Icons.Material.Filled.Tune">
                         Adjustments
                     </MudNavLink>
-                </MudNavMenu>
+                </MudNavGroup>
 
                 <!-- Procurement -->
-                @if (NavExpanded)
-                {
-                    <div class="df-nav-section-title">
-                        <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Size="Size.Small" Style="margin-right: 8px;" />
-                        Procurement
-                    </div>
-                }
-
-                <MudNavMenu>
+                <MudNavGroup Title="Procurement" Icon="@Icons.Material.Filled.ShoppingCart">
                     <MudNavLink Href="/suppliers" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Store">
                         Suppliers
                     </MudNavLink>
                     <MudNavLink Href="/procurement/requests" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.RequestQuote">
                         Purchase Orders
                     </MudNavLink>
-                </MudNavMenu>
+                </MudNavGroup>
 
                 <!-- Sales -->
-                @if (NavExpanded)
-                {
-                    <div class="df-nav-section-title">
-                        <MudIcon Icon="@Icons.Material.Filled.Storefront" Size="Size.Small" Style="margin-right: 8px;" />
-                        Sales
-                    </div>
-                }
-
-                <MudNavMenu>
-                    <MudNavLink Href="/pos" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PointOfSale" Class="df-nav-accent">
+                <MudNavGroup Title="Sales" Icon="@Icons.Material.Filled.Storefront">
+                    <MudNavLink Href="/pos" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PointOfSale">
                         Point of Sale
                     </MudNavLink>
                     <MudNavLink Href="/wholesale/customers" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Business">
@@ -216,36 +199,20 @@
                     <MudNavLink Href="/wholesale/sales" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Receipt">
                         Wholesale Sales
                     </MudNavLink>
-                </MudNavMenu>
+                </MudNavGroup>
 
                 <!-- Finance -->
-                @if (NavExpanded)
-                {
-                    <div class="df-nav-section-title">
-                        <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Size="Size.Small" Style="margin-right: 8px;" />
-                        Finance
-                    </div>
-                }
-
-                <MudNavMenu>
+                <MudNavGroup Title="Finance" Icon="@Icons.Material.Filled.AccountBalance">
                     <MudNavLink Href="/finance/expenses" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.CreditCard">
                         Expenses
                     </MudNavLink>
                     <MudNavLink Href="/finance/bank-accounts" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AccountBalanceWallet">
                         Bank Accounts
                     </MudNavLink>
-                </MudNavMenu>
+                </MudNavGroup>
 
-                <!-- Analytics & Reports -->
-                @if (NavExpanded)
-                {
-                    <div class="df-nav-section-title">
-                        <MudIcon Icon="@Icons.Material.Filled.Insights" Size="Size.Small" Style="margin-right: 8px;" />
-                        Analytics & Reports
-                    </div>
-                }
-
-                <MudNavMenu>
+                <!-- Analytics -->
+                <MudNavGroup Title="Analytics & Reports" Icon="@Icons.Material.Filled.Insights">
                     <MudNavLink Href="/reports" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assessment">
                         Reports
                     </MudNavLink>
@@ -255,91 +222,79 @@
                     <MudNavLink Href="/audit" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.History">
                         Audit Logs
                     </MudNavLink>
-                </MudNavMenu>
+                </MudNavGroup>
 
                 <!-- AI & Tools -->
-                @if (NavExpanded)
-                {
-                    <div class="df-nav-section-title">
-                        <MudIcon Icon="@Icons.Material.Filled.AutoAwesome" Size="Size.Small" Style="margin-right: 8px;" />
-                        AI & Tools
-                    </div>
-                }
-
-                <MudNavMenu>
-                    <MudNavLink Href="/chat" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.SmartToy" Class="df-nav-ai">
+                <MudNavGroup Title="AI & Tools" Icon="@Icons.Material.Filled.AutoAwesome">
+                    <MudNavLink Href="/chat" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.SmartToy">
                         AI Assistant
                     </MudNavLink>
-                </MudNavMenu>
+                </MudNavGroup>
+
+                <!-- HR -->
+                <MudNavGroup Title="HR" Icon="@Icons.Material.Filled.Badge">
+                    <MudNavLink Href="/hr/employees" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PersonSearch">
+                        Employees
+                    </MudNavLink>
+                    <MudNavLink Href="/hr/departments" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Business">
+                        Departments
+                    </MudNavLink>
+                    <MudNavLink Href="/hr/attendance" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AccessTime">
+                        Attendance
+                    </MudNavLink>
+                    <MudNavLink Href="/hr/leave" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.EventBusy">
+                        Leave Requests
+                    </MudNavLink>
+                </MudNavGroup>
 
                 <!-- System -->
-                @if (NavExpanded)
-                {
-                    <div class="df-nav-section-title">
-                        <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" Style="margin-right: 8px;" />
-                        System
-                    </div>
-                }
-
-                <MudNavMenu>
+                <MudNavGroup Title="System" Icon="@Icons.Material.Filled.Settings">
                     <MudNavLink Href="/users" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.People">
                         Users
                     </MudNavLink>
                     <MudNavLink Href="/settings" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.SettingsApplications">
                         Settings
                     </MudNavLink>
-                </MudNavMenu>
-            </div>
-
-            <!-- Drawer Footer -->
-            @if (NavExpanded)
-            {
-                <div class="df-drawer-footer">
-                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--df-surface-variant); border-radius: var(--df-border-radius); margin-bottom: 12px; cursor: pointer;"
-                         @onclick="NavigateToHelp">
-                        <MudIcon Icon="@Icons.Material.Filled.Help" Size="Size.Small" Style="color: var(--df-primary-500);" />
-                        <div>
-                            <div style="font-size: 0.8125rem; font-weight: 600; color: var(--df-text-primary);">Need Help?</div>
-                            <div style="font-size: 0.75rem; color: var(--df-text-tertiary);">Check our documentation</div>
-                        </div>
-                    </div>
-                    <div class="df-version">DawaCloud v1.0.0</div>
-                </div>
-            }
+                </MudNavGroup>
+            </MudNavMenu>
         </div>
     </MudDrawer>
 
     <!-- Main Content -->
-    <MudMainContent Class="df-main-content">
-        <div class="df-content-wrapper">
+    <MudMainContent Class="medical-main-content">
+        <div class="medical-content-wrapper">
             @Body
         </div>
     </MudMainContent>
 
-    <!-- Notification Drawer (right slide-out) -->
+    <!-- Notification Drawer -->
     <MudDrawer @bind-Open="_showNotifications"
                Anchor="Anchor.Right"
-               Elevation="4"
-               Width="360px"
-               Class="df-notification-drawer">
-        <div style="padding: 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--df-border);">
-            <MudText Typo="Typo.h6">Notifications</MudText>
-            <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="@(() => _showNotifications = false)" />
+               Elevation="0"
+               Width="340px"
+               Class="medical-notification-drawer">
+        <div class="medical-notification-header">
+            <div class="medical-notification-title">Notifications</div>
         </div>
-        <div style="padding: 8px; overflow-y: auto; flex: 1;">
-            @foreach (var notif in _notifications)
+        <div class="medical-notification-list">
+            @if (_notifications.Any())
             {
-                <div style="padding: 12px; border-radius: 8px; margin: 4px 0; background: @(notif.IsRead ? "transparent" : "var(--df-primary-50)"); border-left: 3px solid @notif.Color;">
-                    <div style="font-size: 0.875rem; font-weight: 600;">@notif.Title</div>
-                    <div style="font-size: 0.8rem; color: var(--df-text-secondary);">@notif.Message</div>
-                    <div style="font-size: 0.75rem; color: var(--df-text-tertiary); margin-top: 4px;">@notif.Time</div>
-                </div>
+                @foreach (var notif in _notifications)
+                {
+                    <div class="medical-notification-item">
+                        <div class="medical-notification-item-title">@notif.Title</div>
+                        <div class="medical-notification-item-message">@notif.Message</div>
+                        <div class="medical-notification-item-time">@notif.Time</div>
+                    </div>
+                }
             }
-            @if (!_notifications.Any())
+            else
             {
-                <div class="text-center pa-8">
-                    <MudIcon Icon="@Icons.Material.Filled.NotificationsNone" Size="Size.Large" Color="Color.Secondary" />
-                    <MudText Color="Color.Secondary" Class="mt-2">No notifications</MudText>
+                <div class="medical-notification-empty">
+                    <div class="medical-notification-empty-icon">
+                        <MudIcon Icon="@Icons.Material.Filled.NotificationsNone" Size="Size.Large" Color="Color.Default" />
+                    </div>
+                    <div class="medical-notification-empty-text">No new notifications</div>
                 </div>
             }
         </div>
@@ -347,19 +302,15 @@
 </MudLayout>
 </div>
 
-<!-- RTL Layout Styles -->
+<!-- RTL Support -->
 <style>
-    .rtl-layout .mud-drawer-left { right: 0; left: auto; }
-    .rtl-layout .mud-drawer-right { left: 0; right: auto; }
-    .rtl-layout .mud-table { direction: rtl; }
-    .rtl-layout .df-logo { flex-direction: row-reverse; }
-    .rtl-layout .df-search-container { flex-direction: row-reverse; }
+    .rtl-layout .mud-drawer { right: 0; left: auto; }
 </style>
 
-<!-- Command Palette Dialog -->
-<MudDialog @bind-Visible="_showCommandPalette" Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, NoHeader = true })">
+<!-- Command Palette -->
+<MudDialog @bind-Visible="_showCommandPalette" Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, NoHeader = true, CloseButton = false })" Class="medical-command-palette">
     <DialogContent>
-        <div class="pa-2">
+        <div class="medical-command-search">
             <MudTextField @bind-Value="_commandSearch"
                           Placeholder="Search commands, drugs, reports..."
                           Adornment="Adornment.Start"
@@ -370,7 +321,7 @@
                           AutoFocus="true" />
         </div>
         <MudDivider />
-        <div style="max-height: 400px; overflow-y: auto;">
+        <div class="medical-command-results">
             @if (string.IsNullOrWhiteSpace(_commandSearch))
             {
                 <MudList T="string" Dense="true">
@@ -380,7 +331,7 @@
                     <MudListItem T="string" Icon="@Icons.Material.Filled.LocalShipping" OnClick="@(() => NavigateCommand("/procurement/goods-receipts/new"))">Receive Stock</MudListItem>
                     <MudListItem T="string" Icon="@Icons.Material.Filled.Description" OnClick="@(() => NavigateCommand("/reports"))">Generate Report</MudListItem>
                     <MudListSubheader>Navigation</MudListSubheader>
-                    <MudListItem T="string" Icon="@Icons.Material.Filled.Dashboard" OnClick="@(() => NavigateCommand("/"))">Dashboard</MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Dashboard" OnClick="@(() => NavigateCommand("/dashboard"))">Dashboard</MudListItem>
                     <MudListItem T="string" Icon="@Icons.Material.Filled.Inventory" OnClick="@(() => NavigateCommand("/inventory/stock-levels"))">Stock Levels</MudListItem>
                     <MudListItem T="string" Icon="@Icons.Material.Filled.Store" OnClick="@(() => NavigateCommand("/suppliers"))">Suppliers</MudListItem>
                     <MudListItem T="string" Icon="@Icons.Material.Filled.Settings" OnClick="@(() => NavigateCommand("/settings"))">Settings</MudListItem>
@@ -399,157 +350,12 @@
     </DialogContent>
 </MudDialog>
 
-<style>
-    .df-layout {
-        min-height: 100vh;
-        background: var(--df-background);
-    }
-
-    .df-main-content {
-        background: linear-gradient(180deg, var(--df-surface-variant) 0%, var(--df-background) 100%);
-        min-height: calc(100vh - 64px);
-    }
-
-    .df-content-wrapper {
-        max-width: 1600px;
-        margin: 0 auto;
-        padding: 24px;
-    }
-
-    /* Navigation Section Title */
-    .df-nav-section-title {
-        font-size: 0.6875rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--df-text-tertiary);
-        padding: 16px 16px 8px;
-        display: flex;
-        align-items: center;
-        margin-top: 8px;
-    }
-
-    .df-nav-section-title:first-child {
-        margin-top: 0;
-    }
-
-    /* Enhanced MudNavLink styles */
-    .mud-nav-link {
-        border-radius: 10px !important;
-        margin: 2px 10px !important;
-        padding: 10px 14px !important;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        position: relative;
-        overflow: hidden;
-        font-size: 0.875rem !important;
-        font-weight: 500 !important;
-    }
-
-    .mud-nav-link::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 3px;
-        height: 100%;
-        background: linear-gradient(180deg, #2563eb 0%, #7c3aed 100%);
-        border-radius: 0 4px 4px 0;
-        opacity: 0;
-        transform: scaleY(0);
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .mud-nav-link::after {
-        content: '';
-        position: absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 4px;
-        height: 4px;
-        background: var(--df-primary-500);
-        border-radius: 50%;
-        opacity: 0;
-        transition: opacity 0.2s ease;
-    }
-
-    .mud-nav-link:hover {
-        background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(124, 58, 237, 0.06) 100%) !important;
-        transform: translateX(2px);
-    }
-
-    .mud-nav-link:hover::before {
-        opacity: 1;
-        transform: scaleY(0.6);
-    }
-
-    .mud-nav-link.active {
-        background: linear-gradient(135deg, rgba(37, 99, 235, 0.12) 0%, rgba(124, 58, 237, 0.10) 100%) !important;
-        color: var(--df-primary-700) !important;
-        font-weight: 600 !important;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    }
-
-    .mud-nav-link.active::before {
-        opacity: 1;
-        transform: scaleY(1);
-    }
-
-    .mud-nav-link.active::after {
-        opacity: 1;
-    }
-
-    .mud-nav-link .mud-icon-root {
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        font-size: 1.25rem !important;
-    }
-
-    .mud-nav-link:hover .mud-icon-root,
-    .mud-nav-link.active .mud-icon-root {
-        color: var(--df-primary-600) !important;
-        transform: scale(1.05);
-    }
-
-    /* Special nav link styles */
-    .mud-nav-link.df-nav-primary:hover,
-    .mud-nav-link.df-nav-primary.active {
-        background: linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(59, 130, 246, 0.12) 100%) !important;
-    }
-
-    .mud-nav-link.df-nav-accent:hover,
-    .mud-nav-link.df-nav-accent.active {
-        background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.10) 100%) !important;
-    }
-
-    .mud-nav-link.df-nav-ai:hover,
-    .mud-nav-link.df-nav-ai.active {
-        background: linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(124, 58, 237, 0.10) 100%) !important;
-    }
-
-    .mud-nav-link.df-nav-accent:hover .mud-icon-root,
-    .mud-nav-link.df-nav-accent.active .mud-icon-root {
-        color: #10b981 !important;
-    }
-
-    .mud-nav-link.df-nav-ai:hover .mud-icon-root,
-    .mud-nav-link.df-nav-ai.active .mud-icon-root {
-        color: #a855f7 !important;
-    }
-
-    /* Responsive adjustments */
-    @@media (max-width: 960px) {
-        .df-content-wrapper {
-            padding: 16px;
-        }
-    }
-</style>
-
 @code {
-    private bool _drawerOpen = false;
-    private bool _drawerHovered = false;
-    private bool NavExpanded => _drawerOpen || _drawerHovered;
+    private bool _drawerOpen = true;
     private string _searchText = string.Empty;
     private int _notificationCount = 0;
+    private bool _isDarkMode;
+    private MudTheme _theme = MudThemeConfiguration.DawaFlowTheme;
 
     // Notification drawer
     private bool _showNotifications = false;
@@ -565,7 +371,7 @@
         new("New Drug", "/drugs/new", Icons.Material.Filled.Add),
         new("Receive Stock", "/procurement/goods-receipts/new", Icons.Material.Filled.LocalShipping),
         new("Generate Report", "/reports", Icons.Material.Filled.Description),
-        new("Dashboard", "/", Icons.Material.Filled.Dashboard),
+        new("Dashboard", "/dashboard", Icons.Material.Filled.Dashboard),
         new("Stock Levels", "/inventory/stock-levels", Icons.Material.Filled.Inventory),
         new("Stock Movements", "/inventory/movements", Icons.Material.Filled.History),
         new("Stock Counts", "/inventory/stock-counts", Icons.Material.Filled.Rule),
@@ -596,7 +402,35 @@
 
     protected override async Task OnInitializedAsync()
     {
+        ThemeService.OnThemeChanged += HandleThemeChanged;
         await LoadUserInfoAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ThemeService.InitializeAsync();
+            _isDarkMode = ThemeService.IsDarkMode;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ToggleTheme()
+    {
+        await ThemeService.ToggleAsync();
+        _isDarkMode = ThemeService.IsDarkMode;
+    }
+
+    private void HandleThemeChanged()
+    {
+        _isDarkMode = ThemeService.IsDarkMode;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnThemeChanged -= HandleThemeChanged;
     }
 
     private async Task LoadUserInfoAsync()
@@ -646,7 +480,7 @@
 
     private void NavigateHome()
     {
-        NavigationManager.NavigateTo("/");
+        NavigationManager.NavigateTo("/dashboard");
     }
 
     private void HandleSignOut()
@@ -657,21 +491,6 @@
     private void ToggleNotifications()
     {
         _showNotifications = !_showNotifications;
-    }
-
-    private void OnDrawerMouseEnter()
-    {
-        if (!_drawerOpen)
-        {
-            _drawerHovered = true;
-            StateHasChanged();
-        }
-    }
-
-    private void OnDrawerMouseLeave()
-    {
-        _drawerHovered = false;
-        StateHasChanged();
     }
 
     private IEnumerable<CommandItem> GetFilteredCommands()

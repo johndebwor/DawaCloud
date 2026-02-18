@@ -1,6 +1,8 @@
 @page "/procurement/requests"
 @using MudBlazor
 @using DawaCloud.Web.Features.Procurement.Queries
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "RequireInventoryAccess")]
 @using DawaCloud.Web.Data.Entities
 @using MediatR
 @inject IMediator Mediator
@@ -10,11 +12,11 @@
 <PageTitle>Drug Requests - DawaCloud</PageTitle>
 
 <!-- Hero Section -->
-<div class="df-hero animate-fade-in-up">
-    <div class="df-hero-content">
-        <div class="df-hero-text">
-            <h1>Drug Requests</h1>
-            <p>Procurement requests and supplier orders</p>
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">Drug Requests</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Procurement requests and supplier orders</p>
         </div>
         <MudButton Variant="Variant.Filled"
                    Color="Color.Primary"
@@ -26,56 +28,48 @@
 </div>
 
 <!-- KPI Cards -->
-<div class="df-kpi-grid">
-    <div class="df-kpi-card animate-fade-in-up animate-delay-1">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon warning">
-                <MudIcon Icon="@Icons.Material.Filled.PendingActions" />
+<div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 lg:tw:grid-cols-4 tw:gap-4 tw:my-6">
+    <div class="dc-kpi animate-fade-in-up animate-delay-1">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-warning-50">
+                <MudIcon Icon="@Icons.Material.Filled.PendingActions" Style="color: var(--tw-color-warning-600);" />
             </div>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">Pending Approval</div>
-            <div class="df-kpi-value">@_requests.Count(r => r.Status == "PendingApproval")</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Pending Approval</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_requests.Count(r => r.Status == "PendingApproval")</div>
     </div>
-    <div class="df-kpi-card animate-fade-in-up animate-delay-2">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon success">
-                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+    <div class="dc-kpi animate-fade-in-up animate-delay-2">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-success-50">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Style="color: var(--tw-color-success-600);" />
             </div>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">Approved</div>
-            <div class="df-kpi-value">@_requests.Count(r => r.Status == "Approved")</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Approved</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_requests.Count(r => r.Status == "Approved")</div>
     </div>
-    <div class="df-kpi-card animate-fade-in-up animate-delay-3">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon info">
-                <MudIcon Icon="@Icons.Material.Filled.LocalShipping" />
+    <div class="dc-kpi animate-fade-in-up animate-delay-3">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-info-50">
+                <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Style="color: var(--tw-color-info-600);" />
             </div>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">In Transit</div>
-            <div class="df-kpi-value">@_requests.Count(r => r.Status == "SentToSupplier" || r.Status == "SupplierConfirmed")</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">In Transit</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_requests.Count(r => r.Status == "SentToSupplier" || r.Status == "SupplierConfirmed")</div>
     </div>
-    <div class="df-kpi-card animate-fade-in-up animate-delay-4">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon primary">
-                <MudIcon Icon="@Icons.Material.Filled.Receipt" />
+    <div class="dc-kpi animate-fade-in-up animate-delay-4">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-primary-50">
+                <MudIcon Icon="@Icons.Material.Filled.Receipt" Style="color: var(--tw-color-primary-600);" />
             </div>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">Total Value</div>
-            <div class="df-kpi-value">SSP @_requests.Sum(r => r.TotalAmount).ToString("N0")</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Total Value</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">SSP @_requests.Sum(r => r.TotalAmount).ToString("N0")</div>
     </div>
 </div>
 
 <!-- Requests Table -->
-<div class="df-alert-card animate-fade-in-up animate-delay-2 mt-4">
-    <div class="df-alert-header">
+<div class="dc-card animate-fade-in-up animate-delay-2 tw:mt-4">
+    <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
         <MudSelect T="string" @bind-Value="_selectedStatus" Label="Status Filter" Variant="Variant.Outlined" Dense="true" Style="max-width: 250px;" OnSelectedValuesChanged="@((IEnumerable<string> _) => LoadRequests())">
             <MudSelectItem Value="@("All")">All Status</MudSelectItem>
             <MudSelectItem Value="@("Draft")">Draft</MudSelectItem>

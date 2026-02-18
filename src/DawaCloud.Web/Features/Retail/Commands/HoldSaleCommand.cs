@@ -28,7 +28,7 @@ public class HoldSaleCommandHandler : IRequestHandler<HoldSaleCommand, Result<st
 
     public async Task<Result<string>> Handle(HoldSaleCommand request, CancellationToken ct)
     {
-        var reference = $"HOLD-{DateTime.Now:yyyyMMddHHmmss}";
+        var reference = $"HOLD-{DateTime.UtcNow:yyyyMMddHHmmss}";
 
         var heldSale = new HeldSale
         {

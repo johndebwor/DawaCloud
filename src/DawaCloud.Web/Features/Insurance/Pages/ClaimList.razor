@@ -3,16 +3,16 @@
 
 <PageTitle>Insurance Claims - DawaCloud</PageTitle>
 
-<div class="df-hero animate-fade-in-up">
-    <div class="df-hero-content">
-        <div class="df-hero-text">
-            <h1>Insurance Claims</h1>
-            <p>Track and manage prescription insurance claims</p>
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">Insurance Claims</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Track and manage prescription insurance claims</p>
         </div>
     </div>
 </div>
 
-<div class="df-alert-card animate-fade-in-up animate-delay-1 mt-4">
+<div class="dc-card tw:p-0 tw:overflow-hidden animate-fade-in-up animate-delay-1">
     <MudTable T="ClaimDto" Items="@_claims" Dense="true" Hover="true">
         <HeaderContent>
             <MudTh>Claim Number</MudTh>
@@ -42,8 +42,8 @@
     {
         _claims = new List<ClaimDto>
         {
-            new() { ClaimNumber = "CLM-2024-001", PatientName = "Sarah Ayaa", ProviderName = "Phoenix Health", ClaimDate = DateTime.Now.AddDays(-5), TotalAmount = 15000, CoveredAmount = 12000, Status = "Approved" },
-            new() { ClaimNumber = "CLM-2024-002", PatientName = "John Deng", ProviderName = "NHIF", ClaimDate = DateTime.Now.AddDays(-2), TotalAmount = 8500, CoveredAmount = 5950, Status = "Submitted" }
+            new() { ClaimNumber = "CLM-2024-001", PatientName = "Sarah Ayaa", ProviderName = "Phoenix Health", ClaimDate = DateTime.UtcNow.AddDays(-5), TotalAmount = 15000, CoveredAmount = 12000, Status = "Approved" },
+            new() { ClaimNumber = "CLM-2024-002", PatientName = "John Deng", ProviderName = "NHIF", ClaimDate = DateTime.UtcNow.AddDays(-2), TotalAmount = 8500, CoveredAmount = 5950, Status = "Submitted" }
         };
     }
 

@@ -480,8 +480,8 @@
         flex: 1;
         display: flex;
         flex-direction: column;
-        background: white;
-        border-radius: 16px;
+        background: var(--tw-color-surface);
+        border-radius: var(--tw-radius-xl);
         padding: 20px;
         overflow: hidden;
     }
@@ -490,10 +490,10 @@
         width: 400px;
         display: flex;
         flex-direction: column;
-        background: white;
-        border-radius: 16px;
+        background: var(--tw-color-surface);
+        border-radius: var(--tw-radius-xl);
         padding: 20px;
-        box-shadow: var(--df-shadow-lg);
+        box-shadow: var(--tw-shadow-elevated);
     }
 
     .pos-search-bar {
@@ -515,9 +515,9 @@
     }
 
     .pos-product-card {
-        background: var(--df-surface-variant);
-        border: 1px solid var(--df-border);
-        border-radius: 12px;
+        background: rgba(235, 249, 251, 0.5);
+        border: 1px solid var(--tw-color-border);
+        border-radius: var(--tw-radius-lg);
         padding: 16px 12px;
         text-align: center;
         cursor: pointer;
@@ -526,9 +526,10 @@
     }
 
     .pos-product-card:hover {
-        border-color: var(--df-primary-500);
+        border-color: var(--tw-color-primary-500);
         transform: translateY(-2px);
-        box-shadow: var(--df-shadow-md);
+        box-shadow: var(--tw-shadow-card);
+        background: rgba(235, 249, 251, 0.8);
     }
 
     .pos-product-card.out-of-stock {
@@ -537,7 +538,7 @@
     }
 
     .pos-product-icon {
-        color: var(--df-primary-500);
+        color: var(--tw-color-primary-500);
         margin-bottom: 8px;
     }
 
@@ -549,28 +550,30 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        color: var(--tw-color-text);
     }
 
     .pos-product-price {
         font-size: 0.875rem;
         font-weight: 700;
-        color: var(--df-primary-700);
+        color: var(--tw-color-primary-600);
     }
 
     .pos-product-stock {
         font-size: 0.65rem;
         margin-top: 4px;
+        color: var(--tw-color-text-secondary);
     }
 
     .pos-product-stock.warning {
-        color: var(--df-warning);
+        color: var(--tw-color-warning);
     }
 
     .pos-product-rx {
         position: absolute;
         top: 4px;
         right: 4px;
-        color: var(--df-danger);
+        color: var(--tw-color-danger);
     }
 
     /* List View Styles */
@@ -587,18 +590,18 @@
         display: flex;
         align-items: center;
         gap: 12px;
-        background: var(--df-surface-variant);
-        border: 1px solid var(--df-border);
-        border-radius: 8px;
+        background: rgba(235, 249, 251, 0.5);
+        border: 1px solid var(--tw-color-border);
+        border-radius: var(--tw-radius-md);
         padding: 12px;
         cursor: pointer;
         transition: all 0.2s;
     }
 
     .pos-product-list-item:hover {
-        border-color: var(--df-primary-500);
-        background: #f5f7fa;
-        box-shadow: var(--df-shadow-sm);
+        border-color: var(--tw-color-primary-500);
+        background: rgba(235, 249, 251, 0.8);
+        box-shadow: var(--tw-shadow-xs);
     }
 
     .pos-product-list-item.out-of-stock {
@@ -618,7 +621,7 @@
     .pos-product-list-name {
         font-size: 0.875rem;
         font-weight: 600;
-        color: var(--df-text-primary);
+        color: var(--tw-color-text);
         margin-bottom: 4px;
         display: flex;
         align-items: center;
@@ -627,7 +630,7 @@
 
     .pos-product-list-code {
         font-size: 0.75rem;
-        color: var(--df-text-secondary);
+        color: var(--tw-color-text-secondary);
     }
 
     .pos-product-list-details {
@@ -638,17 +641,17 @@
     .pos-product-list-price {
         font-size: 0.875rem;
         font-weight: 700;
-        color: var(--df-primary-700);
+        color: var(--tw-color-primary-600);
         margin-bottom: 4px;
     }
 
     .pos-product-list-stock {
         font-size: 0.75rem;
-        color: var(--df-text-secondary);
+        color: var(--tw-color-text-secondary);
     }
 
     .pos-product-list-stock.warning {
-        color: var(--df-warning);
+        color: var(--tw-color-warning);
         font-weight: 600;
     }
 
@@ -657,12 +660,12 @@
         gap: 8px;
         margin-top: 16px;
         padding-top: 16px;
-        border-top: 1px solid var(--df-border);
+        border-top: 1px solid var(--tw-color-border);
     }
 
     .pos-customer-bar {
         padding-bottom: 12px;
-        border-bottom: 1px solid var(--df-border);
+        border-bottom: 1px solid var(--tw-color-border);
         margin-bottom: 12px;
     }
 
@@ -685,8 +688,8 @@
         align-items: center;
         gap: 8px;
         padding: 12px;
-        background: var(--df-surface-variant);
-        border-radius: 8px;
+        background: rgba(235, 249, 251, 0.5);
+        border-radius: var(--tw-radius-md);
         margin-bottom: 8px;
     }
 
@@ -697,11 +700,12 @@
     .pos-cart-item-name {
         font-weight: 600;
         font-size: 0.875rem;
+        color: var(--tw-color-text);
     }
 
     .pos-cart-item-price {
         font-size: 0.75rem;
-        color: var(--df-text-secondary);
+        color: var(--tw-color-text-secondary);
     }
 
     .pos-cart-item-controls {
@@ -718,15 +722,15 @@
 
     .pos-cart-item-total {
         font-weight: 700;
-        color: var(--df-primary-700);
+        color: var(--tw-color-primary-600);
         min-width: 80px;
         text-align: right;
     }
 
     .pos-totals {
         padding: 16px 0;
-        border-top: 1px solid var(--df-border);
-        border-bottom: 1px solid var(--df-border);
+        border-top: 1px solid var(--tw-color-border);
+        border-bottom: 1px solid var(--tw-color-border);
         margin-bottom: 16px;
     }
 
@@ -737,7 +741,7 @@
     }
 
     .pos-total-row.discount {
-        color: var(--df-success);
+        color: var(--tw-color-success-600);
     }
 
     .pos-total-row.grand-total {
@@ -745,8 +749,8 @@
         font-weight: 700;
         padding-top: 12px;
         margin-top: 8px;
-        border-top: 2px solid var(--df-primary-500);
-        color: var(--df-primary-700);
+        border-top: 2px solid var(--tw-color-primary-500);
+        color: var(--tw-color-primary-600);
     }
 
     .pos-payment-buttons {
@@ -763,8 +767,8 @@
     .payment-dialog-total {
         text-align: center;
         padding: 16px;
-        background: var(--df-surface-variant);
-        border-radius: 12px;
+        background: rgba(235, 249, 251, 0.5);
+        border-radius: var(--tw-radius-lg);
     }
 
     .payment-methods {
@@ -779,20 +783,20 @@
         align-items: center;
         gap: 8px;
         padding: 16px;
-        border: 2px solid var(--df-border);
-        border-radius: 12px;
+        border: 2px solid var(--tw-color-border);
+        border-radius: var(--tw-radius-lg);
         cursor: pointer;
         transition: all 0.2s;
     }
 
     .payment-method:hover {
-        border-color: var(--df-primary-300);
+        border-color: var(--tw-color-primary-400);
     }
 
     .payment-method.selected {
-        border-color: var(--df-primary-500);
-        background: var(--df-primary-50);
-        color: var(--df-primary-700);
+        border-color: var(--tw-color-primary-500);
+        background: rgba(12, 133, 153, 0.1);
+        color: var(--tw-color-primary-600);
     }
 
     @@media (max-width: 960px) {
@@ -805,6 +809,14 @@
             width: 100%;
         }
     }
+
+    /* Dark mode support */
+    .dark .pos-container { background: var(--tw-color-page); }
+    .dark .pos-left-panel { background: var(--tw-color-surface); }
+    .dark .pos-right-panel { background: var(--tw-color-surface); }
+    .dark .pos-product-card { background: var(--tw-color-surface); border-color: var(--tw-color-border); }
+    .dark .pos-product-list-item { border-color: var(--tw-color-border); }
+    .dark .pos-cart-item { border-color: var(--tw-color-border); }
 </style>
 
 @code {

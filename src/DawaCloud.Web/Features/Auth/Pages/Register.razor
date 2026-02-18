@@ -6,39 +6,35 @@
 @attribute [AllowAnonymous]
 @inject NavigationManager NavigationManager
 
-<PageTitle>Register - DawaCloud</PageTitle>
+<PageTitle>DawaCloud | Create Account</PageTitle>
 
-<div class="auth-container">
-    <div class="auth-card">
-        <div class="text-center mb-6">
-            <MudText Typo="Typo.h4" Class="mb-2">
-                Create Your <span class="text-gradient-primary">DawaCloud</span> Account
-            </MudText>
-            <MudText Typo="Typo.body1" Color="Color.Secondary">
-                Get started with modern pharmacy management
-            </MudText>
+<div class="auth-card">
+    @* ── Header ── *@
+    <div class="auth-card-header">
+        <h1 class="auth-card-title">
+            Create Your <span class="auth-accent">DawaCloud</span> Account
+        </h1>
+        <p class="auth-card-subtitle">Get started with modern pharmacy management</p>
+    </div>
+
+    @* ── Registration form ── *@
+    <form method="post" action="/api/auth/register-form" id="registerForm" class="auth-form">
+        <div class="field-stagger field-stagger--1 auth-name-row">
+            <MudTextField Label="First Name"
+                          @bind-Value="_model.FirstName"
+                          name="firstName"
+                          Variant="Variant.Outlined"
+                          Required="true"
+                          RequiredError="First name is required" />
+            <MudTextField Label="Last Name"
+                          @bind-Value="_model.LastName"
+                          name="lastName"
+                          Variant="Variant.Outlined"
+                          Required="true"
+                          RequiredError="Last name is required" />
         </div>
 
-        <form method="post" action="/api/auth/register-form" id="registerForm">
-            <MudGrid Spacing="2">
-                <MudItem xs="12" sm="6">
-                    <MudTextField Label="First Name"
-                                  @bind-Value="_model.FirstName"
-                                  name="firstName"
-                                  Variant="Variant.Outlined"
-                                  Required="true"
-                                  RequiredError="First name is required" />
-                </MudItem>
-                <MudItem xs="12" sm="6">
-                    <MudTextField Label="Last Name"
-                                  @bind-Value="_model.LastName"
-                                  name="lastName"
-                                  Variant="Variant.Outlined"
-                                  Required="true"
-                                  RequiredError="Last name is required" />
-                </MudItem>
-            </MudGrid>
-
+        <div class="field-stagger field-stagger--2">
             <MudTextField Label="Email Address"
                           @bind-Value="_model.Email"
                           name="email"
@@ -49,16 +45,20 @@
                           Validation="@(new EmailAddressAttribute())"
                           Adornment="Adornment.Start"
                           AdornmentIcon="@Icons.Material.Filled.Email" />
+        </div>
 
+        <div class="field-stagger field-stagger--3">
             <MudTextField Label="Phone Number"
                           @bind-Value="_model.PhoneNumber"
                           name="phoneNumber"
                           Variant="Variant.Outlined"
                           Margin="Margin.Normal"
-                          HelperText="Format: +211712345678"
+                          HelperText="Format: +211912345678"
                           Adornment="Adornment.Start"
                           AdornmentIcon="@Icons.Material.Filled.Phone" />
+        </div>
 
+        <div class="field-stagger field-stagger--4">
             <MudTextField Label="Password"
                           @bind-Value="_model.Password"
                           name="password"
@@ -67,13 +67,15 @@
                           InputType="@_passwordInputType"
                           Required="true"
                           RequiredError="Password is required"
-                          HelperText="Min. 12 characters, with uppercase, lowercase, number & special char"
+                          HelperText="Min. 8 characters, with uppercase, lowercase, number & special char"
                           Adornment="Adornment.End"
                           AdornmentIcon="@_passwordIcon"
                           OnAdornmentClick="TogglePasswordVisibility"
                           Immediate="true"
                           TextChanged="OnPasswordChanged" />
+        </div>
 
+        <div class="field-stagger field-stagger--5">
             <MudTextField Label="Confirm Password"
                           @bind-Value="_model.ConfirmPassword"
                           name="confirmPassword"
@@ -82,17 +84,23 @@
                           InputType="@_passwordInputType"
                           Required="true"
                           RequiredError="Please confirm your password" />
+        </div>
 
-            @if (!string.IsNullOrEmpty(_model.Password))
-            {
-                <div class="my-3">
-                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">Password Strength</MudText>
-                    <MudProgressLinear Value="@_passwordStrength" Color="@_passwordStrengthColor" Size="Size.Small" />
-                    <MudText Typo="Typo.caption" Color="@_passwordStrengthColor">@_passwordStrengthText</MudText>
+        @if (!string.IsNullOrEmpty(_model.Password))
+        {
+            <div class="field-stagger field-stagger--5 auth-strength">
+                <div class="auth-strength-label">
+                    <span>Password Strength</span>
+                    <span class="auth-strength-text" style="color: @GetStrengthColor();">@_passwordStrengthText</span>
                 </div>
-            }
+                <div class="auth-strength-bar">
+                    <div class="auth-strength-fill" style="width: @(_passwordStrength)%; background: @GetStrengthColor();"></div>
+                </div>
+            </div>
+        }
 
-            <MudCheckBox @bind-Value="_model.AcceptTerms" Color="Color.Primary" Class="my-2">
+        <div class="field-stagger field-stagger--6">
+            <MudCheckBox @bind-Value="_model.AcceptTerms" Color="Color.Primary" Style="margin: 0.5rem 0;">
                 <MudText Typo="Typo.body2">
                     I agree to the
                     <MudLink Href="/terms" Color="Color.Primary">Terms & Conditions</MudLink>
@@ -100,36 +108,40 @@
                     <MudLink Href="/privacy" Color="Color.Primary">Privacy Policy</MudLink>
                 </MudText>
             </MudCheckBox>
+        </div>
 
+        <div class="field-stagger field-stagger--7">
             <MudButton Variant="Variant.Filled"
                        Color="Color.Primary"
                        FullWidth="true"
                        Size="Size.Large"
-                       Class="mt-3 mb-3"
+                       Class="auth-submit-btn"
                        ButtonType="ButtonType.Submit"
                        Disabled="@(!_model.AcceptTerms || string.IsNullOrEmpty(_model.Email) || string.IsNullOrEmpty(_model.Password))">
-                <MudIcon Icon="@Icons.Material.Filled.PersonAdd" Class="mr-2" />
+                <MudIcon Icon="@Icons.Material.Filled.PersonAdd" Style="margin-right: 0.5rem;" />
                 <span>Create Account</span>
             </MudButton>
-        </form>
-
-        <MudDivider Class="my-4" />
-
-        <div class="text-center">
-            <MudText Typo="Typo.body2" Color="Color.Secondary">
-                Already have an account?
-                <MudLink Href="/auth/login" Color="Color.Primary" Typo="Typo.body2">
-                    <strong>Sign in here</strong>
-                </MudLink>
-            </MudText>
         </div>
+    </form>
 
-        @if (!string.IsNullOrEmpty(_errorMessage))
-        {
-            <MudAlert Severity="Severity.Error" Class="mt-4" Dense="true" ShowCloseIcon="true" CloseIconClicked="() => _errorMessage = null">
-                @_errorMessage
-            </MudAlert>
-        }
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Style="margin-top: 0.75rem;" Dense="true" ShowCloseIcon="true" CloseIconClicked="() => _errorMessage = null">
+            @_errorMessage
+        </MudAlert>
+    }
+
+    @* ── Divider ── *@
+    <div class="field-stagger field-stagger--8 auth-divider">
+        <span class="auth-divider-line"></span>
+    </div>
+
+    @* ── Sign in link ── *@
+    <div class="field-stagger field-stagger--8 auth-footer-link">
+        <span>Already have an account?</span>
+        <MudLink Href="/auth/login" Color="Color.Primary" Typo="Typo.body2">
+            <strong>Sign in here</strong>
+        </MudLink>
     </div>
 </div>
 
@@ -142,7 +154,6 @@
     private string _passwordIcon = Icons.Material.Filled.VisibilityOff;
 
     private int _passwordStrength;
-    private Color _passwordStrengthColor = Color.Default;
     private string _passwordStrengthText = string.Empty;
     private string? _errorMessage;
 
@@ -183,7 +194,6 @@
         if (string.IsNullOrEmpty(_model.Password))
         {
             _passwordStrength = 0;
-            _passwordStrengthColor = Color.Default;
             _passwordStrengthText = string.Empty;
             return;
         }
@@ -197,26 +207,18 @@
 
         _passwordStrength = score;
 
-        if (score < 40)
-        {
-            _passwordStrengthColor = Color.Error;
-            _passwordStrengthText = "Weak";
-        }
-        else if (score < 70)
-        {
-            _passwordStrengthColor = Color.Warning;
-            _passwordStrengthText = "Fair";
-        }
-        else if (score < 90)
-        {
-            _passwordStrengthColor = Color.Info;
-            _passwordStrengthText = "Good";
-        }
-        else
-        {
-            _passwordStrengthColor = Color.Success;
-            _passwordStrengthText = "Strong";
-        }
+        if (score < 40) _passwordStrengthText = "Weak";
+        else if (score < 70) _passwordStrengthText = "Fair";
+        else if (score < 90) _passwordStrengthText = "Good";
+        else _passwordStrengthText = "Strong";
+    }
+
+    private string GetStrengthColor()
+    {
+        if (_passwordStrength < 40) return "var(--tw-color-danger, #EF4444)";
+        if (_passwordStrength < 70) return "var(--tw-color-warning, #F59E0B)";
+        if (_passwordStrength < 90) return "var(--tw-color-info, #0C8599)";
+        return "var(--tw-color-success, #10B981)";
     }
 
     private class RegisterModel
@@ -230,3 +232,122 @@
         public bool AcceptTerms { get; set; }
     }
 }
+
+<style>
+    /* ── Auth card (shared pattern with Login) ── */
+    .auth-card {
+        background: var(--tw-color-surface, #fff);
+        border-radius: 1.25rem;
+        padding: 2rem;
+        border: 1px solid var(--tw-color-border, #E2E8F0);
+        box-shadow: 0 2px 8px -2px rgba(0,0,0,0.08);
+    }
+
+    .auth-card-header { margin-bottom: 1.5rem; text-align: center; }
+
+    .auth-card-title {
+        font-family: "Instrument Serif", Georgia, serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        line-height: 1.2;
+        color: var(--tw-color-text, #1E293B);
+        margin: 0 0 0.5rem;
+    }
+
+    .auth-accent {
+        color: var(--tw-color-primary-600, #0A7285);
+    }
+
+    :global(.dark) .auth-accent {
+        color: var(--tw-color-primary-400, #2DD4BF);
+    }
+
+    .auth-card-subtitle {
+        font-size: 0.875rem;
+        color: var(--tw-color-text-secondary, #64748B);
+        margin: 0;
+    }
+
+    .auth-form { display: flex; flex-direction: column; }
+
+    /* Name row — side-by-side fields */
+    .auth-name-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+
+    .auth-submit-btn {
+        margin-top: 0.5rem;
+        padding-top: 0.75rem !important;
+        padding-bottom: 0.75rem !important;
+    }
+
+    /* Password strength indicator */
+    .auth-strength {
+        margin: 0.5rem 0;
+    }
+
+    .auth-strength-label {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 0.375rem;
+        font-size: 0.75rem;
+        color: var(--tw-color-text-secondary, #64748B);
+    }
+
+    .auth-strength-text {
+        font-weight: 600;
+    }
+
+    .auth-strength-bar {
+        height: 4px; border-radius: 9999px;
+        background: var(--tw-color-muted, #F1F5F9);
+        overflow: hidden;
+    }
+
+    .auth-strength-fill {
+        height: 100%; border-radius: 9999px;
+        transition: width 0.3s ease, background 0.3s ease;
+    }
+
+    /* Divider */
+    .auth-divider {
+        display: flex; align-items: center;
+        margin: 1rem 0;
+    }
+
+    .auth-divider-line {
+        flex: 1; height: 1px;
+        background: var(--tw-color-border, #E2E8F0);
+    }
+
+    /* Footer link */
+    .auth-footer-link {
+        text-align: center; font-size: 0.875rem;
+        color: var(--tw-color-text-secondary, #64748B);
+        display: flex; align-items: center; justify-content: center; gap: 0.375rem;
+    }
+
+    /* ── Staggered entry animation ── */
+    .field-stagger { animation: fieldSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .field-stagger--1 { animation-delay: 0.06s; }
+    .field-stagger--2 { animation-delay: 0.10s; }
+    .field-stagger--3 { animation-delay: 0.14s; }
+    .field-stagger--4 { animation-delay: 0.18s; }
+    .field-stagger--5 { animation-delay: 0.22s; }
+    .field-stagger--6 { animation-delay: 0.26s; }
+    .field-stagger--7 { animation-delay: 0.30s; }
+    .field-stagger--8 { animation-delay: 0.34s; }
+
+    @@keyframes fieldSlideIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @@media (max-width: 600px) {
+        .auth-card { padding: 1.5rem; }
+        .auth-card-title { font-size: 1.3rem; }
+        .auth-name-row { grid-template-columns: 1fr; gap: 0; }
+    }
+</style>

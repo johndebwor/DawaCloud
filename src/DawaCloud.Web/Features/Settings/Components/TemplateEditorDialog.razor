@@ -1,5 +1,6 @@
 @using MudBlazor
 @using DawaCloud.Web.Data.Entities
+@using DawaCloud.Web.Features.Settings.Components
 @inject ISnackbar Snackbar
 
 <MudDialog>
@@ -66,13 +67,13 @@
 
     private MudForm? _form;
     private bool _isEditMode => TemplateId.HasValue && !IsCopyMode;
-    private TemplateModel _model = new();
+    private TemplateEditorModel _model = new();
 
     protected override void OnInitialized()
     {
         if (Template != null)
         {
-            _model = new TemplateModel
+            _model = new TemplateEditorModel
             {
                 Name = IsCopyMode ? $"{Template.Name} (Copy)" : Template.Name,
                 Code = IsCopyMode ? $"{Template.Code}_copy" : Template.Code,
@@ -103,16 +104,5 @@
         }
 
         MudDialog?.Close(DialogResult.Ok(_model));
-    }
-
-    private class TemplateModel
-    {
-        public string Name { get; set; } = string.Empty;
-        public string Code { get; set; } = string.Empty;
-        public NotificationType Type { get; set; }
-        public NotificationChannel Channel { get; set; }
-        public string Subject { get; set; } = string.Empty;
-        public string Body { get; set; } = string.Empty;
-        public bool IsActive { get; set; } = true;
     }
 }

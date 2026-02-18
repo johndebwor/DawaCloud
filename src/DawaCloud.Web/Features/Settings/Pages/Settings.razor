@@ -1,29 +1,35 @@
 @page "/settings"
 @using MudBlazor
 @using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "RequireAdmin")]
 @using Microsoft.EntityFrameworkCore
 @using DawaCloud.Web.Features.Currency.Services
 @using DawaCloud.Web.Data
 @using DawaCloud.Web.Data.Enums
 @using DawaCloud.Web.Features.Notifications.Commands
+@using DawaCloud.Web.Features.Settings.Components
 @using DawaCloud.Web.Features.Settings.Commands
 @using DawaCloud.Web.Features.Settings.Queries
 @using MediatR
+@using Microsoft.JSInterop
 @inject ICurrencyService CurrencyService
 @inject IRoundingService RoundingService
 @inject IServiceScopeFactory ScopeFactory
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject IMediator Mediator
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Settings - DawaCloud</PageTitle>
 
 <!-- Hero Section -->
-<div class="df-hero animate-fade-in-up">
-    <div class="df-hero-content">
-        <div class="df-hero-text">
-            <h1>System Settings</h1>
-            <p>Configure your pharmacy system preferences</p>
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">System Settings</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Configure your pharmacy system preferences</p>
         </div>
     </div>
 </div>
@@ -31,7 +37,7 @@
 <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" Class="mt-4" PanelClass="pa-4">
     <!-- Company Profile Tab -->
     <MudTabPanel Text="Company Profile" Icon="@Icons.Material.Filled.Business">
-        <MudPaper Elevation="0" Class="pa-4">
+        <MudPaper Elevation="0" Class="pa-6 dc-card">
             <MudForm @ref="_companyForm">
                 <MudGrid>
                     <MudItem xs="12" md="6">
@@ -62,25 +68,51 @@
                         <MudTextField @bind-Value="_companySettings.Country" Label="Country" Variant="Variant.Outlined" />
                     </MudItem>
                     <MudItem xs="12">
-                        <MudText Typo="Typo.subtitle2" Class="mb-2">Company Logo</MudText>
-                        <div class="d-flex align-center gap-4">
-                            <MudFileUpload T="IBrowserFile" Accept="image/*" MaximumFileCount="1" OnFilesChanged="OnLogoSelected">
-                                <ActivatorContent>
-                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload">
-                                        Upload Logo
+                        <MudText Typo="Typo.subtitle2" Class="mb-3">Company Logo</MudText>
+                        <div class="d-flex align-start gap-6">
+                            <!-- Logo Preview -->
+                            <div style="width: 120px; height: 120px; border-radius: 0.75rem; border: 1px solid var(--tw-color-border, #E2E8F0); background: var(--tw-color-muted, #F1F5F9); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;">
+                                @if (_isUploadingLogo)
+                                {
+                                    <MudProgressCircular Indeterminate="true" Size="Size.Medium" Color="Color.Primary" />
+                                }
+                                else if (!string.IsNullOrEmpty(_logoPreviewUrl))
+                                {
+                                    <MudImage Src="@_logoPreviewUrl" Alt="Company Logo" Width="120" Height="120" ObjectFit="ObjectFit.Contain" />
+                                }
+                                else if (!string.IsNullOrEmpty(_companySettings.LogoUrl))
+                                {
+                                    <MudImage Src="@_companySettings.LogoUrl" Alt="Company Logo" Width="120" Height="120" ObjectFit="ObjectFit.Contain" />
+                                }
+                                else
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" Style="color: var(--tw-color-text-muted, #94A3B8);" />
+                                }
+                            </div>
+                            <!-- Upload Actions -->
+                            <div class="d-flex flex-column gap-2">
+                                <MudFileUpload T="IBrowserFile" Accept="image/png,image/jpeg,image/jpg,image/webp" MaximumFileCount="1" OnFilesChanged="OnLogoSelected">
+                                    <ActivatorContent>
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                                                   StartIcon="@(HasLogo ? Icons.Material.Filled.Edit : Icons.Material.Filled.CloudUpload)"
+                                                   Disabled="_isUploadingLogo">
+                                            @(HasLogo ? "Replace" : "Upload Logo")
+                                        </MudButton>
+                                    </ActivatorContent>
+                                </MudFileUpload>
+                                @if (HasLogo)
+                                {
+                                    <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small"
+                                               StartIcon="@Icons.Material.Filled.Delete" OnClick="RemoveLogo"
+                                               Disabled="_isUploadingLogo">
+                                        Remove
                                     </MudButton>
-                                </ActivatorContent>
-                            </MudFileUpload>
-                            @if (!string.IsNullOrEmpty(_logoPreviewUrl))
-                            {
-                                <MudImage Src="@_logoPreviewUrl" Alt="Company Logo" Height="80" ObjectFit="ObjectFit.Contain" Class="rounded" Style="border: 1px solid #ddd; padding: 8px;" />
-                            }
-                            else if (!string.IsNullOrEmpty(_companySettings.LogoUrl))
-                            {
-                                <MudImage Src="@_companySettings.LogoUrl" Alt="Company Logo" Height="80" ObjectFit="ObjectFit.Contain" Class="rounded" Style="border: 1px solid #ddd; padding: 8px;" />
-                            }
+                                }
+                                <MudText Typo="Typo.caption" Style="color: var(--tw-color-text-muted, #94A3B8);">
+                                    200 × 200px recommended<br />Max 2MB &bull; PNG or JPG
+                                </MudText>
+                            </div>
                         </div>
-                        <MudText Typo="Typo.caption" Class="mt-1">Recommended: PNG or JPG, max 2MB, transparent background</MudText>
                     </MudItem>
                 </MudGrid>
                 <div class="mt-4">
@@ -94,7 +126,7 @@
 
     <!-- Tax Configuration Tab -->
     <MudTabPanel Text="Tax Configuration" Icon="@Icons.Material.Filled.Receipt">
-        <MudPaper Elevation="0" Class="pa-4">
+        <MudPaper Elevation="0" Class="pa-6 dc-card">
             <MudGrid>
                 <MudItem xs="12" md="6">
                     <MudSelect T="string" @bind-Value="_companySettings.Currency" Label="Currency" Variant="Variant.Outlined">
@@ -106,6 +138,12 @@
                     <MudNumericField @bind-Value="_companySettings.DefaultTaxRate" Label="Default VAT Rate (%)" Variant="Variant.Outlined" Min="0m" Max="100m" />
                 </MudItem>
             </MudGrid>
+
+            <div class="mt-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveTaxSettings">
+                    Save Tax Settings
+                </MudButton>
+            </div>
 
             <MudDivider Class="my-6" />
 
@@ -142,7 +180,7 @@
 
     <!-- Currency Tab -->
     <MudTabPanel Text="Currency" Icon="@Icons.Material.Filled.CurrencyExchange">
-        <MudPaper Elevation="0" Class="pa-4">
+        <MudPaper Elevation="0" Class="pa-6 dc-card">
             <MudText Typo="Typo.h6" Class="mb-4">Currency Configuration</MudText>
             <MudGrid>
                 <MudItem xs="12" md="4">
@@ -219,12 +257,53 @@
                     No exchange rates configured. Click "Manage Rates" to add exchange rates.
                 </MudAlert>
             }
+
+            <MudDivider Class="my-6" />
+
+            <div class="d-flex justify-space-between align-center mb-4">
+                <MudText Typo="Typo.h6">Manage Currencies</MudText>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="CreateCurrency">
+                    Add Currency
+                </MudButton>
+            </div>
+
+            <MudTable Items="@_currencies" Dense="true" Hover="true">
+                <HeaderContent>
+                    <MudTh>Code</MudTh>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Symbol</MudTh>
+                    <MudTh>Decimals</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Code</MudTd>
+                    <MudTd>@context.Name</MudTd>
+                    <MudTd>@context.Symbol</MudTd>
+                    <MudTd>@context.DecimalPlaces</MudTd>
+                    <MudTd>
+                        <MudChip T="string" Size="Size.Small" Color="@(context.IsActive ? Color.Success : Color.Default)">
+                            @(context.IsActive ? "Active" : "Inactive")
+                        </MudChip>
+                    </MudTd>
+                    <MudTd>
+                        <MudTooltip Text="Edit Currency">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Info" OnClick="@(() => EditCurrency(context))" />
+                        </MudTooltip>
+                        <MudTooltip Text="Delete Currency">
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                           Disabled="@(context.IsBaseCurrency || context.IsDefaultPurchaseCurrency || context.IsDefaultSalesCurrency)"
+                                           OnClick="@(() => DeleteCurrency(context))" />
+                        </MudTooltip>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
         </MudPaper>
     </MudTabPanel>
 
     <!-- Rounding Tab -->
     <MudTabPanel Text="Rounding" Icon="@Icons.Material.Filled.Calculate">
-        <MudPaper Elevation="0" Class="pa-4">
+        <MudPaper Elevation="0" Class="pa-6 dc-card">
             <MudText Typo="Typo.h6" Class="mb-4">Amount Rounding Settings</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
                 Configure automatic rounding for SSP amounts across the system
@@ -303,7 +382,7 @@
 
     <!-- POS Settings Tab -->
     <MudTabPanel Text="POS Settings" Icon="@Icons.Material.Filled.PointOfSale">
-        <MudPaper Elevation="0" Class="pa-4">
+        <MudPaper Elevation="0" Class="pa-6 dc-card">
             <MudText Typo="Typo.h6" Class="mb-4">Point of Sale Display</MudText>
             <MudGrid>
                 <MudItem xs="12" md="6">
@@ -352,7 +431,7 @@
 
     <!-- Alert Thresholds Tab -->
     <MudTabPanel Text="Alert Thresholds" Icon="@Icons.Material.Filled.NotificationsActive">
-        <MudPaper Elevation="0" Class="pa-4">
+        <MudPaper Elevation="0" Class="pa-6 dc-card">
             <MudText Typo="Typo.h6" Class="mb-4">Stock Alerts</MudText>
             <MudGrid>
                 <MudItem xs="12" md="6">
@@ -385,7 +464,7 @@
 
     <!-- Email Configuration Tab -->
     <MudTabPanel Text="Email / SMS" Icon="@Icons.Material.Filled.Email">
-        <MudPaper Elevation="0" Class="pa-4">
+        <MudPaper Elevation="0" Class="pa-6 dc-card">
             <MudText Typo="Typo.h6" Class="mb-4">Email (SMTP) Configuration</MudText>
             <MudGrid>
                 <MudItem xs="12" md="6">
@@ -436,7 +515,7 @@
 
     <!-- Notification Templates Tab -->
     <MudTabPanel Text="Templates" Icon="@Icons.Material.Filled.Description">
-        <MudPaper Elevation="0" Class="pa-4">
+        <MudPaper Elevation="0" Class="pa-6 dc-card">
             <div class="d-flex justify-space-between align-center mb-4">
                 <MudText Typo="Typo.h6">Notification Templates</MudText>
                 <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="CreateTemplate">
@@ -472,9 +551,273 @@
                         <MudTooltip Text="Copy Template">
                             <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" Color="Color.Default" OnClick="@(() => CopyTemplate(context))" />
                         </MudTooltip>
+                        <MudTooltip Text="Delete Template">
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteTemplate(context))" />
+                        </MudTooltip>
                     </MudTd>
                 </RowTemplate>
+                <NoRecordsContent>
+                    <MudText Typo="Typo.body2" Color="Color.Default" Class="pa-4">No notification templates found. Click "New Template" to create one.</MudText>
+                </NoRecordsContent>
             </MudTable>
+        </MudPaper>
+    </MudTabPanel>
+
+    <!-- Banking & Integrations Tab -->
+    <MudTabPanel Text="Banking" Icon="@Icons.Material.Filled.AccountBalance">
+        <MudPaper Elevation="0" Class="pa-6 dc-card">
+            <div class="d-flex align-center gap-2 mb-4">
+                <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Color="Color.Primary" />
+                <div>
+                    <MudText Typo="Typo.h6">Bank Integration</MudText>
+                    <MudText Typo="Typo.body2" Style="color: var(--tw-color-text-secondary);">
+                        Connect to your bank for automatic transaction syncing
+                    </MudText>
+                </div>
+            </div>
+
+            <MudAlert Severity="Severity.Info" Class="mb-4" Variant="Variant.Outlined">
+                Bank integration is coming soon. Configure your preferences now to be ready when it launches.
+            </MudAlert>
+
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudSwitch @bind-Value="_bankIntegrationEnabled" Label="Enable Bank Integration"
+                               Color="Color.Primary" Disabled="true" />
+                    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Class="ml-2">Coming Soon</MudChip>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" @bind-Value="_bankIntegrationProvider" Label="Bank Provider"
+                               Variant="Variant.Outlined" Disabled="true">
+                        <MudSelectItem Value="@("Stanbic")">Stanbic Bank</MudSelectItem>
+                        <MudSelectItem Value="@("Equity")">Equity Bank</MudSelectItem>
+                        <MudSelectItem Value="@("KCB")">KCB Bank</MudSelectItem>
+                        <MudSelectItem Value="@("Cooperative")">Cooperative Bank</MudSelectItem>
+                        <MudSelectItem Value="@("Absa")">Absa Bank</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_bankIntegrationApiKey" Label="API Key" Variant="Variant.Outlined"
+                                  Disabled="true" InputType="InputType.Password" />
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+    </MudTabPanel>
+
+    <!-- Insurance Integration Tab -->
+    <MudTabPanel Text="Insurance" Icon="@Icons.Material.Filled.HealthAndSafety">
+        <MudPaper Elevation="0" Class="pa-6 dc-card">
+            <div class="d-flex align-center gap-2 mb-4">
+                <MudIcon Icon="@Icons.Material.Filled.HealthAndSafety" Color="Color.Primary" />
+                <div>
+                    <MudText Typo="Typo.h6">Insurance Provider Integration</MudText>
+                    <MudText Typo="Typo.body2" Style="color: var(--tw-color-text-secondary);">
+                        Connect to insurance providers for automated claim processing
+                    </MudText>
+                </div>
+            </div>
+
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudSwitch @bind-Value="_insuranceEnabled" Label="Enable Insurance Integration"
+                               Color="Color.Primary" />
+                </MudItem>
+
+                @if (_insuranceEnabled)
+                {
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="string" @bind-Value="_insuranceProvider" Label="Integration Provider"
+                                   Variant="Variant.Outlined">
+                            <MudSelectItem Value="@("NHIF")">NHIF (National Health Insurance Fund)</MudSelectItem>
+                            <MudSelectItem Value="@("AAR")">AAR Healthcare</MudSelectItem>
+                            <MudSelectItem Value="@("Jubilee")">Jubilee Insurance</MudSelectItem>
+                            <MudSelectItem Value="@("Custom")">Custom Provider</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_insuranceApiEndpoint" Label="API Endpoint URL"
+                                      Variant="Variant.Outlined" Placeholder="https://api.provider.com/v1" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_insuranceApiKey" Label="API Key" Variant="Variant.Outlined"
+                                      InputType="InputType.Password" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_insuranceApiSecret" Label="API Secret" Variant="Variant.Outlined"
+                                      InputType="InputType.Password" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField Value="@_insuranceWebhookUrl" Label="Webhook URL (Auto-generated)"
+                                      Variant="Variant.Outlined" ReadOnly="true" />
+                    </MudItem>
+                }
+            </MudGrid>
+
+            <div class="d-flex gap-2 mt-4">
+                <MudButton Variant="Variant.Outlined" Color="Color.Info"
+                           Disabled="@(!_insuranceEnabled)" OnClick="TestInsuranceConnection">
+                    Test Connection
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveInsuranceSettings">
+                    Save Changes
+                </MudButton>
+            </div>
+        </MudPaper>
+    </MudTabPanel>
+
+    <!-- AI Configuration Tab -->
+    <MudTabPanel Text="AI Assistant" Icon="@Icons.Material.Filled.SmartToy">
+        <MudPaper Elevation="0" Class="pa-6 dc-card">
+            <div class="d-flex align-center gap-2 mb-4">
+                <MudIcon Icon="@Icons.Material.Filled.SmartToy" Color="Color.Primary" />
+                <div>
+                    <MudText Typo="Typo.h6">AI Assistant Configuration</MudText>
+                    <MudText Typo="Typo.body2" Style="color: var(--tw-color-text-secondary);">
+                        Configure your Claude AI Assistant powered by Anthropic
+                    </MudText>
+                </div>
+            </div>
+
+            <MudAlert Severity="Severity.Info" Class="mb-4" Variant="Variant.Outlined">
+                <strong>Get your API key:</strong> Visit <a href="https://console.anthropic.com/settings/keys" target="_blank" style="text-decoration: underline;">Anthropic Console</a> to generate your API key. You'll need a Claude API account.
+            </MudAlert>
+
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudSwitch @bind-Value="_aiChatEnabled" Label="Enable AI Assistant"
+                               Color="Color.Primary" />
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                        When enabled, the AI Assistant will be available in the chat interface
+                    </MudText>
+                </MudItem>
+
+                <MudItem xs="12" md="8">
+                    <MudTextField @bind-Value="_aiChatApiKey" Label="Anthropic API Key"
+                                  Variant="Variant.Outlined"
+                                  InputType="InputType.Password"
+                                  Disabled="@(!_aiChatEnabled)"
+                                  Placeholder="sk-ant-api03-..." />
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                        Your API key is stored securely and never shared
+                    </MudText>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudSelect T="string" @bind-Value="_aiChatModel" Label="Model"
+                               Variant="Variant.Outlined"
+                               Disabled="@(!_aiChatEnabled)">
+                        <MudSelectItem Value="@("claude-opus-4-6")">Claude Opus 4.6 (Most Capable)</MudSelectItem>
+                        <MudSelectItem Value="@("claude-sonnet-4-5-20250929")">Claude Sonnet 4.5 (Balanced)</MudSelectItem>
+                        <MudSelectItem Value="@("claude-haiku-4-5-20251001")">Claude Haiku 4.5 (Fast)</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_aiChatEndpoint" Label="API Endpoint"
+                                  Variant="Variant.Outlined"
+                                  Disabled="@(!_aiChatEnabled)"
+                                  ReadOnly="true" />
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                        Default Anthropic endpoint (do not change unless using a proxy)
+                    </MudText>
+                </MudItem>
+            </MudGrid>
+
+            <div class="d-flex gap-2 mt-4">
+                <MudButton Variant="Variant.Outlined" Color="Color.Info"
+                           Disabled="@(!_aiChatEnabled || string.IsNullOrWhiteSpace(_aiChatApiKey))"
+                           OnClick="TestAiConnection">
+                    Test Connection
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAiChatSettings">
+                    Save AI Settings
+                </MudButton>
+            </div>
+
+            <MudDivider Class="my-6" />
+
+            <MudText Typo="Typo.subtitle1" Class="mb-3">Features & Capabilities</MudText>
+            <MudList T="string" Dense="true">
+                <MudListItem Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
+                    <MudText>Natural language queries for inventory, sales, and financial data</MudText>
+                </MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
+                    <MudText>Intelligent recommendations for stock reordering and pricing</MudText>
+                </MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
+                    <MudText>Drug interaction checks and pharmaceutical guidance</MudText>
+                </MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
+                    <MudText>Report generation and data analysis assistance</MudText>
+                </MudListItem>
+            </MudList>
+        </MudPaper>
+    </MudTabPanel>
+
+    <!-- Subscription & Billing Tab -->
+    <MudTabPanel Text="Subscription" Icon="@Icons.Material.Filled.CreditCard">
+        <MudPaper Elevation="0" Class="pa-6 dc-card">
+            <div class="d-flex align-center gap-2 mb-4">
+                <MudIcon Icon="@Icons.Material.Filled.CreditCard" Color="Color.Primary" />
+                <div>
+                    <MudText Typo="Typo.h6">Subscription & Billing</MudText>
+                    <MudText Typo="Typo.body2" Style="color: var(--tw-color-text-secondary);">
+                        Manage your subscription plan and billing
+                    </MudText>
+                </div>
+            </div>
+
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudPaper Elevation="0" Class="pa-5 dc-kpi">
+                        <MudText Typo="Typo.caption" Style="color: var(--tw-color-text-secondary);">Current Plan</MudText>
+                        <MudText Typo="Typo.h5" Style="font-weight: 700;" Color="Color.Primary">@_subscriptionPlanName</MudText>
+                        <MudChip T="string" Size="Size.Small" Color="@GetSubscriptionStatusColor()" Class="mt-2">
+                            @_subscriptionStatus
+                        </MudChip>
+                        @if (!string.IsNullOrEmpty(_subscriptionRenewalDate))
+                        {
+                            <MudText Typo="Typo.caption" Class="mt-2" Style="color: var(--tw-color-text-secondary);">
+                                Renews: @_subscriptionRenewalDate
+                            </MudText>
+                        }
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudPaper Elevation="0" Class="pa-5 dc-kpi">
+                        <MudText Typo="Typo.caption" Style="color: var(--tw-color-text-secondary);">Usage</MudText>
+                        <div class="mt-3">
+                            <div class="d-flex justify-space-between mb-1">
+                                <MudText Typo="Typo.body2">Users</MudText>
+                                <MudText Typo="Typo.body2" Style="font-weight: 600;">@_usageUsers / @_maxUsers</MudText>
+                            </div>
+                            <MudProgressLinear Value="@(_maxUsers > 0 ? (double)_usageUsers / _maxUsers * 100 : 0)"
+                                              Color="Color.Primary" Rounded="true" Size="Size.Small" />
+                        </div>
+                        <div class="mt-3">
+                            <div class="d-flex justify-space-between mb-1">
+                                <MudText Typo="Typo.body2">Drugs</MudText>
+                                <MudText Typo="Typo.body2" Style="font-weight: 600;">@_usageDrugs / @(_maxDrugs < 0 ? "Unlimited" : _maxDrugs.ToString())</MudText>
+                            </div>
+                            <MudProgressLinear Value="@(_maxDrugs > 0 ? (double)_usageDrugs / _maxDrugs * 100 : 10)"
+                                              Color="Color.Success" Rounded="true" Size="Size.Small" />
+                        </div>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+
+            <div class="d-flex gap-2 mt-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Upgrade"
+                           OnClick="@(() => NavigationManager.NavigateTo("/subscription/select-plan"))">
+                    Upgrade Plan
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Default"
+                           StartIcon="@Icons.Material.Filled.ManageAccounts"
+                           OnClick="ManageSubscription">
+                    Manage Billing
+                </MudButton>
+            </div>
         </MudPaper>
     </MudTabPanel>
 </MudTabs>
@@ -488,6 +831,11 @@
     private List<TemplateModel> _templates = new();
     private string? _logoPreviewUrl;
     private IBrowserFile? _logoFile;
+    private byte[]? _logoFileBytes;
+    private string? _logoFileExtension;
+    private bool _isUploadingLogo;
+
+    private bool HasLogo => !string.IsNullOrEmpty(_logoPreviewUrl) || !string.IsNullOrEmpty(_companySettings.LogoUrl);
 
     // Currency settings
     private List<CurrencyDto> _currencies = new();
@@ -505,6 +853,9 @@
         await LoadSettingsAsync();
         await LoadCurrencySettingsAsync();
         await LoadRoundingSettingsAsync();
+        await LoadInsuranceSettings();
+        await LoadAiChatSettings();
+        await LoadSubscriptionInfo();
     }
 
     private async Task LoadCurrencySettingsAsync()
@@ -583,7 +934,7 @@
                 // Defaults
                 _companySettings = new CompanySettingsModel
                 {
-                    CompanyName = "Revo Pharma & Medical Ltd",
+                    CompanyName = "Guru Brothers Ltd",
                     DefaultTaxRate = 16,
                     LowStockThresholdDays = 14,
                     ExpiryAlertDays30 = 30,
@@ -605,16 +956,6 @@
                     Body = t.Body,
                     IsActive = t.IsActive
                 }).ToList();
-
-            if (!_templates.Any())
-            {
-                _templates = new List<TemplateModel>
-                {
-                    new() { Name = "Low Stock Alert", Type = "Stock Alert", Channel = "Email", Subject = "Low Stock Alert - Action Required", IsActive = true },
-                    new() { Name = "Expiry Warning", Type = "Expiry Alert", Channel = "Email", Subject = "Drug Expiry Warning", IsActive = true },
-                    new() { Name = "Order Confirmation", Type = "Order Update", Channel = "WhatsApp", Subject = "Order Confirmed", IsActive = true }
-                };
-            }
 
             // Load tax categories from database
             var taxCategoriesDto = await Mediator.Send(new GetTaxCategoriesQuery());
@@ -647,29 +988,88 @@
         try
         {
             var file = e.File;
-            if (file != null)
+            if (file == null) return;
+
+            if (file.Size > 2 * 1024 * 1024)
             {
-                // Validate file size (2MB max)
-                if (file.Size > 2 * 1024 * 1024)
-                {
-                    Snackbar.Add("File size must be less than 2MB", Severity.Warning);
-                    return;
-                }
+                Snackbar.Add("File size must be less than 2MB", Severity.Warning);
+                return;
+            }
 
-                _logoFile = file;
+            if (!file.ContentType.StartsWith("image/"))
+            {
+                Snackbar.Add("Please select an image file (PNG, JPG, etc.)", Severity.Warning);
+                return;
+            }
 
-                // Generate preview
-                var buffer = new byte[file.Size];
-                await file.OpenReadStream(maxAllowedSize: 2 * 1024 * 1024).ReadAsync(buffer);
-                _logoPreviewUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+            _isUploadingLogo = true;
+            StateHasChanged();
 
+            _logoFile = file;
+            var buffer = new byte[file.Size];
+            await file.OpenReadStream(maxAllowedSize: 2 * 1024 * 1024).ReadAsync(buffer);
+            _logoFileExtension = Path.GetExtension(file.Name);
+
+            // Save to temp file for crop dialog
+            var previewDir = Path.Combine("wwwroot", "images");
+            Directory.CreateDirectory(previewDir);
+            var tempName = $"logo-temp-{Guid.NewGuid():N}{_logoFileExtension}";
+            var tempPath = Path.Combine(previewDir, tempName);
+            await File.WriteAllBytesAsync(tempPath, buffer);
+            var tempUrl = $"/images/{tempName}?t={DateTime.UtcNow.Ticks}";
+
+            _isUploadingLogo = false;
+            StateHasChanged();
+
+            // Open crop dialog
+            var parameters = new DialogParameters
+            {
+                { nameof(ImageCropDialog.ImageDataUrl), tempUrl },
+                { nameof(ImageCropDialog.AspectRatio), 1.0 },
+                { nameof(ImageCropDialog.OutputWidth), 200 },
+                { nameof(ImageCropDialog.OutputHeight), 200 }
+            };
+            var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+            var dialog = await DialogService.ShowAsync<ImageCropDialog>("Crop Logo", parameters, options);
+            var result = await dialog.Result;
+
+            // Clean up temp file
+            try { if (File.Exists(tempPath)) File.Delete(tempPath); } catch { }
+
+            if (!result.Canceled && result.Data is string croppedDataUrl)
+            {
+                // Convert cropped base64 data URL to bytes
+                var base64 = croppedDataUrl.Substring(croppedDataUrl.IndexOf(",") + 1);
+                _logoFileBytes = Convert.FromBase64String(base64);
+                _logoFileExtension = ".png";
+
+                // Save cropped preview
+                var previewName = $"logo-preview-{Guid.NewGuid():N}.png";
+                var previewPath = Path.Combine(previewDir, previewName);
+                await File.WriteAllBytesAsync(previewPath, _logoFileBytes);
+                _logoPreviewUrl = $"/images/{previewName}?t={DateTime.UtcNow.Ticks}";
                 StateHasChanged();
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error loading logo: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Error processing logo: {ex.Message}", Severity.Error);
         }
+        finally
+        {
+            _isUploadingLogo = false;
+            StateHasChanged();
+        }
+    }
+
+    private void RemoveLogo()
+    {
+        _logoPreviewUrl = null;
+        _logoFile = null;
+        _logoFileBytes = null;
+        _logoFileExtension = null;
+        _companySettings.LogoUrl = null;
+        StateHasChanged();
     }
 
     private async Task SaveCompanySettings()
@@ -686,22 +1086,28 @@
             }
 
             // Save logo file if one was uploaded
-            if (_logoFile != null)
+            if (_logoFileBytes != null)
             {
                 var uploadsPath = Path.Combine("wwwroot", "images");
                 Directory.CreateDirectory(uploadsPath);
 
-                var fileName = $"company-logo{Path.GetExtension(_logoFile.Name)}";
+                // Use a unique filename to avoid file-lock conflicts with static file middleware
+                var fileName = $"company-logo-{DateTime.UtcNow:yyyyMMddHHmmss}{_logoFileExtension}";
                 var filePath = Path.Combine(uploadsPath, fileName);
 
-                // Save file
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                await File.WriteAllBytesAsync(filePath, _logoFileBytes);
+
+                // Try to delete old logo file
+                if (!string.IsNullOrEmpty(_companySettings.LogoUrl))
                 {
-                    await _logoFile.OpenReadStream(maxAllowedSize: 2 * 1024 * 1024).CopyToAsync(stream);
+                    var oldPath = Path.Combine("wwwroot", _companySettings.LogoUrl.TrimStart('/'));
+                    try { if (File.Exists(oldPath)) File.Delete(oldPath); } catch { /* locked, will be cleaned up later */ }
                 }
 
                 _companySettings.LogoUrl = $"/images/{fileName}";
                 _logoFile = null;
+                _logoFileBytes = null;
+                _logoFileExtension = null;
                 _logoPreviewUrl = null;
             }
 
@@ -752,6 +1158,29 @@
         }
     }
 
+    private async Task SaveTaxSettings()
+    {
+        try
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var settings = await dbContext.CompanySettings.FirstOrDefaultAsync();
+            if (settings == null)
+            {
+                settings = new Data.Entities.CompanySettings();
+                dbContext.CompanySettings.Add(settings);
+            }
+            settings.DefaultCurrency = _companySettings.Currency;
+            settings.DefaultTaxRate = _companySettings.DefaultTaxRate;
+            await dbContext.SaveChangesAsync();
+            Snackbar.Add("Tax settings saved successfully", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving tax settings: {ex.Message}", Severity.Error);
+        }
+    }
+
     private async Task SaveCurrencySettings()
     {
         try
@@ -787,12 +1216,144 @@
             if (salesCurrency != null)
                 salesCurrency.IsDefaultSalesCurrency = true;
 
+            // Also persist IDs to CompanySettings
+            var companySettings = await dbContext.CompanySettings.FirstOrDefaultAsync();
+            if (companySettings != null)
+            {
+                companySettings.BaseCurrencyId = _baseCurrencyId;
+                companySettings.DefaultPurchaseCurrencyId = _purchaseCurrencyId;
+                companySettings.DefaultSalesCurrencyId = _salesCurrencyId;
+            }
+
             await dbContext.SaveChangesAsync();
+
+            // Clear cache and reload to confirm
+            CurrencyService.ClearCache();
+            await LoadCurrencySettingsAsync();
             Snackbar.Add("Currency settings saved successfully", Severity.Success);
         }
         catch (Exception ex)
         {
             Snackbar.Add($"Error saving currency settings: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task CreateCurrency()
+    {
+        var parameters = new DialogParameters();
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<Components.CurrencyEditorDialog>("Add Currency", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is Components.CurrencyEditorDialog.CurrencyFormModel model)
+        {
+            try
+            {
+                using var scope = ScopeFactory.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var currency = new Data.Entities.Currency
+                {
+                    Code = model.Code.ToUpperInvariant(),
+                    Name = model.Name,
+                    Symbol = model.Symbol,
+                    DecimalPlaces = model.DecimalPlaces,
+                    Format = model.Format,
+                    DisplayOrder = model.DisplayOrder,
+                    IsActive = model.IsActive
+                };
+                dbContext.Currencies.Add(currency);
+                await dbContext.SaveChangesAsync();
+                Snackbar.Add($"Currency '{model.Code}' created successfully", Severity.Success);
+                CurrencyService.ClearCache();
+                await LoadCurrencySettingsAsync();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error creating currency: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private async Task EditCurrency(CurrencyDto currency)
+    {
+        var parameters = new DialogParameters
+        {
+            { nameof(Components.CurrencyEditorDialog.CurrencyId), currency.Id },
+            { nameof(Components.CurrencyEditorDialog.Code), currency.Code },
+            { nameof(Components.CurrencyEditorDialog.Name), currency.Name },
+            { nameof(Components.CurrencyEditorDialog.Symbol), currency.Symbol },
+            { nameof(Components.CurrencyEditorDialog.DecimalPlaces), currency.DecimalPlaces },
+            { nameof(Components.CurrencyEditorDialog.Format), currency.Format },
+            { nameof(Components.CurrencyEditorDialog.DisplayOrder), currency.DisplayOrder },
+            { nameof(Components.CurrencyEditorDialog.IsActive), currency.IsActive }
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<Components.CurrencyEditorDialog>("Edit Currency", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is Components.CurrencyEditorDialog.CurrencyFormModel model)
+        {
+            try
+            {
+                using var scope = ScopeFactory.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var dbCurrency = await dbContext.Currencies.FindAsync(currency.Id);
+                if (dbCurrency != null)
+                {
+                    dbCurrency.Code = model.Code.ToUpperInvariant();
+                    dbCurrency.Name = model.Name;
+                    dbCurrency.Symbol = model.Symbol;
+                    dbCurrency.DecimalPlaces = model.DecimalPlaces;
+                    dbCurrency.Format = model.Format;
+                    dbCurrency.DisplayOrder = model.DisplayOrder;
+                    dbCurrency.IsActive = model.IsActive;
+                    await dbContext.SaveChangesAsync();
+                    Snackbar.Add($"Currency '{model.Code}' updated successfully", Severity.Success);
+                    CurrencyService.ClearCache();
+                    await LoadCurrencySettingsAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error updating currency: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private async Task DeleteCurrency(CurrencyDto currency)
+    {
+        if (currency.IsBaseCurrency || currency.IsDefaultPurchaseCurrency || currency.IsDefaultSalesCurrency)
+        {
+            Snackbar.Add("Cannot delete a currency that is set as a default", Severity.Warning);
+            return;
+        }
+
+        bool? confirm = await DialogService.ShowMessageBox(
+            "Delete Currency",
+            $"Are you sure you want to delete '{currency.Code} - {currency.Name}'?",
+            yesText: "Delete",
+            cancelText: "Cancel");
+
+        if (confirm == true)
+        {
+            try
+            {
+                using var scope = ScopeFactory.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var dbCurrency = await dbContext.Currencies.FindAsync(currency.Id);
+                if (dbCurrency != null)
+                {
+                    dbContext.Currencies.Remove(dbCurrency);
+                    await dbContext.SaveChangesAsync();
+                    Snackbar.Add($"Currency '{currency.Code}' deleted successfully", Severity.Success);
+                    CurrencyService.ClearCache();
+                    await LoadCurrencySettingsAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting currency: {ex.Message}", Severity.Error);
+            }
         }
     }
 
@@ -999,11 +1560,10 @@
         var dialog = await DialogService.ShowAsync<Components.TemplateEditorDialog>("Create Notification Template", parameters, options);
         var result = await dialog.Result;
 
-        if (!result.Canceled && result.Data != null)
+        if (!result.Canceled && result.Data is TemplateEditorModel template)
         {
             try
             {
-                var template = (dynamic)result.Data;
                 var command = new CreateNotificationTemplateCommand(
                     template.Name,
                     template.Code,
@@ -1049,9 +1609,8 @@
             var dialog = await DialogService.ShowAsync<Components.TemplateEditorDialog>("Edit Notification Template", parameters, options);
             var result = await dialog.Result;
 
-            if (!result.Canceled && result.Data != null)
+            if (!result.Canceled && result.Data is TemplateEditorModel updatedTemplate)
             {
-                var updatedTemplate = (dynamic)result.Data;
                 var command = new UpdateNotificationTemplateCommand(
                     template.Id,
                     updatedTemplate.Name,
@@ -1098,9 +1657,8 @@
             var dialog = await DialogService.ShowAsync<Components.TemplateEditorDialog>("Copy Notification Template", parameters, options);
             var result = await dialog.Result;
 
-            if (!result.Canceled && result.Data != null)
+            if (!result.Canceled && result.Data is TemplateEditorModel newTemplate)
             {
-                var newTemplate = (dynamic)result.Data;
                 var command = new CreateNotificationTemplateCommand(
                     newTemplate.Name,
                     newTemplate.Code,
@@ -1119,6 +1677,29 @@
         catch (Exception ex)
         {
             Snackbar.Add($"Error copying template: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteTemplate(TemplateModel template)
+    {
+        bool? confirm = await DialogService.ShowMessageBox(
+            "Delete Template",
+            $"Are you sure you want to delete '{template.Name}'?",
+            yesText: "Delete",
+            cancelText: "Cancel");
+
+        if (confirm == true)
+        {
+            try
+            {
+                await Mediator.Send(new DeleteNotificationTemplateCommand(template.Id));
+                Snackbar.Add($"Template '{template.Name}' deleted successfully", Severity.Success);
+                await LoadSettingsAsync();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting template: {ex.Message}", Severity.Error);
+            }
         }
     }
 
@@ -1189,5 +1770,229 @@
         public bool ApplyToRetail { get; set; } = true;
         public bool ApplyToWholesale { get; set; } = true;
         public bool ApplyToInvoices { get; set; } = true;
+    }
+
+    // Banking Integration
+    private bool _bankIntegrationEnabled;
+    private string? _bankIntegrationProvider;
+    private string? _bankIntegrationApiKey;
+
+    // Insurance Integration
+    private bool _insuranceEnabled;
+    private string? _insuranceProvider;
+    private string? _insuranceApiEndpoint;
+    private string? _insuranceApiKey;
+    private string? _insuranceApiSecret;
+    private string _insuranceWebhookUrl = string.Empty;
+
+    // Subscription
+    private string _subscriptionPlanName = "Free Trial";
+    private string _subscriptionStatus = "Trialing";
+    private string? _subscriptionRenewalDate;
+    private int _usageUsers;
+    private int _maxUsers = 2;
+    private int _usageDrugs;
+    private int _maxDrugs = 100;
+
+    // AI Chat Settings
+    private bool _aiChatEnabled;
+    private string _aiChatApiKey = string.Empty;
+    private string _aiChatModel = "claude-sonnet-4-5-20250929";
+    private string _aiChatEndpoint = "https://api.anthropic.com/v1/messages";
+
+    private async Task TestInsuranceConnection()
+    {
+        Snackbar.Add("Connection test feature coming soon. Integration will be available in a future update.", Severity.Info);
+    }
+
+    private async Task SaveInsuranceSettings()
+    {
+        try
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var settings = await db.InsuranceIntegrationSettings.FirstOrDefaultAsync();
+            if (settings == null)
+            {
+                settings = new DawaCloud.Web.Data.Entities.InsuranceIntegrationSettings();
+                db.InsuranceIntegrationSettings.Add(settings);
+            }
+
+            settings.IsEnabled = _insuranceEnabled;
+            settings.IntegrationProvider = _insuranceProvider;
+            settings.ApiEndpointUrl = _insuranceApiEndpoint;
+            settings.ApiKey = _insuranceApiKey;
+            settings.ApiSecret = _insuranceApiSecret;
+            settings.WebhookUrl = _insuranceWebhookUrl;
+            settings.UpdatedAt = DateTime.UtcNow;
+
+            await db.SaveChangesAsync();
+            Snackbar.Add("Insurance settings saved successfully", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving insurance settings: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private Color GetSubscriptionStatusColor()
+    {
+        return _subscriptionStatus switch
+        {
+            "Active" => Color.Success,
+            "Trialing" => Color.Info,
+            "PastDue" => Color.Warning,
+            "Cancelled" or "Expired" => Color.Error,
+            _ => Color.Default
+        };
+    }
+
+    private async Task ManageSubscription()
+    {
+        Snackbar.Add("Stripe billing portal will be available once API keys are configured", Severity.Info);
+    }
+
+    private async Task LoadInsuranceSettings()
+    {
+        try
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var settings = await db.InsuranceIntegrationSettings.FirstOrDefaultAsync();
+            if (settings != null)
+            {
+                _insuranceEnabled = settings.IsEnabled;
+                _insuranceProvider = settings.IntegrationProvider;
+                _insuranceApiEndpoint = settings.ApiEndpointUrl;
+                _insuranceApiKey = settings.ApiKey;
+                _insuranceApiSecret = settings.ApiSecret;
+                _insuranceWebhookUrl = settings.WebhookUrl ?? $"{NavigationManager.BaseUri}api/insurance/webhook/{Guid.NewGuid():N}";
+            }
+            else
+            {
+                _insuranceWebhookUrl = $"{NavigationManager.BaseUri}api/insurance/webhook/{Guid.NewGuid():N}";
+            }
+        }
+        catch { }
+    }
+
+    private async Task LoadSubscriptionInfo()
+    {
+        try
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var tenant = await db.Tenants
+                .AsNoTracking()
+                .Include(t => t.SubscriptionPlan)
+                .FirstOrDefaultAsync();
+
+            if (tenant != null)
+            {
+                _subscriptionPlanName = tenant.SubscriptionPlan?.Name ?? "Free Trial";
+                _subscriptionStatus = tenant.SubscriptionStatus.ToString();
+                _subscriptionRenewalDate = tenant.CurrentPeriodEnd?.ToString("MMM d, yyyy");
+                _maxUsers = tenant.MaxUsers;
+                _maxDrugs = tenant.MaxDrugs;
+            }
+
+            _usageDrugs = await db.Drugs.CountAsync();
+        }
+        catch { }
+    }
+
+    private async Task LoadAiChatSettings()
+    {
+        try
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var settings = await db.CompanySettings.FirstOrDefaultAsync();
+            if (settings != null)
+            {
+                _aiChatEnabled = settings.AiChatEnabled;
+                _aiChatApiKey = settings.AiChatApiKey ?? string.Empty;
+                _aiChatModel = settings.AiChatModel ?? "claude-sonnet-4-5-20250929";
+                _aiChatEndpoint = settings.AiChatEndpoint ?? "https://api.anthropic.com/v1/messages";
+            }
+        }
+        catch { }
+    }
+
+    private async Task SaveAiChatSettings()
+    {
+        try
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var settings = await db.CompanySettings.FirstOrDefaultAsync();
+            if (settings == null)
+            {
+                settings = new DawaCloud.Web.Data.Entities.CompanySettings();
+                db.CompanySettings.Add(settings);
+            }
+
+            settings.AiChatEnabled = _aiChatEnabled;
+            settings.AiChatApiKey = _aiChatApiKey;
+            settings.AiChatModel = _aiChatModel;
+            settings.AiChatEndpoint = _aiChatEndpoint;
+
+            await db.SaveChangesAsync();
+            Snackbar.Add("AI Chat settings saved successfully", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving AI Chat settings: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task TestAiConnection()
+    {
+        if (string.IsNullOrWhiteSpace(_aiChatApiKey))
+        {
+            Snackbar.Add("Please enter an API key first", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add("x-api-key", _aiChatApiKey);
+            httpClient.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
+
+            var requestBody = new
+            {
+                model = _aiChatModel,
+                max_tokens = 10,
+                messages = new[]
+                {
+                    new { role = "user", content = "Hi" }
+                }
+            };
+
+            var json = System.Text.Json.JsonSerializer.Serialize(requestBody);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            var response = await httpClient.PostAsync(_aiChatEndpoint, content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Connection successful! Your API key is valid.", Severity.Success);
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Connection failed: {response.StatusCode} - {error}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Connection test failed: {ex.Message}", Severity.Error);
+        }
     }
 }

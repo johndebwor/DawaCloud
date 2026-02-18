@@ -11,19 +11,19 @@
 
 <PageTitle>My Profile - DawaCloud</PageTitle>
 
-<div class="df-hero animate-fade-in-up">
-    <div class="df-hero-content">
-        <div class="df-hero-text">
-            <h1>My Profile</h1>
-            <p>Manage your personal information and password</p>
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">My Profile</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Manage your personal information and password</p>
         </div>
     </div>
 </div>
 
 <MudGrid Class="mt-4">
     <MudItem xs="12" md="4">
-        <MudPaper Elevation="1" Class="pa-6 text-center">
-            <MudAvatar Color="Color.Primary" Size="Size.Large" Style="width: 80px; height: 80px; font-size: 2rem; margin: 0 auto 16px;">
+        <MudPaper Elevation="0" Class="pa-6 text-center dc-card animate-fade-in-up animate-delay-1">
+            <MudAvatar Color="Color.Primary" Size="Size.Large" Class="tw:w-20 tw:h-20 tw:text-2xl tw:mx-auto tw:mb-4">
                 @(_firstName.Length > 0 ? _firstName[0].ToString().ToUpper() : "?")
             </MudAvatar>
             <MudText Typo="Typo.h6">@_firstName @_lastName</MudText>
@@ -45,7 +45,7 @@
     </MudItem>
 
     <MudItem xs="12" md="8">
-        <MudPaper Elevation="1" Class="pa-6">
+        <MudPaper Elevation="0" Class="pa-6 dc-card animate-fade-in-up animate-delay-2">
             <MudText Typo="Typo.h6" Class="mb-4">Personal Information</MudText>
             <MudForm @ref="_profileForm">
                 <MudGrid>
@@ -71,7 +71,7 @@
             </MudForm>
         </MudPaper>
 
-        <MudPaper Elevation="1" Class="pa-6 mt-4">
+        <MudPaper Elevation="0" Class="pa-6 mt-4 dc-card animate-fade-in-up animate-delay-3">
             <MudText Typo="Typo.h6" Class="mb-4">Change Password</MudText>
             <MudGrid>
                 <MudItem xs="12">

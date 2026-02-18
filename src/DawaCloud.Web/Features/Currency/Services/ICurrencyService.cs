@@ -36,6 +36,9 @@ public interface ICurrencyService
     // Exchange rate management
     Task<SetExchangeRateResult> SetExchangeRateAsync(int fromCurrencyId, int toCurrencyId, decimal rate, string? notes, string changedBy, CancellationToken ct = default);
     Task<List<ExchangeRateHistoryDto>> GetExchangeRateHistoryAsync(int exchangeRateId, int? limit = null, CancellationToken ct = default);
+
+    // Cache management
+    void ClearCache();
 }
 
 // DTOs

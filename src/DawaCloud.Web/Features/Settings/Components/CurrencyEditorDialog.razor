@@ -1,0 +1,101 @@
+@using MudBlazor
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_model.Code" Label="Currency Code" Variant="Variant.Outlined" Required="true"
+                                  HelperText="ISO 4217 code (e.g., SSP, USD)" MaxLength="3" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_model.Name" Label="Currency Name" Variant="Variant.Outlined" Required="true"
+                                  HelperText="Full name (e.g., South Sudan Pound)" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_model.Symbol" Label="Symbol" Variant="Variant.Outlined" Required="true"
+                                  HelperText="Currency symbol (e.g., SSP, $)" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField @bind-Value="_model.DecimalPlaces" Label="Decimal Places" Variant="Variant.Outlined" Min="0" Max="4" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_model.Format" Label="Display Format" Variant="Variant.Outlined"
+                                  HelperText="e.g., {0} {1:N2} where {0}=symbol, {1}=amount" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField @bind-Value="_model.DisplayOrder" Label="Display Order" Variant="Variant.Outlined" Min="0" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudSwitch @bind-Value="_model.IsActive" Label="Active" Color="Color.Primary" />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">
+            @(IsEditMode ? "Update Currency" : "Add Currency")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance? MudDialog { get; set; }
+
+    [Parameter] public int? CurrencyId { get; set; }
+    [Parameter] public string Code { get; set; } = string.Empty;
+    [Parameter] public string Name { get; set; } = string.Empty;
+    [Parameter] public string Symbol { get; set; } = string.Empty;
+    [Parameter] public int DecimalPlaces { get; set; } = 2;
+    [Parameter] public string Format { get; set; } = "{0} {1:N2}";
+    [Parameter] public int DisplayOrder { get; set; }
+    [Parameter] public bool IsActive { get; set; } = true;
+
+    private bool IsEditMode => CurrencyId.HasValue;
+    private MudForm? _form;
+    private CurrencyFormModel _model = new();
+
+    protected override void OnInitialized()
+    {
+        _model = new CurrencyFormModel
+        {
+            Code = Code,
+            Name = Name,
+            Symbol = Symbol,
+            DecimalPlaces = DecimalPlaces,
+            Format = string.IsNullOrEmpty(Format) ? "{0} {1:N2}" : Format,
+            DisplayOrder = DisplayOrder,
+            IsActive = IsActive
+        };
+    }
+
+    private void Cancel() => MudDialog?.Cancel();
+
+    private async Task Submit()
+    {
+        if (_form != null)
+        {
+            await _form.Validate();
+            if (!_form.IsValid)
+            {
+                Snackbar.Add("Please fill all required fields", Severity.Warning);
+                return;
+            }
+        }
+        MudDialog?.Close(DialogResult.Ok(_model));
+    }
+
+    public class CurrencyFormModel
+    {
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Symbol { get; set; } = string.Empty;
+        public int DecimalPlaces { get; set; } = 2;
+        public string Format { get; set; } = "{0} {1:N2}";
+        public int DisplayOrder { get; set; }
+        public bool IsActive { get; set; } = true;
+    }
+}

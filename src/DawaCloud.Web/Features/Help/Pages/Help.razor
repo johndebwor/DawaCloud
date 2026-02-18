@@ -3,17 +3,18 @@
 
 <PageTitle>Help & Support - DawaCloud</PageTitle>
 
-<div class="df-hero animate-fade-in-up">
-    <div class="df-hero-content">
-        <div class="df-hero-text">
-            <h1>Help & Support</h1>
-            <p>Frequently asked questions and user guides</p>
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">Help & Support</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Frequently asked questions and user guides</p>
         </div>
     </div>
 </div>
 
-<MudGrid Class="mt-4">
+<MudGrid Class="mt-4" Spacing="6">
     <MudItem xs="12" md="8">
+        <div class="dc-card animate-fade-in-up animate-delay-1">
         <MudText Typo="Typo.h6" Class="mb-3">Getting Started</MudText>
         <MudExpansionPanels MultiExpansion="true">
             <MudExpansionPanel Text="How do I add a new drug to the system?">
@@ -113,15 +114,112 @@
             <MudExpansionPanel Text="What reports are available?">
                 <MudText>
                     DawaCloud includes: Stock Reports, Expiry Reports, Sales Reports (daily/weekly/monthly),
-                    Supplier Reports, Financial Reports (P&amp;L, receivables), and Compliance Reports.
+                    Supplier Reports, Expense Reports, Financial Reports (P&amp;L, receivables), and Compliance Reports.
                     All reports can be exported to Excel or PDF.
                 </MudText>
             </MudExpansionPanel>
+            <MudExpansionPanel Text="How do I export reports?">
+                <MudText>
+                    After generating any report, click the <strong>Export to Excel</strong> or <strong>Export to PDF</strong> button
+                    at the top of the report. The file will be downloaded automatically to your device.
+                    PDF exports include your company logo and branding.
+                </MudText>
+            </MudExpansionPanel>
         </MudExpansionPanels>
+
+        <MudText Typo="Typo.h6" Class="mb-3 mt-6">Expense Management</MudText>
+        <MudExpansionPanels MultiExpansion="true">
+            <MudExpansionPanel Text="How do I track business expenses?">
+                <MudText>
+                    Navigate to <strong>Expenses &rarr; New Expense</strong> to record business expenses.
+                    Select a category, enter the amount, payment method, and vendor details.
+                    You can attach receipt photos for documentation.
+                </MudText>
+            </MudExpansionPanel>
+            <MudExpansionPanel Text="Can I set up recurring expenses?">
+                <MudText>
+                    Yes! When creating an expense, toggle <strong>Recurring</strong> and configure the frequency:
+                    <ul>
+                        <li>Daily, Weekly, Monthly, or Yearly</li>
+                        <li>Specify which days (for weekly expenses)</li>
+                        <li>Set an end date or occurrence count</li>
+                    </ul>
+                    The system will automatically generate future expense records.
+                </MudText>
+            </MudExpansionPanel>
+            <MudExpansionPanel Text="How do expense budgets work?">
+                <MudText>
+                    Set budget limits for expense categories in <strong>Settings &rarr; Expense Categories</strong>.
+                    When creating an expense, the system will warn you if it exceeds the category budget.
+                    View budget vs actual spending in the <strong>Budget vs Actual</strong> expense report.
+                </MudText>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+
+        <MudText Typo="Typo.h6" Class="mb-3 mt-6">AI Assistant</MudText>
+        <MudExpansionPanels MultiExpansion="true">
+            <MudExpansionPanel Text="What can the AI Assistant help with?">
+                <MudText>
+                    The AI Chat feature (powered by Claude) can answer questions about:
+                    <ul>
+                        <li>Drug information and interactions</li>
+                        <li>How to use DawaCloud features</li>
+                        <li>Inventory management best practices</li>
+                        <li>Pharmaceutical regulations and compliance</li>
+                        <li>Business insights and recommendations</li>
+                    </ul>
+                    Access it via the <strong>AI Chat</strong> icon in the navigation menu.
+                </MudText>
+            </MudExpansionPanel>
+            <MudExpansionPanel Text="How do I enable AI Chat?">
+                <MudText>
+                    AI Chat must be configured in <strong>Settings &rarr; AI Assistant</strong>.
+                    Enter your Anthropic API key, select the Claude model (Haiku, Sonnet, or Opus),
+                    and test the connection. Contact support if you need assistance obtaining an API key.
+                </MudText>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+
+        <MudText Typo="Typo.h6" Class="mb-3 mt-6">Security & Compliance</MudText>
+        <MudExpansionPanels MultiExpansion="true">
+            <MudExpansionPanel Text="How is my data secured?">
+                <MudText>
+                    DawaCloud uses industry-standard security measures:
+                    <ul>
+                        <li>Encrypted database connections (TLS/SSL)</li>
+                        <li>Role-based access control (RBAC)</li>
+                        <li>Complete audit trail of all actions</li>
+                        <li>Regular automated backups</li>
+                        <li>Session management and timeout</li>
+                    </ul>
+                    View audit logs in <strong>Audit &rarr; Activity Logs</strong>.
+                </MudText>
+            </MudExpansionPanel>
+            <MudExpansionPanel Text="Can I track controlled drugs?">
+                <MudText>
+                    Yes — mark drugs as <strong>Controlled</strong> when creating them.
+                    All movements of controlled drugs are logged with full traceability.
+                    Generate controlled drugs reports from <strong>Reports &rarr; Compliance Reports</strong>.
+                </MudText>
+            </MudExpansionPanel>
+            <MudExpansionPanel Text="How do I manage user permissions?">
+                <MudText>
+                    Go to <strong>Settings &rarr; Users &rarr; Edit User</strong> to assign roles:
+                    <ul>
+                        <li><strong>Admin</strong> — full system access</li>
+                        <li><strong>Manager</strong> — manage operations, view reports</li>
+                        <li><strong>Pharmacist</strong> — POS, dispensing, inventory</li>
+                        <li><strong>Cashier</strong> — POS only</li>
+                    </ul>
+                    Create custom roles with specific permissions as needed.
+                </MudText>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+        </div>
     </MudItem>
 
     <MudItem xs="12" md="4">
-        <MudPaper Elevation="1" Class="pa-4">
+        <MudPaper Elevation="0" Class="pa-4 dc-card animate-fade-in-up animate-delay-2">
             <MudText Typo="Typo.h6" Class="mb-3">Quick Tips</MudText>
             <MudList T="string" Dense="true">
                 <MudListItem T="string" Icon="@Icons.Material.Filled.Keyboard">
@@ -142,10 +240,10 @@
             </MudList>
         </MudPaper>
 
-        <MudPaper Elevation="1" Class="pa-4 mt-4">
+        <MudPaper Elevation="0" Class="pa-4 mt-4 dc-card animate-fade-in-up animate-delay-3">
             <MudText Typo="Typo.h6" Class="mb-3">Contact Support</MudText>
             <MudText Typo="Typo.body2">
-                <strong>Revo Pharma & Medical Ltd</strong>
+                <strong>Guru Brothers Ltd</strong>
             </MudText>
             <MudText Typo="Typo.body2" Class="mt-1">
                 <MudIcon Icon="@Icons.Material.Filled.Email" Size="Size.Small" /> info@revopharma.com

@@ -3,6 +3,8 @@
 @using MudBlazor
 @using Microsoft.JSInterop
 @using ClosedXML.Excel
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "RequireInventoryAccess")]
 @using DawaCloud.Web.Features.Inventory.Queries
 @using MediatR
 @inject IMediator Mediator
@@ -12,80 +14,60 @@
 <PageTitle>Stock Levels - DawaCloud</PageTitle>
 
 <!-- Hero Section -->
-<div class="df-hero animate-fade-in-up">
-    <div class="df-hero-content">
-        <div class="df-hero-text">
-            <h1>Stock Levels</h1>
-            <p>Real-time inventory quantities across all batches</p>
+<div class="dc-hero tw:mb-6">
+    <div class="tw:flex tw:flex-wrap tw:items-start tw:justify-between tw:gap-4">
+        <div>
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:mb-1 tw:font-display">Stock Levels</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0">Real-time inventory quantities across all batches</p>
         </div>
-        <div class="d-flex gap-2">
-            <MudButton Variant="Variant.Outlined"
-                       Color="Color.Default"
-                       StartIcon="@Icons.Material.Filled.FileDownload"
-                       OnClick="ExportToExcel">
-                Export
-            </MudButton>
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       StartIcon="@Icons.Material.Filled.Add"
-                       Href="/inventory/adjustments/new">
-                Stock Adjustment
-            </MudButton>
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <button class="dc-btn-secondary" @onclick="ExportToExcel">
+                <MudIcon Icon="@Icons.Material.Filled.FileDownload" Size="Size.Small" />
+                <span>Export</span>
+            </button>
+            <a href="/inventory/adjustments/new" class="dc-btn-primary">
+                <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                <span>Stock Adjustment</span>
+            </a>
         </div>
     </div>
 </div>
 
 <!-- KPI Cards -->
-<div class="df-kpi-grid">
-    <div class="df-kpi-card animate-fade-in-up animate-delay-1">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon success">
-                <MudIcon Icon="@Icons.Material.Filled.Inventory" />
-            </div>
+<div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 lg:tw:grid-cols-4 tw:gap-4 tw:mb-6">
+    <div class="dc-kpi tw:animate-slide-up">
+        <div class="dc-icon-box tw:bg-accent-50 tw:text-accent-500">
+            <MudIcon Icon="@Icons.Material.Filled.Inventory" Size="Size.Medium" />
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">Total SKUs</div>
-            <div class="df-kpi-value">@_stockItems.Count</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Total SKUs</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_stockItems.Count</div>
     </div>
-    <div class="df-kpi-card animate-fade-in-up animate-delay-2">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon warning">
-                <MudIcon Icon="@Icons.Material.Filled.Warning" />
-            </div>
+    <div class="dc-kpi tw:animate-slide-up" style="animation-delay: 0.05s;">
+        <div class="dc-icon-box tw:bg-warning/10 tw:text-warning">
+            <MudIcon Icon="@Icons.Material.Filled.Warning" Size="Size.Medium" />
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">Low Stock</div>
-            <div class="df-kpi-value">@_stockItems.Count(s => s.StockLevel == "Low")</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Low Stock</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_stockItems.Count(s => s.StockLevel == "Low")</div>
     </div>
-    <div class="df-kpi-card animate-fade-in-up animate-delay-3">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon danger">
-                <MudIcon Icon="@Icons.Material.Filled.Error" />
-            </div>
+    <div class="dc-kpi tw:animate-slide-up" style="animation-delay: 0.1s;">
+        <div class="dc-icon-box tw:bg-danger/10 tw:text-danger">
+            <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Medium" />
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">Out of Stock</div>
-            <div class="df-kpi-value">@_stockItems.Count(s => s.StockLevel == "Out")</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Out of Stock</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_stockItems.Count(s => s.StockLevel == "Out")</div>
     </div>
-    <div class="df-kpi-card animate-fade-in-up animate-delay-4">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon primary">
-                <MudIcon Icon="@Icons.Material.Filled.TrendingUp" />
-            </div>
+    <div class="dc-kpi tw:animate-slide-up" style="animation-delay: 0.15s;">
+        <div class="dc-icon-box tw:bg-primary-50 tw:text-primary-600">
+            <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Size="Size.Medium" />
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">Stock Value</div>
-            <div class="df-kpi-value">SSP @_stockItems.Sum(s => s.TotalValue).ToString("N0")</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Stock Value</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">SSP @_stockItems.Sum(s => s.TotalValue).ToString("N0")</div>
     </div>
 </div>
 
 <!-- Filters and Table -->
-<div class="df-alert-card animate-fade-in-up animate-delay-2 mt-4">
-    <div class="df-alert-header">
+<div class="dc-card">
+    <div class="tw:flex tw:flex-wrap tw:justify-between tw:items-center tw:gap-4 tw:mb-6">
         <MudTextField @bind-Value="_searchString"
                       Placeholder="Search by drug name or code..."
                       Adornment="Adornment.Start"
@@ -93,7 +75,7 @@
                       Immediate="true"
                       Style="max-width: 400px;" />
 
-        <div class="d-flex gap-2">
+        <div class="tw:flex tw:gap-2">
             <MudSelect T="string" @bind-Value="_selectedCategory" Label="Category" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
                 <MudSelectItem Value="@("All")">All Categories</MudSelectItem>
                 <MudSelectItem Value="@("Analgesics")">Analgesics</MudSelectItem>
@@ -111,42 +93,42 @@
     </div>
 
     <!-- Stock Table -->
-    <MudTable T="StockLevelDto" Items="@FilteredItems" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" Class="mt-4">
-            <HeaderContent>
-                <MudTh>Drug</MudTh>
-                <MudTh>Category</MudTh>
-                <MudTh>Available</MudTh>
-                <MudTh>Reserved</MudTh>
-                <MudTh>Reorder Level</MudTh>
-                <MudTh>Total Value</MudTh>
-                <MudTh>Status</MudTh>
-                <MudTh>Actions</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd DataLabel="Drug">
-                    <div>
-                        <MudText Typo="Typo.body2" Class="fw-bold">@context.DrugName</MudText>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">@context.DrugCode</MudText>
-                    </div>
-                </MudTd>
-                <MudTd DataLabel="Category">@context.Category</MudTd>
-                <MudTd DataLabel="Available">
-                    <MudText Typo="Typo.body2">@context.AvailableQuantity @context.Unit</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.BatchCount batches</MudText>
-                </MudTd>
-                <MudTd DataLabel="Reserved">@context.ReservedQuantity @context.Unit</MudTd>
-                <MudTd DataLabel="Reorder Level">@context.ReorderLevel</MudTd>
-                <MudTd DataLabel="Total Value">SSP @context.TotalValue.ToString("N2")</MudTd>
-                <MudTd DataLabel="Status">
-                    <MudChip T="string" Size="Size.Small" Color="@GetStockLevelColor(context.StockLevel)">@context.StockLevel</MudChip>
-                </MudTd>
-                <MudTd DataLabel="Actions">
-                    <MudTooltip Text="View Movements"><MudIconButton Icon="@Icons.Material.Filled.History" Size="Size.Small" Color="Color.Info" Href="@($"/inventory/movements?drugId={context.DrugId}")" /></MudTooltip>
-                    <MudTooltip Text="Adjust Stock"><MudIconButton Icon="@Icons.Material.Filled.Tune" Size="Size.Small" Color="Color.Default" Href="@($"/inventory/adjustments/new?drugId={context.DrugId}")" /></MudTooltip>
-                </MudTd>
-            </RowTemplate>
-        </MudTable>
-    </div>
+    <MudTable T="StockLevelDto" Items="@FilteredItems" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading">
+        <HeaderContent>
+            <MudTh>Drug</MudTh>
+            <MudTh>Category</MudTh>
+            <MudTh>Available</MudTh>
+            <MudTh>Reserved</MudTh>
+            <MudTh>Reorder Level</MudTh>
+            <MudTh>Total Value</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Drug">
+                <div>
+                    <MudText Typo="Typo.body2" Class="tw:font-semibold">@context.DrugName</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.DrugCode</MudText>
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Category">@context.Category</MudTd>
+            <MudTd DataLabel="Available">
+                <MudText Typo="Typo.body2">@context.AvailableQuantity @context.Unit</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@context.BatchCount batches</MudText>
+            </MudTd>
+            <MudTd DataLabel="Reserved">@context.ReservedQuantity @context.Unit</MudTd>
+            <MudTd DataLabel="Reorder Level">@context.ReorderLevel</MudTd>
+            <MudTd DataLabel="Total Value">SSP @context.TotalValue.ToString("N2")</MudTd>
+            <MudTd DataLabel="Status">
+                <MudChip T="string" Size="Size.Small" Color="@GetStockLevelColor(context.StockLevel)">@context.StockLevel</MudChip>
+            </MudTd>
+            <MudTd DataLabel="Actions">
+                <MudTooltip Text="View Movements"><MudIconButton Icon="@Icons.Material.Filled.History" Size="Size.Small" Color="Color.Info" Href="@($"/inventory/movements?drugId={context.DrugId}")" /></MudTooltip>
+                <MudTooltip Text="Adjust Stock"><MudIconButton Icon="@Icons.Material.Filled.Tune" Size="Size.Small" Color="Color.Default" Href="@($"/inventory/adjustments/new?drugId={context.DrugId}")" /></MudTooltip>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</div>
 
 @code {
     private List<StockLevelDto> _stockItems = new();
@@ -253,7 +235,7 @@
 
             // Download via JavaScript
             await JSRuntime.InvokeVoidAsync("downloadFile",
-                $"stock-levels-{DateTime.Now:yyyyMMdd-HHmmss}.xlsx",
+                $"stock-levels-{DateTime.UtcNow:yyyyMMdd-HHmmss}.xlsx",
                 base64,
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 

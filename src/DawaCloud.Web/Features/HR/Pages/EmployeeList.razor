@@ -1,0 +1,240 @@
+@page "/hr/employees"
+@using MudBlazor
+@using DawaCloud.Web.Features.HR.Queries
+@using DawaCloud.Web.Features.HR.Commands
+@using DawaCloud.Web.Data.Entities
+@using MediatR
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "RequireHrAccess")]
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Employees - DawaCloud</PageTitle>
+
+<!-- Hero Section -->
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">Employees</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Manage employee records and information</p>
+        </div>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   Href="/hr/employees/new">
+            Add Employee
+        </MudButton>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 lg:tw:grid-cols-4 tw:gap-4 tw:my-6">
+    <div class="dc-kpi animate-fade-in-up animate-delay-1">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-success/10">
+                <MudIcon Icon="@Icons.Material.Filled.People" Style="color: var(--tw-color-success);" />
+            </div>
+        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Total Employees</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@(_loading ? "-" : _employees.Count.ToString())</div>
+    </div>
+    <div class="dc-kpi animate-fade-in-up animate-delay-2">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-success/10">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Style="color: var(--tw-color-success);" />
+            </div>
+        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Active</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@(_loading ? "-" : _employees.Count(e => e.Status == EmploymentStatus.Active).ToString())</div>
+    </div>
+    <div class="dc-kpi animate-fade-in-up animate-delay-3">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-warning/10">
+                <MudIcon Icon="@Icons.Material.Filled.EventBusy" Style="color: var(--tw-color-warning);" />
+            </div>
+        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">On Leave</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@(_loading ? "-" : _employees.Count(e => e.Status == EmploymentStatus.OnLeave).ToString())</div>
+    </div>
+    <div class="dc-kpi animate-fade-in-up animate-delay-4">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-info/10">
+                <MudIcon Icon="@Icons.Material.Filled.PersonAdd" Style="color: var(--tw-color-info);" />
+            </div>
+        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">New This Month</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@(_loading ? "-" : _employees.Count(e => e.HireDate.Month == DateTime.Today.Month && e.HireDate.Year == DateTime.Today.Year).ToString())</div>
+    </div>
+</div>
+
+<!-- Employees Table -->
+<div class="dc-card animate-fade-in-up animate-delay-2 mt-4">
+    <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4 tw:flex-wrap">
+        <MudTextField Value="_searchTerm"
+                      ValueChanged="@((string value) => OnSearchChanged(value))"
+                      Placeholder="Search employees..."
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Immediate="true"
+                      DebounceInterval="300"
+                      Style="max-width: 400px;" />
+
+        <div class="d-flex gap-2">
+            <MudSelect T="int?" Value="_selectedDepartmentId" ValueChanged="@((int? value) => OnDepartmentChanged(value))" Label="Department" Variant="Variant.Outlined" Dense="true" Style="min-width: 180px;">
+                <MudSelectItem T="int?" Value="@((int?)null)">All Departments</MudSelectItem>
+                @foreach (var dept in _departments)
+                {
+                    <MudSelectItem T="int?" Value="@((int?)dept.Id)">@dept.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="EmploymentStatus?" Value="_selectedStatus" ValueChanged="@((EmploymentStatus? value) => OnStatusChanged(value))" Label="Status" Variant="Variant.Outlined" Dense="true" Style="min-width: 150px;">
+                <MudSelectItem T="EmploymentStatus?" Value="@((EmploymentStatus?)null)">All Status</MudSelectItem>
+                <MudSelectItem T="EmploymentStatus?" Value="@((EmploymentStatus?)EmploymentStatus.Active)">Active</MudSelectItem>
+                <MudSelectItem T="EmploymentStatus?" Value="@((EmploymentStatus?)EmploymentStatus.OnLeave)">On Leave</MudSelectItem>
+                <MudSelectItem T="EmploymentStatus?" Value="@((EmploymentStatus?)EmploymentStatus.Suspended)">Suspended</MudSelectItem>
+                <MudSelectItem T="EmploymentStatus?" Value="@((EmploymentStatus?)EmploymentStatus.Terminated)">Terminated</MudSelectItem>
+            </MudSelect>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mt-4" />
+    }
+    else
+    {
+        <MudTable T="EmployeeDto" Items="@_employees" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Class="mt-4">
+            <HeaderContent>
+                <MudTh>Code</MudTh>
+                <MudTh>Name</MudTh>
+                <MudTh>Department</MudTh>
+                <MudTh>Position</MudTh>
+                <MudTh>Type</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Hire Date</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Code">
+                    <MudText Typo="Typo.body2" Class="fw-bold">@context.EmployeeCode</MudText>
+                </MudTd>
+                <MudTd DataLabel="Name">
+                    <MudText Typo="Typo.body2">@context.FirstName @context.LastName</MudText>
+                </MudTd>
+                <MudTd DataLabel="Department">@context.DepartmentName</MudTd>
+                <MudTd DataLabel="Position">@context.Position</MudTd>
+                <MudTd DataLabel="Type">
+                    <MudText Typo="Typo.body2">@FormatEmploymentType(context.EmploymentType)</MudText>
+                </MudTd>
+                <MudTd DataLabel="Status">
+                    <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">@FormatStatus(context.Status)</MudChip>
+                </MudTd>
+                <MudTd DataLabel="Hire Date">@context.HireDate.ToString("dd MMM yyyy")</MudTd>
+                <MudTd DataLabel="Actions">
+                    <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                   Size="Size.Small"
+                                   Color="Color.Info"
+                                   Href="@($"/hr/employees/{context.Id}")"
+                                   Title="View" />
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText>No employees found</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    }
+</div>
+
+@code {
+    private List<EmployeeDto> _employees = new();
+    private List<DepartmentDto> _departments = new();
+    private string _searchTerm = string.Empty;
+    private int? _selectedDepartmentId;
+    private EmploymentStatus? _selectedStatus;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(LoadEmployees(), LoadDepartments());
+    }
+
+    private async Task LoadEmployees()
+    {
+        _loading = true;
+        StateHasChanged();
+
+        try
+        {
+            _employees = await Mediator.Send(new GetEmployeesQuery(
+                SearchTerm: string.IsNullOrWhiteSpace(_searchTerm) ? null : _searchTerm,
+                DepartmentId: _selectedDepartmentId,
+                Status: _selectedStatus
+            ));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading employees: {ex.Message}", Severity.Error);
+        }
+
+        _loading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadDepartments()
+    {
+        try
+        {
+            _departments = await Mediator.Send(new GetDepartmentsQuery());
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading departments: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task OnSearchChanged(string value)
+    {
+        _searchTerm = value;
+        await LoadEmployees();
+    }
+
+    private async Task OnDepartmentChanged(int? value)
+    {
+        _selectedDepartmentId = value;
+        await LoadEmployees();
+    }
+
+    private async Task OnStatusChanged(EmploymentStatus? value)
+    {
+        _selectedStatus = value;
+        await LoadEmployees();
+    }
+
+    private Color GetStatusColor(EmploymentStatus status) => status switch
+    {
+        EmploymentStatus.Active => Color.Success,
+        EmploymentStatus.OnLeave => Color.Warning,
+        EmploymentStatus.Suspended => Color.Error,
+        EmploymentStatus.Terminated => Color.Default,
+        _ => Color.Default
+    };
+
+    private string FormatStatus(EmploymentStatus status) => status switch
+    {
+        EmploymentStatus.Active => "Active",
+        EmploymentStatus.OnLeave => "On Leave",
+        EmploymentStatus.Suspended => "Suspended",
+        EmploymentStatus.Terminated => "Terminated",
+        _ => status.ToString()
+    };
+
+    private string FormatEmploymentType(EmploymentType type) => type switch
+    {
+        EmploymentType.FullTime => "Full Time",
+        EmploymentType.PartTime => "Part Time",
+        EmploymentType.Contract => "Contract",
+        EmploymentType.Intern => "Intern",
+        _ => type.ToString()
+    };
+}

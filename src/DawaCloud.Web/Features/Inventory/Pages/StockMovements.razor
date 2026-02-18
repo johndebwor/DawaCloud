@@ -1,6 +1,8 @@
 @page "/inventory/movements"
 @using MudBlazor
 @using DawaCloud.Web.Features.Inventory.Queries
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "RequireInventoryAccess")]
 @using DawaCloud.Web.Data.Entities
 @using MediatR
 @using Microsoft.JSInterop
@@ -13,13 +15,13 @@
 <PageTitle>Stock Movements - DawaCloud</PageTitle>
 
 <!-- Hero Section -->
-<div class="df-hero animate-fade-in-up">
-    <div class="df-hero-content">
-        <div class="df-hero-text">
-            <h1>Stock Movements</h1>
-            <p>Complete history of all inventory transactions</p>
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">Stock Movements</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Complete history of all inventory transactions</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-3">
             <MudButton Variant="Variant.Outlined"
                        Color="Color.Default"
                        StartIcon="@Icons.Material.Filled.FileDownload"
@@ -37,55 +39,47 @@
 </div>
 
 <!-- KPI Cards -->
-<div class="df-kpi-grid">
-    <div class="df-kpi-card animate-fade-in-up animate-delay-1">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon success">
-                <MudIcon Icon="@Icons.Material.Filled.TrendingUp" />
+<div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 lg:tw:grid-cols-4 tw:gap-4 tw:my-6">
+    <div class="dc-kpi animate-fade-in-up animate-delay-1">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-success/10">
+                <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Style="color: var(--tw-color-success);" />
             </div>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">Total Movements</div>
-            <div class="df-kpi-value">@_totalCount</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Total Movements</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_totalCount</div>
     </div>
-    <div class="df-kpi-card animate-fade-in-up animate-delay-2">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon primary">
-                <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" />
+    <div class="dc-kpi animate-fade-in-up animate-delay-2">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-primary-50">
+                <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Style="color: var(--tw-color-primary-600);" />
             </div>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">Purchases</div>
-            <div class="df-kpi-value">@_movements.Count(m => m.Type == "Purchase")</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Purchases</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_movements.Count(m => m.Type == "Purchase")</div>
     </div>
-    <div class="df-kpi-card animate-fade-in-up animate-delay-3">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon info">
-                <MudIcon Icon="@Icons.Material.Filled.PointOfSale" />
+    <div class="dc-kpi animate-fade-in-up animate-delay-3">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-info/10">
+                <MudIcon Icon="@Icons.Material.Filled.PointOfSale" Style="color: var(--tw-color-info);" />
             </div>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">Sales</div>
-            <div class="df-kpi-value">@_movements.Count(m => m.Type == "Sale")</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Sales</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_movements.Count(m => m.Type == "Sale")</div>
     </div>
-    <div class="df-kpi-card animate-fade-in-up animate-delay-4">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon warning">
-                <MudIcon Icon="@Icons.Material.Filled.Tune" />
+    <div class="dc-kpi animate-fade-in-up animate-delay-4">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-warning/10">
+                <MudIcon Icon="@Icons.Material.Filled.Tune" Style="color: var(--tw-color-warning);" />
             </div>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">Adjustments</div>
-            <div class="df-kpi-value">@_movements.Count(m => m.Type == "Adjustment")</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Adjustments</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_movements.Count(m => m.Type == "Adjustment")</div>
     </div>
 </div>
 
 <!-- Filters -->
-<div class="df-alert-card animate-fade-in-up animate-delay-2 mt-4">
+<div class="dc-card animate-fade-in-up animate-delay-2 mt-4">
     <MudGrid Class="mb-4">
         <MudItem xs="12" sm="6" md="3">
             <MudSelect T="string" @bind-Value="_selectedType" Label="Movement Type" Variant="Variant.Outlined" Dense="true" OnSelectedValuesChanged="@((IEnumerable<string> _) => LoadMovements())">
@@ -333,7 +327,7 @@
             var base64 = Convert.ToBase64String(stream.ToArray());
 
             // Download via JavaScript
-            var fileName = $"stock-movements-{DateTime.Now:yyyyMMdd-HHmmss}.xlsx";
+            var fileName = $"stock-movements-{DateTime.UtcNow:yyyyMMdd-HHmmss}.xlsx";
             await JSRuntime.InvokeVoidAsync("downloadFile", fileName, base64, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
             Snackbar.Add($"Exported {_movements.Count} stock movements to Excel", Severity.Success);

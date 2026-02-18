@@ -1,0 +1,181 @@
+@page "/privacy"
+@using MudBlazor
+@using Microsoft.AspNetCore.Authorization
+@layout Shared.Layout.AuthLayout
+@attribute [AllowAnonymous]
+
+<PageTitle>DawaCloud | Privacy Policy</PageTitle>
+
+<div class="legal-card">
+    <div class="legal-header">
+        <h1 class="legal-title">Privacy Policy</h1>
+        <p class="legal-updated">Last updated: February 2026</p>
+    </div>
+
+    <div class="legal-body">
+        <section class="legal-section">
+            <h2>1. Introduction</h2>
+            <p>DawaCloud ("we", "our", "us") is committed to protecting the privacy of our users. This Privacy Policy explains how we collect, use, store, and protect your information when you use our pharmaceutical management platform.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>2. Information We Collect</h2>
+            <p><strong>Account information:</strong> Name, email address, phone number, and pharmacy details provided during registration.</p>
+            <p><strong>Operational data:</strong> Drug inventory records, sales transactions, supplier information, procurement orders, and other data you enter into the platform.</p>
+            <p><strong>Usage data:</strong> Login activity, feature usage, browser type, and device information collected automatically to improve the Service.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>3. How We Use Your Information</h2>
+            <ul>
+                <li>To provide, operate, and maintain the DawaCloud platform</li>
+                <li>To process transactions and manage your pharmacy operations</li>
+                <li>To send service notifications, expiry alerts, and low-stock warnings</li>
+                <li>To provide customer support and respond to inquiries</li>
+                <li>To improve our platform through analytics and usage patterns</li>
+                <li>To comply with legal obligations and regulatory requirements</li>
+            </ul>
+        </section>
+
+        <section class="legal-section">
+            <h2>4. Data Storage & Security</h2>
+            <p>Your data is stored on secure servers with encryption at rest and in transit. We implement industry-standard security measures including access controls, audit logging, and regular security assessments to protect your information.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>5. Data Sharing</h2>
+            <p>We do not sell your personal or operational data. We may share information only in the following circumstances:</p>
+            <ul>
+                <li><strong>With your consent:</strong> When you explicitly authorize sharing</li>
+                <li><strong>Service providers:</strong> With trusted partners who assist in operating the platform, under strict confidentiality agreements</li>
+                <li><strong>Legal compliance:</strong> When required by law, regulation, or valid legal process</li>
+            </ul>
+        </section>
+
+        <section class="legal-section">
+            <h2>6. Data Retention</h2>
+            <p>We retain your data for as long as your account is active or as needed to provide services. Upon account deletion, we will remove your personal data within 30 days, except where retention is required by law or for legitimate business purposes.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>7. Your Rights</h2>
+            <p>You have the right to:</p>
+            <ul>
+                <li>Access and download your data</li>
+                <li>Correct inaccurate information</li>
+                <li>Request deletion of your account and data</li>
+                <li>Withdraw consent for optional data processing</li>
+            </ul>
+        </section>
+
+        <section class="legal-section">
+            <h2>8. Cookies</h2>
+            <p>We use essential cookies for authentication and session management. These are required for the Service to function. We do not use third-party advertising or tracking cookies.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>9. Children's Privacy</h2>
+            <p>DawaCloud is not intended for use by individuals under 18 years of age. We do not knowingly collect information from children.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>10. Changes to This Policy</h2>
+            <p>We may update this Privacy Policy periodically. We will notify you of material changes via email or through the platform. Your continued use after changes constitutes acceptance.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>11. Contact Us</h2>
+            <p>For privacy-related questions or to exercise your rights, contact us at <strong>privacy@@dawacloud.com</strong>.</p>
+        </section>
+    </div>
+
+    <div class="legal-footer">
+        <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/auth/register" StartIcon="@Icons.Material.Filled.ArrowBack">
+            Back to Registration
+        </MudButton>
+    </div>
+</div>
+
+<style>
+    .legal-card {
+        background: var(--tw-color-surface, #fff);
+        border-radius: 1.25rem;
+        padding: 2rem;
+        border: 1px solid var(--tw-color-border, #E2E8F0);
+        box-shadow: 0 2px 8px -2px rgba(0,0,0,0.08);
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .legal-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--tw-color-border, #E2E8F0);
+    }
+
+    .legal-title {
+        font-family: "Instrument Serif", Georgia, serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--tw-color-text, #1E293B);
+        margin: 0 0 0.25rem;
+    }
+
+    .legal-updated {
+        font-size: 0.8rem;
+        color: var(--tw-color-text-muted, #94A3B8);
+        margin: 0;
+    }
+
+    .legal-body {
+        flex: 1;
+        overflow-y: auto;
+        padding-right: 0.5rem;
+    }
+
+    .legal-section {
+        margin-bottom: 1.25rem;
+    }
+
+    .legal-section h2 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--tw-color-text, #1E293B);
+        margin: 0 0 0.5rem;
+    }
+
+    .legal-section p {
+        font-size: 0.85rem;
+        line-height: 1.6;
+        color: var(--tw-color-text-secondary, #64748B);
+        margin: 0 0 0.5rem;
+    }
+
+    .legal-section ul {
+        margin: 0.5rem 0;
+        padding-left: 1.25rem;
+    }
+
+    .legal-section li {
+        font-size: 0.85rem;
+        line-height: 1.6;
+        color: var(--tw-color-text-secondary, #64748B);
+        margin-bottom: 0.25rem;
+    }
+
+    .legal-footer {
+        margin-top: 1.25rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--tw-color-border, #E2E8F0);
+    }
+
+    .legal-body::-webkit-scrollbar { width: 4px; }
+    .legal-body::-webkit-scrollbar-track { background: transparent; }
+    .legal-body::-webkit-scrollbar-thumb { background: var(--tw-color-border, #E2E8F0); border-radius: 9999px; }
+
+    @@media (max-width: 600px) {
+        .legal-card { padding: 1.5rem; }
+        .legal-title { font-size: 1.3rem; }
+    }
+</style>

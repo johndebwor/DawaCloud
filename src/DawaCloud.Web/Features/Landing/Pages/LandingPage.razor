@@ -1,0 +1,1343 @@
+@page "/"
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@layout DawaCloud.Web.Shared.Layout.LandingLayout
+@attribute [AllowAnonymous]
+
+<!-- ═══════════════════════════════════════════════════
+     NAVIGATION BAR — transparent, becomes frosted on scroll
+     ═══════════════════════════════════════════════════ -->
+<nav class="landing-nav" id="landing-nav">
+    <div class="landing-nav-inner">
+        <a href="/" class="landing-logo">
+            <svg viewBox="0 0 36 36" fill="none" class="landing-logo-icon">
+                <rect x="13" y="3" width="10" height="30" rx="3" fill="url(#lCross)"/>
+                <rect x="3" y="13" width="30" height="10" rx="3" fill="url(#lCross)"/>
+                <defs><linearGradient id="lCross" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#0C8599"/><stop offset="100%" stop-color="#10B981"/></linearGradient></defs>
+            </svg>
+            <span class="landing-logo-text">DawaCloud</span>
+        </a>
+
+        <div class="landing-nav-links">
+            <a href="#features" class="landing-nav-link">Features</a>
+            <a href="#pricing" class="landing-nav-link">Pricing</a>
+            <a href="#about" class="landing-nav-link">About</a>
+        </div>
+
+        <div class="landing-nav-actions">
+            <a href="/auth/login" class="landing-btn-ghost" data-enhance-nav="false">Log In</a>
+            <a href="/auth/register" class="landing-btn-primary" data-enhance-nav="false">Start Free Trial</a>
+        </div>
+
+        <!-- Mobile menu button -->
+        <button class="landing-mobile-menu" onclick="document.querySelector('.landing-nav-links').classList.toggle('show'); document.querySelector('.landing-nav-actions').classList.toggle('show');">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+    </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════
+     HERO SECTION — full viewport, dark atmospheric
+     ═══════════════════════════════════════════════════ -->
+<section class="landing-hero">
+    <!-- Background layers -->
+    <div class="landing-hero-bg">
+        <div class="landing-hero-gradient"></div>
+        <div class="landing-hero-grain"></div>
+        <div class="landing-hero-orb landing-hero-orb--1"></div>
+        <div class="landing-hero-orb landing-hero-orb--2"></div>
+        <div class="landing-hero-orb landing-hero-orb--3"></div>
+    </div>
+
+    <!-- Floating pharmaceutical elements -->
+    <div class="landing-pharma landing-pharma--1">
+        <svg viewBox="0 0 60 28" fill="none"><rect width="30" height="28" rx="14" fill="rgba(12,133,153,0.18)"/><rect x="30" width="30" height="28" rx="14" fill="rgba(16,185,129,0.22)"/><line x1="30" y1="2" x2="30" y2="26" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/></svg>
+    </div>
+    <div class="landing-pharma landing-pharma--2">
+        <svg viewBox="0 0 60 28" fill="none"><rect width="30" height="28" rx="14" fill="rgba(12,133,153,0.14)"/><rect x="30" width="30" height="28" rx="14" fill="rgba(16,185,129,0.18)"/><line x1="30" y1="2" x2="30" y2="26" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/></svg>
+    </div>
+    <div class="landing-pharma landing-pharma--3">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="rgba(12,133,153,0.1)" stroke="rgba(12,133,153,0.15)" stroke-width="0.5"/><circle cx="12" cy="12" r="4" fill="rgba(12,133,153,0.3)"/></svg>
+    </div>
+    <div class="landing-pharma landing-pharma--4">
+        <svg viewBox="0 0 60 28" fill="none"><rect width="30" height="28" rx="14" fill="rgba(20,184,166,0.12)"/><rect x="30" width="30" height="28" rx="14" fill="rgba(52,211,153,0.16)"/><line x1="30" y1="2" x2="30" y2="26" stroke="rgba(255,255,255,0.05)" stroke-width="0.5"/></svg>
+    </div>
+
+    <!-- DNA Helix -->
+    <svg class="landing-helix" viewBox="0 0 120 800" fill="none">
+        <path d="M60 0 C20 50 100 100 60 150 C20 200 100 250 60 300 C20 350 100 400 60 450 C20 500 100 550 60 600 C20 650 100 700 60 750 C20 800 100 850 60 900" stroke="rgba(12,133,153,0.12)" stroke-width="1.5" fill="none"/>
+        <path d="M60 0 C100 50 20 100 60 150 C100 200 20 250 60 300 C100 350 20 400 60 450 C100 500 20 550 60 600 C100 650 20 700 60 750 C100 800 20 850 60 900" stroke="rgba(16,185,129,0.08)" stroke-width="1.5" fill="none"/>
+    </svg>
+
+    <!-- Hero content -->
+    <div class="landing-hero-content">
+        <div class="landing-hero-badge">
+            <span class="landing-hero-badge-dot"></span>
+            Now available in South Sudan
+        </div>
+
+        <h1 class="landing-hero-title">
+            Pharmacy management,<br/><span class="landing-gradient-text">reimagined.</span>
+        </h1>
+
+        <p class="landing-hero-subtitle">
+            Streamline inventory, accelerate sales, and stay compliant — all from one intelligent platform built for modern pharmacies.
+        </p>
+
+        <div class="landing-hero-cta">
+            <a href="/auth/register" class="landing-btn-primary landing-btn-primary--lg" data-enhance-nav="false">
+                Start Free Trial
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+            <a href="#features" class="landing-btn-ghost landing-btn-ghost--lg">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                See How It Works
+            </a>
+        </div>
+
+        <!-- Floating dashboard preview -->
+        <div class="landing-hero-visual">
+            <div class="landing-preview-card">
+                <div class="landing-preview-bar">
+                    <div class="landing-preview-dot" style="background:#EF4444;"></div>
+                    <div class="landing-preview-dot" style="background:#F59E0B;"></div>
+                    <div class="landing-preview-dot" style="background:#10B981;"></div>
+                    <span style="color:rgba(255,255,255,0.3);font-size:11px;margin-left:12px;">DawaCloud Dashboard</span>
+                </div>
+                <div class="landing-preview-body">
+                    <div class="landing-preview-kpi">
+                        <div class="landing-preview-kpi-item">
+                            <div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.05em;">Today's Sales</div>
+                            <div style="font-size:20px;font-weight:700;color:#14B8A6;font-family:'Instrument Serif',serif;">SSP 125,450</div>
+                            <div style="font-size:10px;color:#34D399;">+12.5%</div>
+                        </div>
+                        <div class="landing-preview-kpi-item">
+                            <div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.05em;">Stock Value</div>
+                            <div style="font-size:20px;font-weight:700;color:#FAFAF9;font-family:'Instrument Serif',serif;">SSP 2.4M</div>
+                            <div style="font-size:10px;color:rgba(255,255,255,0.4);">758 items</div>
+                        </div>
+                        <div class="landing-preview-kpi-item">
+                            <div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.05em;">Low Stock</div>
+                            <div style="font-size:20px;font-weight:700;color:#FB923C;font-family:'Instrument Serif',serif;">12</div>
+                            <div style="font-size:10px;color:#FB923C;">Needs attention</div>
+                        </div>
+                    </div>
+                    <div class="landing-preview-chart">
+                        <svg viewBox="0 0 300 60" fill="none" style="width:100%;height:60px;">
+                            <defs>
+                                <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#14B8A6" stop-opacity="0.3"/>
+                                    <stop offset="100%" stop-color="#14B8A6" stop-opacity="0"/>
+                                </linearGradient>
+                            </defs>
+                            <path d="M0 50 L30 42 L60 45 L90 30 L120 35 L150 20 L180 25 L210 15 L240 18 L270 8 L300 12 L300 60 L0 60Z" fill="url(#chartGrad)"/>
+                            <path d="M0 50 L30 42 L60 45 L90 30 L120 35 L150 20 L180 25 L210 15 L240 18 L270 8 L300 12" stroke="#14B8A6" stroke-width="2" fill="none"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="landing-scroll-hint">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     SOCIAL PROOF
+     ═══════════════════════════════════════════════════ -->
+<section class="landing-section landing-proof">
+    <div class="landing-container">
+        <p class="landing-proof-text">Trusted by <span style="color:#14B8A6;font-weight:700;">50+</span> pharmacies across South Sudan</p>
+        <div class="landing-proof-logos">
+            <div class="landing-proof-logo">Juba Central Pharmacy</div>
+            <div class="landing-proof-logo">Grace Medical</div>
+            <div class="landing-proof-logo">Unity Health</div>
+            <div class="landing-proof-logo">Nile Pharma</div>
+            <div class="landing-proof-logo">Hope Clinic</div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     FEATURES GRID
+     ═══════════════════════════════════════════════════ -->
+<section class="landing-section" id="features">
+    <div class="landing-container">
+        <div class="landing-section-header">
+            <span class="landing-section-tag">Features</span>
+            <h2 class="landing-section-title">Everything your pharmacy needs</h2>
+            <p class="landing-section-subtitle">One platform to manage inventory, sales, procurement, and compliance — so you can focus on what matters: patient care.</p>
+        </div>
+
+        <div class="landing-features-grid">
+            <!-- Feature 1 -->
+            <div class="landing-feature-card">
+                <div class="landing-feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                </div>
+                <h3 class="landing-feature-title">Inventory Tracking</h3>
+                <p class="landing-feature-desc">Real-time stock levels with batch tracking, expiry alerts, and automated reorder points. Never run out of critical medications.</p>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="landing-feature-card">
+                <div class="landing-feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20M6 16h4M14 16h4"/></svg>
+                </div>
+                <h3 class="landing-feature-title">Point of Sale</h3>
+                <p class="landing-feature-desc">Lightning-fast POS with barcode scanning, receipt printing, and customer management. Process sales in seconds.</p>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="landing-feature-card">
+                <div class="landing-feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+                </div>
+                <h3 class="landing-feature-title">Procurement</h3>
+                <p class="landing-feature-desc">Manage suppliers, create purchase orders, compare prices, and track deliveries — all in one unified workflow.</p>
+            </div>
+
+            <!-- Feature 4 -->
+            <div class="landing-feature-card">
+                <div class="landing-feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>
+                </div>
+                <h3 class="landing-feature-title">Wholesale</h3>
+                <p class="landing-feature-desc">Bulk sales management with customer credit tracking, order fulfillment, and wholesale pricing tiers.</p>
+            </div>
+
+            <!-- Feature 5 -->
+            <div class="landing-feature-card">
+                <div class="landing-feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+                </div>
+                <h3 class="landing-feature-title">Analytics & Reports</h3>
+                <p class="landing-feature-desc">Sales trends, profit margins, expiry forecasts, and compliance reports. Data-driven decisions made simple.</p>
+            </div>
+
+            <!-- Feature 6 -->
+            <div class="landing-feature-card">
+                <div class="landing-feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a7 7 0 017 7c0 5-7 13-7 13S5 14 5 9a7 7 0 017-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                </div>
+                <h3 class="landing-feature-title">AI Assistant</h3>
+                <p class="landing-feature-desc">Intelligent drug interaction checks, demand forecasting, and natural language queries powered by Claude AI.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     HOW IT WORKS
+     ═══════════════════════════════════════════════════ -->
+<section class="landing-section landing-section--dark" id="about">
+    <div class="landing-container">
+        <div class="landing-section-header">
+            <span class="landing-section-tag">How It Works</span>
+            <h2 class="landing-section-title">Get started in minutes</h2>
+            <p class="landing-section-subtitle">No complex setup. No training required. Just sign up and start managing your pharmacy smarter.</p>
+        </div>
+
+        <div class="landing-steps">
+            <div class="landing-step">
+                <div class="landing-step-number">1</div>
+                <div class="landing-step-line"></div>
+                <h3 class="landing-step-title">Sign Up</h3>
+                <p class="landing-step-desc">Create your free account in 30 seconds. No credit card required.</p>
+            </div>
+            <div class="landing-step">
+                <div class="landing-step-number">2</div>
+                <div class="landing-step-line"></div>
+                <h3 class="landing-step-title">Add Inventory</h3>
+                <p class="landing-step-desc">Import your drug catalog or add items one by one with batch and expiry tracking.</p>
+            </div>
+            <div class="landing-step">
+                <div class="landing-step-number">3</div>
+                <h3 class="landing-step-title">Start Selling</h3>
+                <p class="landing-step-desc">Use the POS, manage wholesale orders, and let DawaCloud handle the rest automatically.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     TESTIMONIALS
+     ═══════════════════════════════════════════════════ -->
+<section class="landing-section">
+    <div class="landing-container">
+        <div class="landing-section-header">
+            <span class="landing-section-tag">Testimonials</span>
+            <h2 class="landing-section-title">Loved by pharmacists</h2>
+        </div>
+
+        <div class="landing-testimonials">
+            <div class="landing-testimonial">
+                <div class="landing-testimonial-stars">★★★★★</div>
+                <p class="landing-testimonial-text">"DawaCloud transformed how we manage our pharmacy. The expiry alerts alone have saved us thousands in wasted stock. It's like having an extra team member."</p>
+                <div class="landing-testimonial-author">
+                    <div class="landing-testimonial-avatar">JM</div>
+                    <div>
+                        <div class="landing-testimonial-name">James Majok</div>
+                        <div class="landing-testimonial-role">Owner, Juba Central Pharmacy</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="landing-testimonial">
+                <div class="landing-testimonial-stars">★★★★★</div>
+                <p class="landing-testimonial-text">"The POS system is incredibly fast. Our checkout times dropped by 60%. Customers are happier, and we can serve more people every day."</p>
+                <div class="landing-testimonial-author">
+                    <div class="landing-testimonial-avatar">SA</div>
+                    <div>
+                        <div class="landing-testimonial-name">Sarah Achol</div>
+                        <div class="landing-testimonial-role">Pharmacist, Grace Medical</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="landing-testimonial">
+                <div class="landing-testimonial-stars">★★★★★</div>
+                <p class="landing-testimonial-text">"Finally, a pharmacy system that understands our market. The procurement module and supplier management have streamlined our entire supply chain."</p>
+                <div class="landing-testimonial-author">
+                    <div class="landing-testimonial-avatar">PD</div>
+                    <div>
+                        <div class="landing-testimonial-name">Peter Deng</div>
+                        <div class="landing-testimonial-role">Director, Unity Health Group</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     PRICING
+     ═══════════════════════════════════════════════════ -->
+<section class="landing-section landing-section--dark" id="pricing">
+    <div class="landing-container">
+        <div class="landing-section-header">
+            <span class="landing-section-tag">Pricing</span>
+            <h2 class="landing-section-title">Simple, transparent pricing</h2>
+            <p class="landing-section-subtitle">Start free, upgrade when you're ready. No hidden fees, no surprises.</p>
+        </div>
+
+        <div class="landing-pricing">
+            <!-- Starter -->
+            <div class="landing-price-card">
+                <div class="landing-price-name">Starter</div>
+                <div class="landing-price-amount"><span class="landing-price-currency">SSP</span> 0<span class="landing-price-period">/month</span></div>
+                <p class="landing-price-desc">Perfect for small pharmacies getting started.</p>
+                <ul class="landing-price-features">
+                    <li>Up to 200 drug items</li>
+                    <li>Basic POS</li>
+                    <li>Inventory tracking</li>
+                    <li>Expiry alerts</li>
+                    <li>1 user</li>
+                </ul>
+                <a href="/auth/register" class="landing-btn-ghost" style="width:100%;justify-content:center;" data-enhance-nav="false">Get Started</a>
+            </div>
+
+            <!-- Professional -->
+            <div class="landing-price-card landing-price-card--featured">
+                <div class="landing-price-badge">Most Popular</div>
+                <div class="landing-price-name">Professional</div>
+                <div class="landing-price-amount"><span class="landing-price-currency">SSP</span> 25,000<span class="landing-price-period">/month</span></div>
+                <p class="landing-price-desc">For growing pharmacies that need the full suite.</p>
+                <ul class="landing-price-features">
+                    <li>Unlimited drug items</li>
+                    <li>Advanced POS + wholesale</li>
+                    <li>Procurement & suppliers</li>
+                    <li>Analytics & reports</li>
+                    <li>AI Assistant</li>
+                    <li>Up to 10 users</li>
+                    <li>Email support</li>
+                </ul>
+                <a href="/auth/register" class="landing-btn-primary" style="width:100%;justify-content:center;" data-enhance-nav="false">Start Free Trial</a>
+            </div>
+
+            <!-- Enterprise -->
+            <div class="landing-price-card">
+                <div class="landing-price-name">Enterprise</div>
+                <div class="landing-price-amount">Custom</div>
+                <p class="landing-price-desc">For pharmacy chains and large operations.</p>
+                <ul class="landing-price-features">
+                    <li>Everything in Professional</li>
+                    <li>Multi-branch support</li>
+                    <li>API access</li>
+                    <li>Custom integrations</li>
+                    <li>Unlimited users</li>
+                    <li>Dedicated support</li>
+                    <li>On-premise option</li>
+                </ul>
+                <a href="/auth/register" class="landing-btn-ghost" style="width:100%;justify-content:center;" data-enhance-nav="false">Contact Sales</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     FINAL CTA
+     ═══════════════════════════════════════════════════ -->
+<section class="landing-cta">
+    <div class="landing-cta-glow"></div>
+    <div class="landing-cta-grain"></div>
+    <div class="landing-container" style="position:relative;z-index:2;text-align:center;">
+        <h2 class="landing-cta-title">Ready to modernize<br/>your pharmacy?</h2>
+        <p class="landing-cta-subtitle">Join 50+ pharmacies already using DawaCloud. Start your free trial today — no credit card required.</p>
+        <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+            <a href="/auth/register" class="landing-btn-primary landing-btn-primary--lg" data-enhance-nav="false">
+                Get Started Free
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     FOOTER
+     ═══════════════════════════════════════════════════ -->
+<footer class="landing-footer">
+    <div class="landing-container">
+        <div class="landing-footer-grid">
+            <div class="landing-footer-brand">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+                    <svg viewBox="0 0 36 36" fill="none" style="width:28px;height:28px;">
+                        <rect x="13" y="3" width="10" height="30" rx="3" fill="url(#fCross)"/>
+                        <rect x="3" y="13" width="30" height="10" rx="3" fill="url(#fCross)"/>
+                        <defs><linearGradient id="fCross" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#0C8599"/><stop offset="100%" stop-color="#10B981"/></linearGradient></defs>
+                    </svg>
+                    <span style="font-family:'Instrument Serif',Georgia,serif;font-size:18px;font-style:italic;color:#14B8A6;">DawaCloud</span>
+                </div>
+                <p style="color:rgba(255,255,255,0.4);font-size:13px;line-height:1.6;max-width:280px;">Intelligent pharmacy management for modern healthcare in South Sudan and beyond.</p>
+            </div>
+
+            <div class="landing-footer-col">
+                <h4 class="landing-footer-heading">Product</h4>
+                <a href="#features" class="landing-footer-link">Features</a>
+                <a href="#pricing" class="landing-footer-link">Pricing</a>
+                <a href="/auth/register" class="landing-footer-link" data-enhance-nav="false">Sign Up</a>
+                <a href="/auth/login" class="landing-footer-link" data-enhance-nav="false">Log In</a>
+            </div>
+
+            <div class="landing-footer-col">
+                <h4 class="landing-footer-heading">Company</h4>
+                <a href="#about" class="landing-footer-link">About</a>
+                <a href="#" class="landing-footer-link">Blog</a>
+                <a href="#" class="landing-footer-link">Careers</a>
+                <a href="#" class="landing-footer-link">Contact</a>
+            </div>
+
+            <div class="landing-footer-col">
+                <h4 class="landing-footer-heading">Legal</h4>
+                <a href="#" class="landing-footer-link">Privacy Policy</a>
+                <a href="#" class="landing-footer-link">Terms of Service</a>
+                <a href="#" class="landing-footer-link">Cookie Policy</a>
+            </div>
+        </div>
+
+        <div class="landing-footer-bottom">
+            <p>&copy; @DateTime.UtcNow.Year DawaCloud. All rights reserved.</p>
+            <p>Made with care in South Sudan</p>
+        </div>
+    </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════════════
+     SCOPED STYLES
+     ═══════════════════════════════════════════════════ -->
+<style>
+    /* ─── BASE ─── */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    a { text-decoration: none; }
+
+    .landing-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 24px;
+    }
+
+    /* ─── NAVIGATION ─── */
+    .landing-nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        padding: 16px 24px;
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .landing-nav.scrolled {
+        background: rgba(12, 10, 9, 0.85);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        padding: 10px 24px;
+    }
+
+    .landing-nav-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 32px;
+    }
+
+    .landing-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .landing-logo-icon { width: 28px; height: 28px; }
+
+    .landing-logo-text {
+        font-family: 'Instrument Serif', Georgia, serif;
+        font-size: 20px;
+        font-style: italic;
+        font-weight: 600;
+        color: #14B8A6;
+        letter-spacing: -0.02em;
+    }
+
+    .landing-nav-links {
+        display: flex;
+        gap: 28px;
+        margin-left: 24px;
+    }
+
+    .landing-nav-link {
+        font-size: 14px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.55);
+        transition: color 0.2s ease;
+    }
+
+    .landing-nav-link:hover { color: #FAFAF9; }
+
+    .landing-nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-left: auto;
+    }
+
+    .landing-mobile-menu {
+        display: none;
+        margin-left: auto;
+        background: none;
+        border: none;
+        color: rgba(255,255,255,0.7);
+        cursor: pointer;
+        padding: 4px;
+    }
+
+    @@media (max-width: 768px) {
+        .landing-nav-links,
+        .landing-nav-actions {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(12, 10, 9, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 16px 24px;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .landing-nav-links.show,
+        .landing-nav-actions.show { display: flex; }
+
+        .landing-mobile-menu { display: flex; }
+    }
+
+    /* ─── BUTTONS ─── */
+    .landing-btn-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 24px;
+        background: linear-gradient(135deg, #0C8599 0%, #0A7285 100%);
+        color: #FFFFFF;
+        font-weight: 600;
+        font-size: 14px;
+        font-family: 'DM Sans', system-ui, sans-serif;
+        border: none;
+        border-radius: 9999px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 16px rgba(12, 133, 153, 0.25);
+    }
+
+    .landing-btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 28px rgba(12, 133, 153, 0.35);
+        color: #FFFFFF;
+    }
+
+    .landing-btn-primary--lg { padding: 14px 32px; font-size: 16px; }
+
+    .landing-btn-ghost {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 24px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 500;
+        font-size: 14px;
+        font-family: 'DM Sans', system-ui, sans-serif;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 9999px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .landing-btn-ghost:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.25);
+        color: #FAFAF9;
+    }
+
+    .landing-btn-ghost--lg { padding: 14px 32px; font-size: 16px; }
+
+    /* ─── HERO ─── */
+    .landing-hero {
+        position: relative;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 120px 24px 80px;
+        overflow: hidden;
+    }
+
+    .landing-hero-bg {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(160deg, #0C0A09 0%, #0A1A1C 40%, #0D1F22 100%);
+    }
+
+    .landing-hero-gradient {
+        position: absolute;
+        inset: -50%;
+        background:
+            radial-gradient(ellipse at 25% 30%, rgba(12,133,153,0.12) 0%, transparent 50%),
+            radial-gradient(ellipse at 75% 70%, rgba(16,185,129,0.08) 0%, transparent 50%),
+            radial-gradient(ellipse at 50% 50%, rgba(20,184,166,0.05) 0%, transparent 40%);
+        animation: gradientDrift 25s ease-in-out infinite alternate;
+    }
+
+    @@keyframes gradientDrift {
+        0% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(-3%, 2%) scale(1.02); }
+        66% { transform: translate(2%, -2%) scale(0.98); }
+        100% { transform: translate(-1%, 1%) scale(1.01); }
+    }
+
+    .landing-hero-grain {
+        position: absolute;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+        background-repeat: repeat;
+        background-size: 256px;
+        opacity: 0.6;
+        pointer-events: none;
+        mix-blend-mode: overlay;
+    }
+
+    .landing-hero-orb {
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+        filter: blur(80px);
+    }
+
+    .landing-hero-orb--1 {
+        width: 500px; height: 500px;
+        top: -10%; left: -5%;
+        background: rgba(12, 133, 153, 0.08);
+        animation: orbFloat1 20s ease-in-out infinite;
+    }
+
+    .landing-hero-orb--2 {
+        width: 400px; height: 400px;
+        bottom: -5%; right: 10%;
+        background: rgba(16, 185, 129, 0.06);
+        animation: orbFloat2 18s ease-in-out infinite;
+    }
+
+    .landing-hero-orb--3 {
+        width: 300px; height: 300px;
+        top: 40%; left: 60%;
+        background: rgba(20, 184, 166, 0.04);
+        animation: orbFloat1 22s ease-in-out infinite reverse;
+    }
+
+    @@keyframes orbFloat1 {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(30px, -20px); }
+    }
+
+    @@keyframes orbFloat2 {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(-20px, 15px); }
+    }
+
+    /* Floating pharma decorations */
+    .landing-pharma { position: absolute; pointer-events: none; opacity: 0.6; z-index: 1; }
+    .landing-pharma--1 { width: 80px; top: 15%; right: 15%; animation: floatPill 16s ease-in-out infinite; transform: rotate(-25deg); }
+    .landing-pharma--2 { width: 64px; bottom: 25%; left: 10%; animation: floatPill 20s ease-in-out infinite reverse; transform: rotate(15deg); }
+    .landing-pharma--3 { width: 36px; top: 40%; left: 6%; animation: floatTablet 14s ease-in-out infinite; }
+    .landing-pharma--4 { width: 72px; bottom: 30%; right: 8%; animation: floatPill 18s ease-in-out infinite; transform: rotate(35deg); }
+
+    @@keyframes floatPill {
+        0%, 100% { transform: translateY(0) rotate(-25deg); }
+        25% { transform: translateY(-22px) rotate(-15deg); }
+        50% { transform: translateY(10px) rotate(-30deg); }
+        75% { transform: translateY(-14px) rotate(-20deg); }
+    }
+
+    @@keyframes floatTablet {
+        0%, 100% { transform: translateY(0) scale(1); }
+        50% { transform: translateY(-20px) scale(1.06); }
+    }
+
+    .landing-helix {
+        position: absolute;
+        right: 0;
+        top: 0;
+        height: 100%;
+        width: 120px;
+        opacity: 0.4;
+        pointer-events: none;
+    }
+
+    /* Hero content */
+    .landing-hero-content {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        max-width: 800px;
+    }
+
+    .landing-hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 16px;
+        background: rgba(20, 184, 166, 0.08);
+        border: 1px solid rgba(20, 184, 166, 0.2);
+        border-radius: 9999px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #14B8A6;
+        margin-bottom: 32px;
+        animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+    }
+
+    .landing-hero-badge-dot {
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        background: #14B8A6;
+        animation: dotPulse 2s ease-in-out infinite;
+    }
+
+    @@keyframes dotPulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+    }
+
+    .landing-hero-title {
+        font-family: 'Instrument Serif', Georgia, serif;
+        font-size: clamp(2.5rem, 6vw, 4.5rem);
+        font-weight: 400;
+        line-height: 1.1;
+        color: #FAFAF9;
+        margin-bottom: 24px;
+        letter-spacing: -0.02em;
+        animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+    }
+
+    .landing-gradient-text {
+        background: linear-gradient(135deg, #14B8A6 0%, #34D399 50%, #0C8599 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-style: italic;
+    }
+
+    .landing-hero-subtitle {
+        font-size: clamp(1rem, 2vw, 1.2rem);
+        line-height: 1.7;
+        color: rgba(255, 255, 255, 0.5);
+        max-width: 600px;
+        margin: 0 auto 40px;
+        animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+    }
+
+    .landing-hero-cta {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        flex-wrap: wrap;
+        animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
+    }
+
+    /* Dashboard preview */
+    .landing-hero-visual {
+        margin-top: 60px;
+        animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
+    }
+
+    .landing-preview-card {
+        background: rgba(28, 25, 23, 0.6);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 32px 64px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,0.03) inset;
+        max-width: 700px;
+        margin: 0 auto;
+    }
+
+    .landing-preview-bar {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 12px 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .landing-preview-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+    .landing-preview-body { padding: 20px; }
+
+    .landing-preview-kpi {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .landing-preview-kpi-item {
+        padding: 12px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 10px;
+    }
+
+    .landing-preview-chart {
+        padding: 12px;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 10px;
+    }
+
+    /* Scroll indicator */
+    .landing-scroll-hint {
+        position: absolute;
+        bottom: 32px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: rgba(255,255,255,0.2);
+        animation: scrollBounce 2s ease-in-out infinite;
+        z-index: 2;
+    }
+
+    @@keyframes scrollBounce {
+        0%, 100% { transform: translateX(-50%) translateY(0); }
+        50% { transform: translateX(-50%) translateY(6px); }
+    }
+
+    @@keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(24px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── SECTIONS ─── */
+    .landing-section {
+        padding: 100px 0;
+        position: relative;
+    }
+
+    .landing-section--dark {
+        background: linear-gradient(180deg, rgba(12,10,9,0) 0%, rgba(12,133,153,0.03) 50%, rgba(12,10,9,0) 100%);
+    }
+
+    .landing-section-header {
+        text-align: center;
+        margin-bottom: 64px;
+    }
+
+    .landing-section-tag {
+        display: inline-block;
+        padding: 4px 14px;
+        background: rgba(20,184,166,0.08);
+        border: 1px solid rgba(20,184,166,0.15);
+        border-radius: 9999px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #14B8A6;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 16px;
+    }
+
+    .landing-section-title {
+        font-family: 'Instrument Serif', Georgia, serif;
+        font-size: clamp(2rem, 4vw, 3rem);
+        font-weight: 400;
+        color: #FAFAF9;
+        letter-spacing: -0.02em;
+        margin-bottom: 16px;
+    }
+
+    .landing-section-subtitle {
+        font-size: 16px;
+        line-height: 1.7;
+        color: rgba(255,255,255,0.45);
+        max-width: 560px;
+        margin: 0 auto;
+    }
+
+    /* ─── SOCIAL PROOF ─── */
+    .landing-proof {
+        padding: 48px 0;
+        border-top: 1px solid rgba(255,255,255,0.04);
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .landing-proof-text {
+        text-align: center;
+        font-size: 14px;
+        color: rgba(255,255,255,0.35);
+        margin-bottom: 24px;
+    }
+
+    .landing-proof-logos {
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        flex-wrap: wrap;
+    }
+
+    .landing-proof-logo {
+        font-size: 13px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.15);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    /* ─── FEATURES ─── */
+    .landing-features-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+    }
+
+    @@media (max-width: 960px) {
+        .landing-features-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @@media (max-width: 600px) {
+        .landing-features-grid { grid-template-columns: 1fr; }
+    }
+
+    .landing-feature-card {
+        padding: 32px;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 16px;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .landing-feature-card:hover {
+        background: rgba(255,255,255,0.04);
+        border-color: rgba(20,184,166,0.15);
+        transform: translateY(-4px);
+        box-shadow: 0 16px 40px rgba(12,133,153,0.08);
+    }
+
+    .landing-feature-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: rgba(20,184,166,0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #14B8A6;
+        margin-bottom: 20px;
+    }
+
+    .landing-feature-title {
+        font-family: 'DM Sans', system-ui, sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        color: #FAFAF9;
+        margin-bottom: 10px;
+    }
+
+    .landing-feature-desc {
+        font-size: 14px;
+        line-height: 1.7;
+        color: rgba(255,255,255,0.4);
+    }
+
+    /* ─── HOW IT WORKS ─── */
+    .landing-steps {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 32px;
+        text-align: center;
+    }
+
+    @@media (max-width: 768px) {
+        .landing-steps { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+        .landing-step-line { display: none; }
+    }
+
+    .landing-step { position: relative; }
+
+    .landing-step-number {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #0C8599, #10B981);
+        color: #FFFFFF;
+        font-family: 'Instrument Serif', Georgia, serif;
+        font-size: 22px;
+        font-weight: 400;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        box-shadow: 0 4px 20px rgba(12,133,153,0.25);
+    }
+
+    .landing-step-line {
+        position: absolute;
+        top: 26px;
+        left: calc(50% + 32px);
+        width: calc(100% - 64px);
+        height: 1px;
+        background: linear-gradient(90deg, rgba(20,184,166,0.3), rgba(20,184,166,0.05));
+    }
+
+    .landing-step-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #FAFAF9;
+        margin-bottom: 8px;
+    }
+
+    .landing-step-desc {
+        font-size: 14px;
+        line-height: 1.6;
+        color: rgba(255,255,255,0.4);
+    }
+
+    /* ─── TESTIMONIALS ─── */
+    .landing-testimonials {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+    }
+
+    @@media (max-width: 960px) {
+        .landing-testimonials { grid-template-columns: 1fr; max-width: 500px; margin: 0 auto; }
+    }
+
+    .landing-testimonial {
+        padding: 32px;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 16px;
+        transition: all 0.3s ease;
+    }
+
+    .landing-testimonial:hover {
+        border-color: rgba(20,184,166,0.12);
+    }
+
+    .landing-testimonial-stars {
+        color: #F59E0B;
+        font-size: 14px;
+        letter-spacing: 2px;
+        margin-bottom: 16px;
+    }
+
+    .landing-testimonial-text {
+        font-size: 15px;
+        line-height: 1.7;
+        color: rgba(255,255,255,0.6);
+        margin-bottom: 24px;
+        font-style: italic;
+    }
+
+    .landing-testimonial-author {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .landing-testimonial-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(20,184,166,0.2), rgba(12,133,153,0.3));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+        color: #14B8A6;
+    }
+
+    .landing-testimonial-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: #FAFAF9;
+    }
+
+    .landing-testimonial-role {
+        font-size: 12px;
+        color: rgba(255,255,255,0.35);
+    }
+
+    /* ─── PRICING ─── */
+    .landing-pricing {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        align-items: start;
+    }
+
+    @@media (max-width: 960px) {
+        .landing-pricing { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
+    }
+
+    .landing-price-card {
+        padding: 36px;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 20px;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .landing-price-card:hover {
+        border-color: rgba(255,255,255,0.1);
+    }
+
+    .landing-price-card--featured {
+        border-color: rgba(20,184,166,0.3);
+        background: rgba(20,184,166,0.04);
+        box-shadow: 0 0 40px rgba(12,133,153,0.08);
+    }
+
+    .landing-price-card--featured:hover {
+        border-color: rgba(20,184,166,0.4);
+        box-shadow: 0 0 60px rgba(12,133,153,0.12);
+    }
+
+    .landing-price-badge {
+        position: absolute;
+        top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 4px 16px;
+        background: linear-gradient(135deg, #0C8599, #10B981);
+        color: #FFFFFF;
+        font-size: 12px;
+        font-weight: 700;
+        border-radius: 9999px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .landing-price-name {
+        font-size: 16px;
+        font-weight: 700;
+        color: rgba(255,255,255,0.6);
+        margin-bottom: 12px;
+    }
+
+    .landing-price-amount {
+        font-family: 'Instrument Serif', Georgia, serif;
+        font-size: 36px;
+        font-weight: 400;
+        color: #FAFAF9;
+        margin-bottom: 8px;
+    }
+
+    .landing-price-currency { font-size: 16px; color: rgba(255,255,255,0.4); vertical-align: super; }
+    .landing-price-period { font-size: 14px; color: rgba(255,255,255,0.3); font-family: 'DM Sans', sans-serif; }
+
+    .landing-price-desc {
+        font-size: 14px;
+        color: rgba(255,255,255,0.35);
+        margin-bottom: 24px;
+        line-height: 1.5;
+    }
+
+    .landing-price-features {
+        list-style: none;
+        margin-bottom: 28px;
+    }
+
+    .landing-price-features li {
+        font-size: 14px;
+        color: rgba(255,255,255,0.5);
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        position: relative;
+        padding-left: 24px;
+    }
+
+    .landing-price-features li::before {
+        content: '✓';
+        position: absolute;
+        left: 0;
+        color: #14B8A6;
+        font-weight: 700;
+    }
+
+    /* ─── FINAL CTA ─── */
+    .landing-cta {
+        padding: 120px 24px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .landing-cta-glow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 600px;
+        height: 600px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(12,133,153,0.12) 0%, transparent 60%);
+        pointer-events: none;
+    }
+
+    .landing-cta-grain {
+        position: absolute;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+        background-repeat: repeat;
+        background-size: 256px;
+        opacity: 0.4;
+        pointer-events: none;
+        mix-blend-mode: overlay;
+    }
+
+    .landing-cta-title {
+        font-family: 'Instrument Serif', Georgia, serif;
+        font-size: clamp(2rem, 4vw, 3rem);
+        color: #FAFAF9;
+        margin-bottom: 16px;
+        letter-spacing: -0.02em;
+    }
+
+    .landing-cta-subtitle {
+        font-size: 16px;
+        color: rgba(255,255,255,0.45);
+        margin-bottom: 36px;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.7;
+    }
+
+    /* ─── FOOTER ─── */
+    .landing-footer {
+        border-top: 1px solid rgba(255,255,255,0.04);
+        padding: 64px 0 32px;
+    }
+
+    .landing-footer-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr;
+        gap: 48px;
+        margin-bottom: 48px;
+    }
+
+    @@media (max-width: 768px) {
+        .landing-footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+    }
+
+    .landing-footer-heading {
+        font-size: 13px;
+        font-weight: 700;
+        color: rgba(255,255,255,0.5);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 16px;
+    }
+
+    .landing-footer-col {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .landing-footer-link {
+        font-size: 14px;
+        color: rgba(255,255,255,0.3);
+        transition: color 0.2s ease;
+    }
+
+    .landing-footer-link:hover { color: #14B8A6; }
+
+    .landing-footer-bottom {
+        display: flex;
+        justify-content: space-between;
+        padding-top: 24px;
+        border-top: 1px solid rgba(255,255,255,0.04);
+        font-size: 13px;
+        color: rgba(255,255,255,0.2);
+    }
+
+    @@media (max-width: 600px) {
+        .landing-footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
+    }
+
+    /* ─── REDUCED MOTION ─── */
+    @@media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+
+<!-- ═══════════════════════════════════════════════════
+     SCROLL-BASED NAV STATE (inline JS)
+     ═══════════════════════════════════════════════════ -->
+<script suppress-error="BL9992">
+    (function() {
+        var nav = document.getElementById('landing-nav');
+        if (!nav) return;
+        var onScroll = function() {
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+    })();
+</script>

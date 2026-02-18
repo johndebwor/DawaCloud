@@ -2,12 +2,14 @@
 @page "/drugs/{id:int}/edit"
 @using MudBlazor
 @using MediatR
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "RequireInventoryAccess")]
 @using DawaCloud.Web.Data
 @using DawaCloud.Web.Data.Entities
 @using DawaCloud.Web.Features.Drugs.Commands
 @using Microsoft.EntityFrameworkCore
 @inject IMediator Mediator
-@inject AppDbContext DbContext
+@inject IServiceScopeFactory ScopeFactory
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
 
@@ -16,13 +18,11 @@
 <div class="mb-4">
     <MudBreadcrumbs Items="_breadcrumbItems" Class="mb-4" />
 
-    <div class="d-flex justify-space-between align-center mb-4">
-        <div>
-            <MudText Typo="Typo.h4" Class="mb-1">@(_isEditMode ? "Edit Drug" : "Add New Drug")</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">
-                @(_isEditMode ? "Update drug information" : "Add a new pharmaceutical product")
-            </MudText>
-        </div>
+    <div class="dc-hero tw:mb-6 animate-fade-in-up">
+        <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:mb-1 tw:font-display">@(_isEditMode ? "Edit Drug" : "Add New Drug")</h1>
+        <p class="tw:text-sm tw:text-text-secondary tw:m-0">
+            @(_isEditMode ? "Update drug information" : "Add a new pharmaceutical product")
+        </p>
     </div>
 
     @if (_isLoading)
@@ -33,9 +33,9 @@
     {
         <MudGrid>
             <MudItem xs="12" md="8">
-                <MudPaper Elevation="2" Class="pa-6">
+                <div class="dc-card">
                     <MudForm @ref="_form" @bind-IsValid="@_isValid">
-                        <MudText Typo="Typo.h6" Class="mb-4">Basic Information</MudText>
+                        <h3 class="tw:text-lg tw:font-semibold tw:text-text tw:font-display tw:mb-6">Basic Information</h3>
 
                         <MudGrid>
                             <MudItem xs="12" md="6">
@@ -89,7 +89,7 @@
                         </MudGrid>
 
                         <MudDivider Class="my-6" />
-                        <MudText Typo="Typo.h6" Class="mb-4">Pricing Information</MudText>
+                        <h3 class="tw:text-lg tw:font-semibold tw:text-text tw:font-display tw:mb-6">Pricing Information</h3>
 
                         <MudGrid>
                             <MudItem xs="12" md="4">
@@ -128,17 +128,17 @@
                                                  HelperText="VAT or tax percentage" />
                             </MudItem>
                             <MudItem xs="12" md="6">
-                                <div class="pa-4" style="background: #f5f7fa; border-radius: 8px;">
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Profit Margin</MudText>
-                                    <MudText Typo="Typo.h6" Color="Color.Success">
+                                <div class="tw:p-5 tw:bg-success/5 tw:rounded-xl tw:border tw:border-success/20">
+                                    <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:mb-2">Profit Margin</div>
+                                    <div class="tw:text-2xl tw:font-bold tw:text-success tw:font-display">
                                         @CalculateProfitMargin()%
-                                    </MudText>
+                                    </div>
                                 </div>
                             </MudItem>
                         </MudGrid>
 
                         <MudDivider Class="my-6" />
-                        <MudText Typo="Typo.h6" Class="mb-4">Stock Management</MudText>
+                        <h3 class="tw:text-lg tw:font-semibold tw:text-text tw:font-display tw:mb-6">Stock Management</h3>
 
                         <MudGrid>
                             <MudItem xs="12" md="6">
@@ -160,17 +160,13 @@
                         <MudDivider Class="my-6" />
 
                         <div class="d-flex justify-space-between">
-                            <MudButton Variant="Variant.Text"
-                                       Color="Color.Default"
-                                       Href="/drugs"
-                                       StartIcon="@Icons.Material.Filled.ArrowBack">
-                                Cancel
-                            </MudButton>
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Primary"
-                                       Disabled="@(!_isValid || _isSaving)"
-                                       OnClick="HandleSubmit"
-                                       StartIcon="@Icons.Material.Filled.Save">
+                            <a href="/drugs" class="dc-btn-secondary">
+                                <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
+                                <span>Cancel</span>
+                            </a>
+                            <button class="dc-btn-primary"
+                                    disabled="@(!_isValid || _isSaving)"
+                                    @onclick="HandleSubmit">
                                 @if (_isSaving)
                                 {
                                     <MudProgressCircular Size="Size.Small" Indeterminate="true" />
@@ -178,45 +174,49 @@
                                 }
                                 else
                                 {
+                                    <MudIcon Icon="@Icons.Material.Filled.Save" Size="Size.Small" />
                                     <span>@(_isEditMode ? "Update Drug" : "Save Drug")</span>
                                 }
-                            </MudButton>
+                            </button>
                         </div>
                     </MudForm>
-                </MudPaper>
+                </div>
             </MudItem>
 
             <MudItem xs="12" md="4">
-                <MudPaper Elevation="2" Class="pa-4 mb-4">
-                    <MudText Typo="Typo.h6" Class="mb-3">Quick Stats</MudText>
-                    <div class="mb-3">
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">Profit Per Unit</MudText>
-                        <MudText Typo="Typo.h6" Color="Color.Success">
+                <div class="dc-card tw:mb-4">
+                    <h3 class="tw:text-lg tw:font-semibold tw:text-text tw:font-display tw:mb-4">Quick Stats</h3>
+                    <div class="tw:mb-3">
+                        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:mb-1">Profit Per Unit</div>
+                        <div class="tw:text-2xl tw:font-bold tw:text-success tw:font-display">
                             SSP @((_model.RetailPrice - _model.CostPrice).ToString("N2"))
-                        </MudText>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">Price with Tax</MudText>
-                        <MudText Typo="Typo.h6">
+                    <div class="tw:mb-3">
+                        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:mb-1">Price with Tax</div>
+                        <div class="tw:text-2xl tw:font-bold tw:text-primary-600 tw:font-display">
                             SSP @((_model.RetailPrice * (1 + _model.TaxRate / 100)).ToString("N2"))
-                        </MudText>
+                        </div>
                     </div>
-                </MudPaper>
+                </div>
 
-                <MudPaper Elevation="2" Class="pa-4">
-                    <MudText Typo="Typo.h6" Class="mb-3">Guidelines</MudText>
-                    <MudList T="string" Dense="true">
-                        <MudListItem T="string" Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
-                            <MudText Typo="Typo.body2">Use unique drug codes</MudText>
-                        </MudListItem>
-                        <MudListItem T="string" Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
-                            <MudText Typo="Typo.body2">Set appropriate reorder levels</MudText>
-                        </MudListItem>
-                        <MudListItem T="string" Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
-                            <MudText Typo="Typo.body2">Verify pricing before saving</MudText>
-                        </MudListItem>
-                    </MudList>
-                </MudPaper>
+                <div class="dc-card">
+                    <h3 class="tw:text-lg tw:font-semibold tw:text-text tw:font-display tw:mb-4">Guidelines</h3>
+                    <div class="tw:flex tw:flex-col tw:gap-3">
+                        <div class="tw:flex tw:items-start tw:gap-3">
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+                            <span class="tw:text-sm tw:text-text-secondary">Use unique drug codes</span>
+                        </div>
+                        <div class="tw:flex tw:items-start tw:gap-3">
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+                            <span class="tw:text-sm tw:text-text-secondary">Set appropriate reorder levels</span>
+                        </div>
+                        <div class="tw:flex tw:items-start tw:gap-3">
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+                            <span class="tw:text-sm tw:text-text-secondary">Verify pricing before saving</span>
+                        </div>
+                    </div>
+                </div>
             </MudItem>
         </MudGrid>
     }
@@ -257,7 +257,9 @@
 
     private async Task LoadCategoriesAsync()
     {
-        _categories = await DbContext.DrugCategories
+        using var scope = ScopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        _categories = await db.DrugCategories
             .Where(c => !c.IsDeleted)
             .OrderBy(c => c.Name)
             .ToListAsync();
@@ -271,7 +273,9 @@
 
     private async Task LoadDrugAsync(int id)
     {
-        var drug = await DbContext.Drugs
+        using var scope = ScopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var drug = await db.Drugs
             .AsNoTracking()
             .FirstOrDefaultAsync(d => d.Id == id);
 

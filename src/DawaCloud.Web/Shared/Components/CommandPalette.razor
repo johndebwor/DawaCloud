@@ -4,9 +4,9 @@
 
 @if (_isOpen)
 {
-    <div class="command-palette-overlay" @onclick="Close">
-        <div class="command-palette" @onclick:stopPropagation="true">
-            <div class="command-palette-search">
+    <div class="medical-command-overlay" @onclick="Close">
+        <div class="medical-command-palette" @onclick:stopPropagation="true">
+            <div class="medical-command-search">
                 <MudTextField Value="@_searchQuery"
                               ValueChanged="@((string val) => _searchQuery = val)"
                               Placeholder="Type a command or search..."
@@ -18,74 +18,67 @@
                               OnKeyDown="HandleKeyDown" />
             </div>
 
-            <div class="command-palette-results">
+            <div class="medical-command-results">
                 @if (string.IsNullOrWhiteSpace(_searchQuery))
                 {
-                    <!-- Recent Items -->
-                    <div class="command-palette-section">
-                        <div class="command-palette-section-title">RECENT</div>
-                        <div class="command-palette-item" @onclick='() => Navigate("/")'>
-                            <MudIcon Icon="@Icons.Material.Filled.Dashboard" Class="command-palette-item-icon" />
-                            <div class="command-palette-item-text">Dashboard</div>
+                    <div class="medical-command-section">
+                        <div class="medical-command-section-title">RECENT</div>
+                        <div class="medical-command-item" @onclick='() => Navigate("/")'>
+                            <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" />
+                            <span>Dashboard</span>
                         </div>
                     </div>
 
-                    <!-- Quick Actions -->
-                    <div class="command-palette-section">
-                        <div class="command-palette-section-title">QUICK ACTIONS</div>
-                        <div class="command-palette-item" @onclick='() => Navigate("/drugs/new")'>
-                            <MudIcon Icon="@Icons.Material.Filled.Add" Class="command-palette-item-icon" />
-                            <div class="command-palette-item-text">New Drug</div>
-                            <div class="command-palette-item-shortcut">⌘N</div>
+                    <div class="medical-command-section">
+                        <div class="medical-command-section-title">QUICK ACTIONS</div>
+                        <div class="medical-command-item" @onclick='() => Navigate("/drugs/new")'>
+                            <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                            <span>New Drug</span>
+                            <span class="medical-search-kbd" style="margin-left: auto;">Ctrl+N</span>
                         </div>
-                        <div class="command-palette-item" @onclick='() => Navigate("/pos")'>
-                            <MudIcon Icon="@Icons.Material.Filled.PointOfSale" Class="command-palette-item-icon" />
-                            <div class="command-palette-item-text">New Sale</div>
-                            <div class="command-palette-item-shortcut">⌘S</div>
+                        <div class="medical-command-item" @onclick='() => Navigate("/pos")'>
+                            <MudIcon Icon="@Icons.Material.Filled.PointOfSale" Size="Size.Small" />
+                            <span>New Sale</span>
                         </div>
-                        <div class="command-palette-item" @onclick='() => Navigate("/inventory/receive")'>
-                            <MudIcon Icon="@Icons.Material.Filled.Inventory" Class="command-palette-item-icon" />
-                            <div class="command-palette-item-text">Receive Stock</div>
-                            <div class="command-palette-item-shortcut">⌘R</div>
+                        <div class="medical-command-item" @onclick='() => Navigate("/inventory/receive")'>
+                            <MudIcon Icon="@Icons.Material.Filled.Inventory" Size="Size.Small" />
+                            <span>Receive Stock</span>
                         </div>
-                        <div class="command-palette-item" @onclick='() => Navigate("/reports")'>
-                            <MudIcon Icon="@Icons.Material.Filled.Assessment" Class="command-palette-item-icon" />
-                            <div class="command-palette-item-text">Generate Report</div>
-                            <div class="command-palette-item-shortcut">⌘G</div>
+                        <div class="medical-command-item" @onclick='() => Navigate("/reports")'>
+                            <MudIcon Icon="@Icons.Material.Filled.Assessment" Size="Size.Small" />
+                            <span>Generate Report</span>
                         </div>
                     </div>
 
-                    <!-- Navigation -->
-                    <div class="command-palette-section">
-                        <div class="command-palette-section-title">NAVIGATION</div>
-                        <div class="command-palette-item" @onclick='() => Navigate("/")'>
-                            <MudIcon Icon="@Icons.Material.Filled.Dashboard" Class="command-palette-item-icon" />
-                            <div class="command-palette-item-text">Go to Dashboard</div>
+                    <div class="medical-command-section">
+                        <div class="medical-command-section-title">NAVIGATION</div>
+                        <div class="medical-command-item" @onclick='() => Navigate("/")'>
+                            <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" />
+                            <span>Go to Dashboard</span>
                         </div>
-                        <div class="command-palette-item" @onclick='() => Navigate("/drugs")'>
-                            <MudIcon Icon="@Icons.Material.Filled.Medication" Class="command-palette-item-icon" />
-                            <div class="command-palette-item-text">Go to Drugs</div>
+                        <div class="medical-command-item" @onclick='() => Navigate("/drugs")'>
+                            <MudIcon Icon="@Icons.Material.Filled.Medication" Size="Size.Small" />
+                            <span>Go to Drugs</span>
                         </div>
-                        <div class="command-palette-item" @onclick='() => Navigate("/inventory")'>
-                            <MudIcon Icon="@Icons.Material.Filled.Inventory" Class="command-palette-item-icon" />
-                            <div class="command-palette-item-text">Go to Inventory</div>
+                        <div class="medical-command-item" @onclick='() => Navigate("/inventory/stock-levels")'>
+                            <MudIcon Icon="@Icons.Material.Filled.Inventory" Size="Size.Small" />
+                            <span>Go to Inventory</span>
                         </div>
-                        <div class="command-palette-item" @onclick='() => Navigate("/pos")'>
-                            <MudIcon Icon="@Icons.Material.Filled.PointOfSale" Class="command-palette-item-icon" />
-                            <div class="command-palette-item-text">Go to POS</div>
+                        <div class="medical-command-item" @onclick='() => Navigate("/pos")'>
+                            <MudIcon Icon="@Icons.Material.Filled.PointOfSale" Size="Size.Small" />
+                            <span>Go to POS</span>
                         </div>
                     </div>
                 }
                 else
                 {
-                    <!-- Search Results -->
-                    <div class="command-palette-section">
-                        <div class="command-palette-section-title">RESULTS</div>
+                    <div class="medical-command-section">
+                        <div class="medical-command-section-title">RESULTS</div>
                         @foreach (var result in GetSearchResults())
                         {
-                            <div class="command-palette-item" @onclick="() => Navigate(result.Url)">
-                                <MudIcon Icon="@result.Icon" Class="command-palette-item-icon" />
-                                <div class="command-palette-item-text">@result.Title</div>
+                            <div class="medical-command-item" @onclick="() => Navigate(result.Url)">
+                                <MudIcon Icon="@result.Icon" Size="Size.Small" />
+                                <span>@result.Title</span>
                             </div>
                         }
                     </div>
@@ -134,13 +127,17 @@
         {
             new("Dashboard", "/", Icons.Material.Filled.Dashboard),
             new("Drugs", "/drugs", Icons.Material.Filled.Medication),
-            new("Inventory", "/inventory", Icons.Material.Filled.Inventory),
-            new("Procurement", "/procurement", Icons.Material.Filled.ShoppingCart),
+            new("Categories", "/categories", Icons.Material.Filled.Category),
+            new("Batches", "/batches", Icons.Material.Filled.Inventory2),
+            new("Inventory", "/inventory/stock-levels", Icons.Material.Filled.Inventory),
+            new("Procurement", "/procurement/requests", Icons.Material.Filled.ShoppingCart),
             new("Suppliers", "/suppliers", Icons.Material.Filled.LocalShipping),
             new("Wholesale", "/wholesale", Icons.Material.Filled.BusinessCenter),
             new("POS", "/pos", Icons.Material.Filled.PointOfSale),
             new("Reports", "/reports", Icons.Material.Filled.Assessment),
             new("Settings", "/settings", Icons.Material.Filled.Settings),
+            new("Users", "/users", Icons.Material.Filled.People),
+            new("Audit Logs", "/audit", Icons.Material.Filled.History),
         };
 
         return allItems

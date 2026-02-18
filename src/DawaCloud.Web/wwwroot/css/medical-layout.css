@@ -1,0 +1,586 @@
+/* DawaCloud Medical Layout — Teal Theme
+   Uses --tw-color-* CSS variables from Tailwind for dark/light mode support */
+
+/* Base styles — no global reset to avoid breaking MudBlazor spacing */
+
+/* AppBar Styling - Frosted Glass Effect with ambient shadow */
+.medical-appbar {
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(16px) saturate(200%);
+    -webkit-backdrop-filter: blur(16px) saturate(200%);
+    border-bottom: 1px solid var(--tw-color-border-light);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.04), 0 4px 12px rgb(0 0 0 / 0.02);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .medical-appbar {
+    background: rgba(28, 25, 23, 0.88) !important;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.2), 0 4px 12px rgb(0 0 0 / 0.1);
+}
+
+/* Scrolled state — deeper shadow with teal hint */
+.medical-appbar.scrolled {
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.06), 0 8px 24px rgb(12 133 153 / 0.04);
+}
+
+.dark .medical-appbar.scrolled {
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.3), 0 8px 24px rgb(20 184 166 / 0.03);
+}
+
+.medical-appbar-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    padding: 0 8px;
+}
+
+/* Logo Styling */
+.medical-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 6px 12px;
+    border-radius: 6px;
+}
+
+.medical-logo:hover {
+    background: var(--tw-color-primary-50);
+}
+
+.medical-logo-icon {
+    width: 28px;
+    height: 28px;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
+}
+
+.medical-logo:hover .medical-logo-icon {
+    transform: rotate(90deg) scale(1.1);
+    filter: drop-shadow(0 0 6px rgb(12 133 153 / 0.35));
+}
+
+.medical-logo-text {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: 20px;
+    font-weight: 600;
+    font-style: italic;
+    color: var(--tw-color-primary-500);
+    letter-spacing: -0.02em;
+}
+
+/* Search Bar */
+.medical-search {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: var(--tw-color-surface);
+    border: 1.5px solid var(--tw-color-border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--tw-color-text-secondary);
+    font-size: 14px;
+    min-width: 280px;
+}
+
+@media (min-width: 768px) {
+    .medical-search {
+        display: flex;
+    }
+}
+
+.medical-search:hover {
+    border-color: var(--tw-color-primary-500);
+    background: var(--tw-color-primary-50);
+}
+
+.medical-search-kbd {
+    margin-left: auto;
+    padding: 4px 8px;
+    background: var(--tw-color-page);
+    border: 1px solid var(--tw-color-border);
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--tw-color-text-muted);
+}
+
+/* Mobile Search Icon */
+.medical-mobile-search {
+    display: flex;
+}
+
+@media (min-width: 768px) {
+    .medical-mobile-search {
+        display: none;
+    }
+}
+
+/* User Avatar */
+.medical-user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--tw-color-primary-50) 0%, var(--tw-color-primary-500) 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 2px solid var(--tw-color-surface);
+    box-shadow: 0 4px 6px rgba(12, 133, 153, 0.07), 0 2px 4px rgba(12, 133, 153, 0.05);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.medical-user-avatar:hover {
+    transform: scale(1.08);
+    box-shadow: 0 10px 15px rgba(12, 133, 153, 0.1), 0 4px 6px rgba(12, 133, 153, 0.05);
+}
+
+/* User Menu Header */
+.medical-user-info {
+    padding: 12px 0;
+}
+
+.medical-user-name {
+    font-weight: 600;
+    color: var(--tw-color-text);
+    font-size: 15px;
+}
+
+.medical-user-email {
+    font-size: 13px;
+    color: var(--tw-color-text-secondary);
+    margin-top: 2px;
+}
+
+/* Navigation Drawer — subtle gradient background */
+.medical-drawer {
+    background: linear-gradient(180deg, var(--tw-color-surface) 0%, rgb(248 250 251 / 0.5) 100%) !important;
+    border-right: 1px solid var(--tw-color-border-light);
+}
+
+.dark .medical-drawer {
+    background: linear-gradient(180deg, var(--tw-color-surface) 0%, rgb(12 10 9 / 0.3) 100%) !important;
+}
+
+.medical-drawer-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Navigation Menu */
+.medical-nav-menu {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+}
+
+/* Custom scrollbar for nav — fade in on hover */
+.medical-nav-menu::-webkit-scrollbar {
+    width: 4px;
+}
+
+.medical-nav-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.medical-nav-menu::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 3px;
+    transition: background 0.2s ease;
+}
+
+.medical-nav-menu:hover::-webkit-scrollbar-thumb {
+    background: var(--tw-color-border);
+}
+
+.medical-nav-menu:hover::-webkit-scrollbar-thumb:hover {
+    background: var(--tw-color-primary-500);
+}
+
+/* Override MudBlazor nav link styles */
+.medical-nav-menu .mud-nav-link {
+    border-radius: 6px;
+    margin-bottom: 3px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.medical-nav-menu .mud-nav-link:hover {
+    background: var(--tw-color-primary-50) !important;
+    color: var(--tw-color-primary-500) !important;
+}
+
+.medical-nav-menu .mud-nav-link.active {
+    background: linear-gradient(135deg, var(--tw-color-primary-50) 0%, rgba(12, 133, 153, 0.15) 100%) !important;
+    color: var(--tw-color-primary-700) !important;
+    font-weight: 600;
+    position: relative;
+}
+
+.dark .medical-nav-menu .mud-nav-link.active {
+    color: var(--tw-color-primary-400) !important;
+}
+
+.medical-nav-menu .mud-nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 20px;
+    background: linear-gradient(180deg, var(--tw-color-primary-500), var(--tw-color-accent-500));
+    border-radius: 0 2px 2px 0;
+    animation: navAccentSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes navAccentSlide {
+    from { height: 0; opacity: 0; }
+    to { height: 20px; opacity: 1; }
+}
+
+/* Nav Groups */
+.medical-nav-menu .mud-nav-group {
+    margin-bottom: 8px;
+}
+
+.medical-nav-menu .mud-nav-group > .mud-nav-link {
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--tw-color-text-muted);
+    padding-top: 12px;
+    padding-bottom: 8px;
+}
+
+.medical-nav-menu .mud-nav-group-content {
+    padding-left: 8px;
+}
+
+/* Main Content */
+.medical-main-content {
+    background: var(--tw-color-page) !important;
+    min-height: 100vh;
+}
+
+.medical-content-wrapper {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+@media (max-width: 768px) {
+    .medical-content-wrapper {
+        padding: 16px;
+    }
+}
+
+/* Notification Drawer */
+.medical-notification-drawer {
+    background: var(--tw-color-surface) !important;
+    border-left: 1px solid var(--tw-color-border-light);
+}
+
+.medical-notification-header {
+    border-bottom: 1px solid var(--tw-color-border-light);
+    padding: 16px 20px;
+}
+
+.medical-notification-title {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--tw-color-text);
+}
+
+.medical-notification-list {
+    padding: 16px;
+}
+
+.medical-notification-item {
+    margin-bottom: 12px;
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid var(--tw-color-border);
+    border-left: 3px solid var(--tw-color-primary-500);
+    background: var(--tw-color-surface);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideInRight 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.medical-notification-item:nth-child(1) { animation-delay: 0s; }
+.medical-notification-item:nth-child(2) { animation-delay: 0.05s; }
+.medical-notification-item:nth-child(3) { animation-delay: 0.1s; }
+.medical-notification-item:nth-child(4) { animation-delay: 0.15s; }
+.medical-notification-item:nth-child(5) { animation-delay: 0.2s; }
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.medical-notification-item:hover {
+    border-color: var(--tw-color-primary-500);
+    box-shadow: 0 1px 3px rgba(12, 133, 153, 0.08), 0 1px 2px rgba(12, 133, 153, 0.04);
+}
+
+.medical-notification-item-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--tw-color-text);
+}
+
+.medical-notification-item-message {
+    margin-top: 4px;
+    font-size: 13px;
+    color: var(--tw-color-text-secondary);
+    line-height: 1.5;
+}
+
+.medical-notification-item-time {
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--tw-color-text-muted);
+}
+
+.medical-notification-empty {
+    text-align: center;
+    padding: 48px 20px;
+}
+
+.medical-notification-empty-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: var(--tw-color-page);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+}
+
+.medical-notification-empty-text {
+    font-size: 14px;
+    color: var(--tw-color-text-secondary);
+}
+
+/* Command Palette Overlay */
+.medical-command-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 15vh;
+    z-index: 1700;
+    animation: cmdFadeIn 0.15s ease;
+}
+
+@keyframes cmdFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Command Palette — glassmorphism */
+.medical-command-palette {
+    width: 560px;
+    max-width: 90vw;
+    background: var(--tw-color-surface);
+    border-radius: 16px;
+    overflow: hidden;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--tw-color-border);
+    box-shadow: 0 24px 48px rgb(0 0 0 / 0.15), 0 0 0 1px rgb(255 255 255 / 0.05) inset;
+    animation: cmdScaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes cmdScaleIn {
+    from { opacity: 0; transform: scale(0.96) translateY(-8px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.dark .medical-command-palette {
+    box-shadow: 0 24px 48px rgb(0 0 0 / 0.4), 0 0 0 1px rgb(255 255 255 / 0.03) inset;
+}
+
+.medical-command-search {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--tw-color-border-light);
+}
+
+.medical-command-results {
+    max-height: 420px;
+    overflow-y: auto;
+    padding: 8px;
+}
+
+.medical-command-section {
+    margin-bottom: 8px;
+}
+
+.medical-command-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--tw-color-text-muted);
+    padding: 8px 12px 4px;
+}
+
+.medical-command-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--tw-color-text-secondary);
+    font-size: 14px;
+    transition: all 0.15s ease;
+}
+
+.medical-command-item:hover {
+    background: var(--tw-color-primary-50);
+    color: var(--tw-color-primary-500);
+    padding-left: 16px;
+}
+
+/* Utility Classes */
+.medical-spacer {
+    flex: 1;
+}
+
+/* Button Overrides for MudIconButton */
+.mud-icon-button {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mud-icon-button:hover {
+    background: var(--tw-color-primary-50) !important;
+}
+
+/* Badge Styling — subtle glow pulse */
+.mud-badge .mud-badge-content {
+    animation: badgePulse 2.5s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgb(239 68 68 / 0.3); }
+    50% { box-shadow: 0 0 0 4px rgb(239 68 68 / 0); }
+}
+
+/* RTL Support */
+.rtl-layout .medical-drawer {
+    right: 0;
+    left: auto;
+    border-right: none;
+    border-left: 1px solid var(--tw-color-border-light);
+}
+
+.rtl-layout .medical-nav-link.active::before {
+    left: auto;
+    right: 0;
+    border-radius: 2px 0 0 2px;
+}
+
+/* Loading States */
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+.medical-loading {
+    background: linear-gradient(
+        90deg,
+        var(--tw-color-page) 0%,
+        var(--tw-color-border-light) 50%,
+        var(--tw-color-page) 100%
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite;
+}
+
+/* Micro-interactions */
+.medical-interactive {
+    position: relative;
+    overflow: hidden;
+}
+
+.medical-interactive::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(12, 133, 153, 0.15);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.medical-interactive:active::after {
+    width: 300px;
+    height: 300px;
+}
+
+/* Accessibility Focus States */
+.mud-button:focus-visible,
+.mud-icon-button:focus-visible,
+.mud-nav-link:focus-visible {
+    outline: 2px solid var(--tw-color-primary-500);
+    outline-offset: 2px;
+}
+
+/* Print Styles */
+@media print {
+    .medical-appbar,
+    .medical-drawer,
+    .medical-notification-drawer {
+        display: none !important;
+    }
+
+    .medical-main-content {
+        margin: 0 !important;
+    }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    :root {
+        --tw-color-border: #334155;
+        --tw-color-text-secondary: #1E293B;
+    }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

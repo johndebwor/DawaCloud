@@ -88,7 +88,7 @@ public class CreateSaleCommandHandler : IRequestHandler<CreateSaleCommand, Resul
             .FirstOrDefaultAsync(ct);
 
         var nextNumber = (lastSale?.Id ?? 0) + 1;
-        var invoiceNumber = $"INV-{DateTime.Now:yyyyMM}-{nextNumber:D5}";
+        var invoiceNumber = $"INV-{DateTime.UtcNow:yyyyMM}-{nextNumber:D5}";
 
         // Create sale
         var sale = new WholesaleSale

@@ -1,41 +1,51 @@
 @page "/inventory/stock-counts/{id:int}/count"
 @using MediatR
 @using MudBlazor
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "RequireInventoryAccess")]
 @using DawaCloud.Web.Features.Inventory.Queries
 @using DawaCloud.Web.Features.Inventory.Commands
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
 
-<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
-    @if (_loading)
-    {
+@if (_loading)
+{
+    <div class="tw:flex tw:justify-center tw:py-12">
         <MudProgressCircular Indeterminate="true" />
-    }
-    else if (_stockCount == null)
-    {
-        <MudAlert Severity="Severity.Error">Stock count not found</MudAlert>
-    }
-    else
-    {
-        <MudPaper Elevation="2" Class="pa-4 mb-4">
-            <div class="d-flex justify-space-between align-center mb-4">
+    </div>
+}
+else if (_stockCount == null)
+{
+    <MudAlert Severity="Severity.Error">Stock count not found</MudAlert>
+}
+else
+{
+    <div class="dc-hero tw:mb-6 animate-fade-in-up">
+        <div class="tw:flex tw:flex-wrap tw:justify-between tw:items-center tw:gap-4">
+            <div class="tw:flex tw:items-center tw:gap-4">
+                <a href="/inventory/stock-counts" class="dc-btn-secondary">
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
+                    Back
+                </a>
                 <div>
-                    <MudText Typo="Typo.h5">@_stockCount.ReferenceNumber</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    <h1 class="tw:text-2xl tw:font-bold tw:font-display tw:tracking-tight tw:text-text tw:m-0">@_stockCount.ReferenceNumber</h1>
+                    <p class="tw:text-text-secondary tw:text-sm tw:mt-0.5 tw:m-0">
                         Count Date: @_stockCount.CountDate.ToString("dd MMM yyyy HH:mm")
-                    </MudText>
-                </div>
-                <div>
-                    <MudChip T="string" Color="@GetStatusColor()" Size="Size.Large">
-                        @_stockCount.Status
-                    </MudChip>
+                    </p>
                 </div>
             </div>
+            <div class="tw:flex tw:items-center tw:gap-2">
+                <MudChip T="string" Color="@GetStatusColor()" Size="Size.Large">
+                    @_stockCount.Status
+                </MudChip>
+            </div>
+        </div>
 
-            <MudText Typo="Typo.body2" Class="mb-2">
+        <div class="tw:mt-4">
+            <p class="tw:text-sm tw:text-text-secondary tw:mb-2 tw:m-0">
                 Progress: @_stockCount.TotalItemsCounted / @_stockCount.TotalItems items counted (@GetProgressPercentage()%)
-            </MudText>
+            </p>
             <MudProgressLinear Color="Color.Primary" Value="@GetProgressValue()" Class="mb-2" />
 
             @if (_stockCount.ItemsWithVariance > 0)
@@ -44,9 +54,10 @@
                     @_stockCount.ItemsWithVariance items with variance. Total variance value: SSP @_stockCount.TotalVarianceValue.ToString("N2")
                 </MudAlert>
             }
-        </MudPaper>
+        </div>
+    </div>
 
-        <MudPaper Elevation="2" Class="pa-4">
+    <div class="dc-card animate-fade-in-up animate-delay-1">
             <div class="d-flex justify-space-between align-center mb-4">
                 <MudText Typo="Typo.h6">Items to Count</MudText>
 
@@ -144,9 +155,8 @@
                     </MudTd>
                 </RowTemplate>
             </MudTable>
-        </MudPaper>
-    }
-</MudContainer>
+    </div>
+}
 
 @code {
     [Parameter]

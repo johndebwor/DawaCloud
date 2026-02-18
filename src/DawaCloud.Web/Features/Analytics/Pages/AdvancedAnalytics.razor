@@ -1,0 +1,488 @@
+@page "/analytics"
+@using MudBlazor
+@using DawaCloud.Web.Data
+@using DawaCloud.Web.Data.Entities
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject IServiceScopeFactory ScopeFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Advanced Analytics - DawaCloud</PageTitle>
+
+<!-- Hero Section -->
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">Advanced Analytics</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Deep insights into your pharmacy performance and trends</p>
+        </div>
+        <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-3">
+            <MudSelect T="string" @bind-Value="_selectedPeriod" Variant="Variant.Outlined" Dense="true"
+                       Style="width: 180px;" Label="Period">
+                <MudSelectItem Value="@("7")">Last 7 Days</MudSelectItem>
+                <MudSelectItem Value="@("30")">Last 30 Days</MudSelectItem>
+                <MudSelectItem Value="@("90")">Last 90 Days</MudSelectItem>
+                <MudSelectItem Value="@("365")">Last Year</MudSelectItem>
+            </MudSelect>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadData"
+                       StartIcon="@Icons.Material.Filled.Refresh">
+                Refresh
+            </MudButton>
+        </div>
+    </div>
+</div>
+
+@if (_loading)
+{
+    <div class="d-flex justify-center pa-8">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    </div>
+}
+else
+{
+    <!-- KPI Cards -->
+    <div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 lg:tw:grid-cols-4 tw:gap-4 tw:my-6">
+        <div class="dc-kpi animate-fade-in-up animate-delay-1">
+            <div class="tw:flex tw:items-center tw:gap-3">
+                <div class="dc-icon-box tw:bg-primary-50">
+                    <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Style="color: var(--tw-color-primary-600);" />
+                </div>
+            </div>
+            <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Total Revenue</div>
+            <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">$@_totalRevenue.ToString("N0")</div>
+            <MudText Typo="Typo.caption" Style="color: var(--tw-color-success);">
+                <MudIcon Icon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small" /> @_revenueGrowth.ToString("N1")% vs prior
+            </MudText>
+        </div>
+        <div class="dc-kpi animate-fade-in-up animate-delay-2">
+            <div class="tw:flex tw:items-center tw:gap-3">
+                <div class="dc-icon-box tw:bg-accent-50">
+                    <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Style="color: var(--tw-color-accent-600);" />
+                </div>
+            </div>
+            <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Total Orders</div>
+            <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_totalOrders.ToString("N0")</div>
+            <MudText Typo="Typo.caption" Class="tw:text-text-secondary">
+                Avg $@_avgOrderValue.ToString("N0") per order
+            </MudText>
+        </div>
+        <div class="dc-kpi animate-fade-in-up animate-delay-3">
+            <div class="tw:flex tw:items-center tw:gap-3">
+                <div class="dc-icon-box tw:bg-warning-50">
+                    <MudIcon Icon="@Icons.Material.Filled.Inventory" Style="color: var(--tw-color-warning-600);" />
+                </div>
+            </div>
+            <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Inventory Value</div>
+            <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">$@_inventoryValue.ToString("N0")</div>
+            <MudText Typo="Typo.caption" Class="tw:text-text-secondary">
+                @_totalDrugs active drugs
+            </MudText>
+        </div>
+        <div class="dc-kpi animate-fade-in-up animate-delay-4">
+            <div class="tw:flex tw:items-center tw:gap-3">
+                <div class="dc-icon-box tw:bg-danger-50">
+                    <MudIcon Icon="@Icons.Material.Filled.MoneyOff" Style="color: var(--tw-color-danger-600);" />
+                </div>
+            </div>
+            <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Total Expenses</div>
+            <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">$@_totalExpenses.ToString("N0")</div>
+            <MudText Typo="Typo.caption" Class="tw:text-text-secondary">
+                @_expenseCount transactions
+            </MudText>
+        </div>
+    </div>
+
+    <!-- Revenue & Profit Trend + Sales by Category -->
+    <MudGrid Class="mt-4">
+        <MudItem xs="12" md="8">
+            <div class="dc-card animate-fade-in-up">
+                <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                    <div class="tw:flex tw:items-center tw:gap-3">
+                        <div class="dc-icon-box tw:bg-primary-50">
+                            <MudIcon Icon="@Icons.Material.Filled.ShowChart" Style="color: var(--tw-color-primary-600);" />
+                        </div>
+                        <h3 class="tw:text-lg tw:font-semibold tw:text-text tw:m-0 tw:font-display">Revenue Trend</h3>
+                    </div>
+                </div>
+                @if (_revenueTrend.Any())
+                {
+                    <div style="display: flex; gap: 4px; align-items: flex-end; height: 200px; padding: 8px 0;">
+                        @foreach (var point in _revenueTrend)
+                        {
+                            var maxVal = _revenueTrend.Max(p => p.Value);
+                            var heightPct = maxVal > 0 ? (point.Value / maxVal * 100) : 0;
+                            <MudTooltip Text="@($"{point.Label}: ${point.Value:N0}")">
+                                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%;">
+                                    <div style="width: 100%; max-width: 40px; height: @(heightPct)%; min-height: 4px; background: linear-gradient(180deg, var(--tw-color-primary-600), var(--tw-color-primary-400)); border-radius: 4px 4px 0 0; transition: height 0.3s;"></div>
+                                    <MudText Typo="Typo.caption" Style="font-size: 0.65rem; margin-top: 4px;" Class="tw:text-text-secondary">@point.ShortLabel</MudText>
+                                </div>
+                            </MudTooltip>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center pa-8">
+                        <MudText Color="Color.Secondary">No revenue data for this period</MudText>
+                    </div>
+                }
+            </div>
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <div class="dc-card animate-fade-in-up">
+                <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                    <div class="tw:flex tw:items-center tw:gap-3">
+                        <div class="dc-icon-box tw:bg-accent-50">
+                            <MudIcon Icon="@Icons.Material.Filled.PieChart" Style="color: var(--tw-color-accent-600);" />
+                        </div>
+                        <h3 class="tw:text-lg tw:font-semibold tw:text-text tw:m-0 tw:font-display">Sales by Category</h3>
+                    </div>
+                </div>
+                @if (_categoryBreakdown.Any())
+                {
+                    @foreach (var cat in _categoryBreakdown.Take(6))
+                    {
+                        var pct = _categoryTotal > 0 ? (double)(cat.Amount / _categoryTotal * 100) : 0;
+                        <div class="mb-3">
+                            <div class="d-flex justify-space-between mb-1">
+                                <MudText Typo="Typo.body2" Style="font-weight: 600;">@cat.Name</MudText>
+                                <MudText Typo="Typo.body2">$@cat.Amount.ToString("N0") (@pct.ToString("N0")%)</MudText>
+                            </div>
+                            <MudProgressLinear Value="@pct" Color="@cat.Color" Rounded="true" Size="Size.Small" />
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center pa-4">
+                        <MudText Color="Color.Secondary">No sales data</MudText>
+                    </div>
+                }
+            </div>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Top Selling Drugs + Expiry Alerts -->
+    <MudGrid Class="mt-4">
+        <MudItem xs="12" md="6">
+            <div class="dc-card animate-fade-in-up">
+                <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                    <div class="tw:flex tw:items-center tw:gap-3">
+                        <div class="dc-icon-box tw:bg-primary-50">
+                            <MudIcon Icon="@Icons.Material.Filled.Medication" Style="color: var(--tw-color-primary-600);" />
+                        </div>
+                        <h3 class="tw:text-lg tw:font-semibold tw:text-text tw:m-0 tw:font-display">Top Selling Drugs</h3>
+                    </div>
+                </div>
+                <MudSimpleTable Dense="true" Hover="true" Style="overflow-x: auto;">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Drug</th>
+                            <th style="text-align: right;">Qty Sold</th>
+                            <th style="text-align: right;">Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ var rank = 1; }
+                        @foreach (var drug in _topSellingDrugs)
+                        {
+                            <tr>
+                                <td>
+                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled"
+                                             Color="@(rank <= 3 ? Color.Primary : Color.Default)">
+                                        @rank
+                                    </MudChip>
+                                </td>
+                                <td>
+                                    <div>
+                                        <MudText Typo="Typo.body2" Style="font-weight: 600;">@drug.Name</MudText>
+                                        <MudText Typo="Typo.caption" Class="tw:text-text-secondary">@drug.Code</MudText>
+                                    </div>
+                                </td>
+                                <td style="text-align: right;">@drug.QuantitySold.ToString("N0")</td>
+                                <td style="text-align: right; font-weight: 600;">$@drug.Revenue.ToString("N0")</td>
+                            </tr>
+                            rank++;
+                        }
+                        @if (!_topSellingDrugs.Any())
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center pa-4">No sales data for this period</td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            </div>
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <div class="dc-card animate-fade-in-up">
+                <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                    <div class="tw:flex tw:items-center tw:gap-3">
+                        <div class="dc-icon-box tw:bg-warning-50">
+                            <MudIcon Icon="@Icons.Material.Filled.Warning" Style="color: var(--tw-color-warning-600);" />
+                        </div>
+                        <h3 class="tw:text-lg tw:font-semibold tw:text-text tw:m-0 tw:font-display">Expiry Alerts</h3>
+                    </div>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Filled">@_expiringBatches.Count items</MudChip>
+                </div>
+                @if (_expiringBatches.Any())
+                {
+                    @foreach (var batch in _expiringBatches.Take(8))
+                    {
+                        var daysLeft = (batch.ExpiryDate - DateTime.UtcNow).Days;
+                        var severity = daysLeft <= 30 ? Color.Error : daysLeft <= 60 ? Color.Warning : Color.Info;
+                        <div class="d-flex align-center justify-space-between py-2" style="border-bottom: 1px solid var(--tw-color-border);">
+                            <div>
+                                <MudText Typo="Typo.body2" Style="font-weight: 600;">@batch.DrugName</MudText>
+                                <MudText Typo="Typo.caption" Class="tw:text-text-secondary">
+                                    Batch: @batch.BatchNumber | Qty: @batch.CurrentQuantity
+                                </MudText>
+                            </div>
+                            <MudChip T="string" Size="Size.Small" Color="@severity" Variant="Variant.Outlined">
+                                @(daysLeft <= 0 ? "Expired" : $"{daysLeft}d left")
+                            </MudChip>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center pa-4">
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" />
+                        <MudText Color="Color.Success" Class="mt-2">No upcoming expiries</MudText>
+                    </div>
+                }
+            </div>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Low Stock + Expense Breakdown -->
+    <MudGrid Class="mt-4 mb-4">
+        <MudItem xs="12" md="6">
+            <div class="dc-card animate-fade-in-up">
+                <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                    <div class="tw:flex tw:items-center tw:gap-3">
+                        <div class="dc-icon-box tw:bg-danger-50">
+                            <MudIcon Icon="@Icons.Material.Filled.Inventory2" Style="color: var(--tw-color-danger-600);" />
+                        </div>
+                        <h3 class="tw:text-lg tw:font-semibold tw:text-text tw:m-0 tw:font-display">Low Stock Alerts</h3>
+                    </div>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Filled">@_lowStockDrugs.Count items</MudChip>
+                </div>
+                @if (_lowStockDrugs.Any())
+                {
+                    @foreach (var drug in _lowStockDrugs.Take(8))
+                    {
+                        var pct = drug.ReorderLevel > 0 ? ((double)drug.CurrentStock / drug.ReorderLevel * 100) : 0;
+                        <div class="py-2" style="border-bottom: 1px solid var(--tw-color-border);">
+                            <div class="d-flex justify-space-between mb-1">
+                                <MudText Typo="Typo.body2" Style="font-weight: 600;">@drug.Name</MudText>
+                                <MudText Typo="Typo.body2" Class="tw:text-text-secondary">@drug.CurrentStock / @drug.ReorderLevel</MudText>
+                            </div>
+                            <MudProgressLinear Value="@pct" Color="@(pct < 25 ? Color.Error : Color.Warning)" Rounded="true" Size="Size.Small" />
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center pa-4">
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" />
+                        <MudText Color="Color.Success" Class="mt-2">All stock levels healthy</MudText>
+                    </div>
+                }
+            </div>
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <div class="dc-card animate-fade-in-up">
+                <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                    <div class="tw:flex tw:items-center tw:gap-3">
+                        <div class="dc-icon-box tw:bg-danger-50">
+                            <MudIcon Icon="@Icons.Material.Filled.Receipt" Style="color: var(--tw-color-danger-600);" />
+                        </div>
+                        <h3 class="tw:text-lg tw:font-semibold tw:text-text tw:m-0 tw:font-display">Expense Breakdown</h3>
+                    </div>
+                </div>
+                @if (_expenseBreakdown.Any())
+                {
+                    @foreach (var cat in _expenseBreakdown.Take(8))
+                    {
+                        var pct = _totalExpenses > 0 ? (double)(cat.Amount / _totalExpenses * 100) : 0;
+                        <div class="mb-3">
+                            <div class="d-flex justify-space-between mb-1">
+                                <MudText Typo="Typo.body2" Style="font-weight: 600;">@cat.Name</MudText>
+                                <MudText Typo="Typo.body2">$@cat.Amount.ToString("N0")</MudText>
+                            </div>
+                            <MudProgressLinear Value="@pct" Color="Color.Error" Rounded="true" Size="Size.Small" />
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center pa-4">
+                        <MudText Color="Color.Secondary">No expense data for this period</MudText>
+                    </div>
+                }
+            </div>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    private bool _loading = true;
+    private string _selectedPeriod = "30";
+
+    // KPIs
+    private decimal _totalRevenue;
+    private decimal _revenueGrowth;
+    private int _totalOrders;
+    private decimal _avgOrderValue;
+    private decimal _inventoryValue;
+    private int _totalDrugs;
+    private decimal _totalExpenses;
+    private int _expenseCount;
+
+    // Charts data
+    private List<ChartPoint> _revenueTrend = new();
+    private List<CategoryBreakdown> _categoryBreakdown = new();
+    private decimal _categoryTotal;
+    private List<TopDrug> _topSellingDrugs = new();
+    private List<ExpiringBatch> _expiringBatches = new();
+    private List<LowStockItem> _lowStockDrugs = new();
+    private List<CategoryBreakdown> _expenseBreakdown = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        StateHasChanged();
+
+        try
+        {
+            var days = int.Parse(_selectedPeriod);
+            var startDate = DateTime.UtcNow.AddDays(-days);
+            var priorStart = startDate.AddDays(-days);
+
+            using var scope = ScopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            // Revenue from POS sales
+            var salesInPeriod = await db.RetailSales
+                .Where(s => s.SaleDate >= startDate && !s.IsDeleted)
+                .ToListAsync();
+
+            _totalRevenue = salesInPeriod.Sum(s => s.TotalAmount);
+            _totalOrders = salesInPeriod.Count;
+            _avgOrderValue = _totalOrders > 0 ? _totalRevenue / _totalOrders : 0;
+
+            var priorRevenue = await db.RetailSales
+                .Where(s => s.SaleDate >= priorStart && s.SaleDate < startDate && !s.IsDeleted)
+                .SumAsync(s => s.TotalAmount);
+            _revenueGrowth = priorRevenue > 0 ? (((_totalRevenue - priorRevenue) / priorRevenue) * 100) : 0;
+
+            // Inventory value
+            var activeBatches = await db.Batches
+                .Include(b => b.Drug)
+                .Where(b => b.Status == BatchStatus.Active && b.CurrentQuantity > 0)
+                .ToListAsync();
+            _inventoryValue = activeBatches.Sum(b => b.CurrentQuantity * b.CostPrice);
+            _totalDrugs = await db.Drugs.CountAsync(d => d.IsActive && !d.IsDeleted);
+
+            // Expenses
+            var expensesInPeriod = await db.Expenses
+                .Where(e => e.Date >= startDate && e.Status == ExpenseStatus.Approved && !e.IsDeleted)
+                .ToListAsync();
+            _totalExpenses = expensesInPeriod.Sum(e => e.AmountBase);
+            _expenseCount = expensesInPeriod.Count;
+
+            // Revenue trend (group by week or day)
+            _revenueTrend = days <= 30
+                ? salesInPeriod
+                    .GroupBy(s => s.SaleDate.Date)
+                    .OrderBy(g => g.Key)
+                    .Select(g => new ChartPoint(g.Key.ToString("MMM dd"), g.Key.ToString("dd"), g.Sum(s => s.TotalAmount)))
+                    .ToList()
+                : salesInPeriod
+                    .GroupBy(s => new { s.SaleDate.Year, Week = System.Globalization.CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(s.SaleDate, System.Globalization.CalendarWeekRule.FirstDay, DayOfWeek.Monday) })
+                    .OrderBy(g => g.Key.Year).ThenBy(g => g.Key.Week)
+                    .Select(g => new ChartPoint($"Wk {g.Key.Week}", $"W{g.Key.Week}", g.Sum(s => s.TotalAmount)))
+                    .ToList();
+
+            // Category breakdown from sale items
+            var saleItems = await db.RetailSaleItems
+                .Include(si => si.Drug).ThenInclude(d => d!.Category)
+                .Where(si => si.Sale!.SaleDate >= startDate && !si.Sale.IsDeleted)
+                .ToListAsync();
+
+            var colors = new[] { Color.Primary, Color.Secondary, Color.Tertiary, Color.Info, Color.Success, Color.Warning };
+            _categoryBreakdown = saleItems
+                .GroupBy(si => si.Drug?.Category?.Name ?? "Uncategorized")
+                .Select((g, i) => new CategoryBreakdown(g.Key, g.Sum(si => si.LineTotal), colors[i % colors.Length]))
+                .OrderByDescending(c => c.Amount)
+                .ToList();
+            _categoryTotal = _categoryBreakdown.Sum(c => c.Amount);
+
+            // Top selling drugs
+            _topSellingDrugs = saleItems
+                .GroupBy(si => new { si.Drug?.Name, si.Drug?.Code })
+                .Select(g => new TopDrug(g.Key.Name ?? "Unknown", g.Key.Code ?? "", g.Sum(si => si.Quantity), g.Sum(si => si.LineTotal)))
+                .OrderByDescending(d => d.Revenue)
+                .Take(10)
+                .ToList();
+
+            // Expiring batches (within 90 days)
+            var expiryThreshold = DateTime.UtcNow.AddDays(90);
+            _expiringBatches = await db.Batches
+                .Include(b => b.Drug)
+                .Where(b => b.Status == BatchStatus.Active && b.CurrentQuantity > 0 && b.ExpiryDate <= expiryThreshold)
+                .OrderBy(b => b.ExpiryDate)
+                .Select(b => new ExpiringBatch(b.Drug!.Name, b.BatchNumber, b.ExpiryDate, b.CurrentQuantity))
+                .ToListAsync();
+
+            // Low stock drugs
+            _lowStockDrugs = await db.Drugs
+                .Where(d => d.IsActive && !d.IsDeleted && d.ReorderLevel > 0)
+                .Select(d => new
+                {
+                    d.Name,
+                    CurrentStock = d.Batches!.Where(b => b.Status == BatchStatus.Active).Sum(b => b.CurrentQuantity),
+                    d.ReorderLevel
+                })
+                .Where(d => d.CurrentStock <= d.ReorderLevel)
+                .OrderBy(d => (double)d.CurrentStock / d.ReorderLevel)
+                .Take(10)
+                .Select(d => new LowStockItem(d.Name, d.CurrentStock, d.ReorderLevel))
+                .ToListAsync();
+
+            // Expense breakdown by category
+            var expensesWithCategory = await db.Expenses
+                .Include(e => e.Category)
+                .Where(e => e.Date >= startDate && e.Status == ExpenseStatus.Approved && !e.IsDeleted)
+                .ToListAsync();
+            _expenseBreakdown = expensesWithCategory
+                .GroupBy(e => e.Category?.Name ?? "Uncategorized")
+                .Select(g => new CategoryBreakdown(g.Key, g.Sum(e => e.AmountBase), Color.Error))
+                .OrderByDescending(c => c.Amount)
+                .ToList();
+        }
+        catch
+        {
+            // Gracefully handle - show empty state
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private record ChartPoint(string Label, string ShortLabel, decimal Value);
+    private record CategoryBreakdown(string Name, decimal Amount, Color Color);
+    private record TopDrug(string Name, string Code, int QuantitySold, decimal Revenue);
+    private record ExpiringBatch(string DrugName, string BatchNumber, DateTime ExpiryDate, int CurrentQuantity);
+    private record LowStockItem(string Name, int CurrentStock, int ReorderLevel);
+}

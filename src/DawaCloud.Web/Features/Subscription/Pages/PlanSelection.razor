@@ -1,0 +1,144 @@
+@page "/subscription/select-plan"
+@using MudBlazor
+@using MediatR
+@using Microsoft.AspNetCore.Authorization
+@using DawaCloud.Web.Features.Subscription.Queries
+@using System.Text.Json
+@attribute [Authorize]
+@inject IMediator Mediator
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<PageTitle>DawaCloud | Select Plan</PageTitle>
+
+<div style="max-width: 1200px; margin: 0 auto; padding: 2rem;">
+    <!-- Header -->
+    <div style="text-align: center; margin-bottom: 3rem;">
+        <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem;">Choose Your Plan</h1>
+        <p style="color: var(--df-text-secondary); font-size: 1.05rem;">
+            Select the plan that best fits your pharmacy's needs
+        </p>
+        <!-- Billing Toggle -->
+        <div class="d-flex align-center justify-center gap-3 mt-4">
+            <MudText Style="@($"font-weight: {(!_annualBilling ? "700" : "400")}; color: {(!_annualBilling ? "var(--df-text-primary)" : "var(--df-text-tertiary)")}")">Monthly</MudText>
+            <MudSwitch @bind-Value="_annualBilling" Color="Color.Primary" />
+            <MudText Style="@($"font-weight: {(_annualBilling ? "700" : "400")}; color: {(_annualBilling ? "var(--df-text-primary)" : "var(--df-text-tertiary)")}")">
+                Annual
+            </MudText>
+            <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">Save 20%</MudChip>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="d-flex justify-center pa-8">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        </div>
+    }
+    else
+    {
+        <MudGrid Justify="Justify.Center">
+            @foreach (var plan in _plans)
+            {
+                <MudItem xs="12" sm="6" md="3">
+                    <MudPaper Elevation="@(plan.IsFeatured ? 4 : 0)" Class="pa-5"
+                              Style="@($"border-radius: 20px; border: {(plan.IsFeatured ? "2px solid #1565C0" : "1px solid rgba(0,0,0,0.06)")}; position: relative; height: 100%; display: flex; flex-direction: column;")">
+                        @if (plan.IsFeatured)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled"
+                                     Style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%);">
+                                Most Popular
+                            </MudChip>
+                        }
+
+                        <MudText Typo="Typo.h6" Style="font-weight: 700; margin-bottom: 0.5rem;">@plan.Name</MudText>
+
+                        <div style="margin-bottom: 1.5rem;">
+                            @if (plan.PriceMonthly == 0 && plan.Name == "Enterprise")
+                            {
+                                <MudText Typo="Typo.h4" Style="font-weight: 800;">Custom</MudText>
+                                <MudText Typo="Typo.caption" Style="color: var(--df-text-tertiary);">Contact us</MudText>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.h4" Style="font-weight: 800;">
+                                    $@(_annualBilling ? (plan.PriceAnnual / 12).ToString("N0") : plan.PriceMonthly.ToString("N0"))
+                                </MudText>
+                                <MudText Typo="Typo.caption" Style="color: var(--df-text-tertiary);">/month @(_annualBilling ? "(billed annually)" : "")</MudText>
+                            }
+                        </div>
+
+                        <MudDivider Class="mb-4" />
+
+                        <div style="flex: 1;">
+                            @foreach (var feature in GetFeatures(plan.FeaturesJson))
+                            {
+                                <div class="d-flex align-center gap-2 mb-2">
+                                    <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Success" />
+                                    <MudText Typo="Typo.body2">@feature</MudText>
+                                </div>
+                            }
+                        </div>
+
+                        <MudButton Variant="@(plan.IsFeatured ? Variant.Filled : Variant.Outlined)"
+                                   Color="Color.Primary" FullWidth="true" Class="mt-4"
+                                   OnClick="@(() => SelectPlan(plan))">
+                            @(plan.Name == "Enterprise" ? "Contact Sales" : plan.PriceMonthly == 0 ? "Start Free Trial" : "Get Started")
+                        </MudButton>
+                    </MudPaper>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+
+    <!-- Skip for now -->
+    <div style="text-align: center; margin-top: 2rem;">
+        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="@(() => NavigationManager.NavigateTo("/"))">
+            Skip for now — continue with free trial
+        </MudButton>
+    </div>
+</div>
+
+@code {
+    private bool _loading = true;
+    private bool _annualBilling;
+    private List<SubscriptionPlanDto> _plans = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _plans = await Mediator.Send(new GetSubscriptionPlansQuery());
+        _loading = false;
+    }
+
+    private List<string> GetFeatures(string? featuresJson)
+    {
+        if (string.IsNullOrEmpty(featuresJson)) return new();
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(featuresJson) ?? new();
+        }
+        catch
+        {
+            return new();
+        }
+    }
+
+    private void SelectPlan(SubscriptionPlanDto plan)
+    {
+        if (plan.Name == "Enterprise")
+        {
+            Snackbar.Add("Please contact sales@dawacloud.com for Enterprise pricing", Severity.Info);
+            return;
+        }
+
+        if (plan.PriceMonthly == 0)
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        // TODO: Integrate with Stripe Checkout when keys are configured
+        Snackbar.Add("Stripe integration will be activated once API keys are configured in Settings", Severity.Info);
+        NavigationManager.NavigateTo("/");
+    }
+}

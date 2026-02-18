@@ -1,0 +1,356 @@
+@page "/hr/leave/new"
+@page "/hr/leave/{Id:int}"
+@using MudBlazor
+@using DawaCloud.Web.Features.HR.Queries
+@using DawaCloud.Web.Features.HR.Commands
+@using DawaCloud.Web.Data
+@using DawaCloud.Web.Data.Entities
+@using MediatR
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@attribute [Authorize(Policy = "RequireHrAccess")]
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+@inject IServiceScopeFactory ScopeFactory
+
+<PageTitle>DawaCloud | @(_isCreateMode ? "New Leave Request" : "Leave Request Details")</PageTitle>
+
+<!-- Hero Section -->
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="GoBack" />
+            <div class="tw:flex-1">
+                <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">
+                    @(_isCreateMode ? "New Leave Request" : "Leave Request Details")
+                </h1>
+                <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">
+                    @(_isCreateMode ? "Submit a new leave request for an employee" : "View leave request information and status")
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (_loadingData)
+{
+    <div class="d-flex justify-center pa-8">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    </div>
+}
+else
+{
+    <MudGrid>
+        <!-- Main Form -->
+        <MudItem xs="12" md="@(_isCreateMode ? 12 : 8)">
+            <MudPaper Elevation="0" Class="pa-6 dc-card animate-fade-in-up animate-delay-1">
+                <MudForm @ref="_form" @bind-IsValid="_isValid">
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="int" @bind-Value="_model.EmployeeId" Label="Employee" Required="true"
+                                       RequiredError="Employee is required" Variant="Variant.Outlined"
+                                       Disabled="@(!_isCreateMode)"
+                                       ToStringFunc="@(id => _employees.FirstOrDefault(e => e.Id == id) is { } emp ? $"{emp.FirstName} {emp.LastName} ({emp.EmployeeCode})" : id.ToString())">
+                                @foreach (var emp in _employees)
+                                {
+                                    <MudSelectItem T="int" Value="@emp.Id">
+                                        @emp.FirstName @emp.LastName (@emp.EmployeeCode)
+                                    </MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="int" @bind-Value="_model.LeaveTypeId" Label="Leave Type" Required="true"
+                                       RequiredError="Leave type is required" Variant="Variant.Outlined"
+                                       Disabled="@(!_isCreateMode)"
+                                       ToStringFunc="@(id => _leaveTypes.FirstOrDefault(lt => lt.Id == id) is { } lt ? $"{lt.Name} ({lt.DefaultDaysPerYear} days/year)" : id.ToString())">
+                                @foreach (var lt in _leaveTypes)
+                                {
+                                    <MudSelectItem T="int" Value="@lt.Id">
+                                        @lt.Name (@lt.DefaultDaysPerYear days/year)
+                                    </MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudDatePicker @bind-Date="_model.StartDate" Label="Start Date" Required="true"
+                                           RequiredError="Start date is required" Variant="Variant.Outlined"
+                                           DateFormat="yyyy-MM-dd" Disabled="@(!_isCreateMode)"
+                                           @bind-Date:after="OnDatesChanged" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudDatePicker @bind-Date="_model.EndDate" Label="End Date" Required="true"
+                                           RequiredError="End date is required" Variant="Variant.Outlined"
+                                           DateFormat="yyyy-MM-dd" Disabled="@(!_isCreateMode)"
+                                           MinDate="@_model.StartDate"
+                                           @bind-Date:after="OnDatesChanged" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField Value="@_totalDays" Label="Total Days" Variant="Variant.Outlined"
+                                          ReadOnly="true" Adornment="Adornment.Start"
+                                          AdornmentIcon="@Icons.Material.Filled.DateRange" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="_model.Reason" Label="Reason" Variant="Variant.Outlined"
+                                          Lines="3" Placeholder="Provide a reason for the leave request..."
+                                          Disabled="@(!_isCreateMode)" />
+                        </MudItem>
+                    </MudGrid>
+
+                    @if (_isCreateMode)
+                    {
+                        <div class="d-flex gap-3 mt-6">
+                            <MudButton Variant="Variant.Outlined" OnClick="GoBack">Cancel</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitRequest"
+                                       Disabled="@(!_isValid || _saving)">
+                                @if (_saving)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                }
+                                Submit Request
+                            </MudButton>
+                        </div>
+                    }
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+
+        <!-- Status Sidebar (View mode only) -->
+        @if (!_isCreateMode && _viewData != null)
+        {
+            <MudItem xs="12" md="4">
+                <MudPaper Elevation="0" Class="pa-6 dc-card animate-fade-in-up animate-delay-2">
+                    <MudText Typo="Typo.h6" Class="mb-4">Request Status</MudText>
+
+                    <div class="tw:space-y-4">
+                        <div>
+                            <MudText Typo="Typo.caption" Style="color: var(--tw-color-text-secondary);">Status</MudText>
+                            <div class="tw:mt-1">
+                                <MudChip T="string" Size="Size.Medium" Color="@GetStatusColor(_viewData.Status)">
+                                    @_viewData.Status.ToString()
+                                </MudChip>
+                            </div>
+                        </div>
+
+                        <MudDivider />
+
+                        <div>
+                            <MudText Typo="Typo.caption" Style="color: var(--tw-color-text-secondary);">Employee</MudText>
+                            <MudText Typo="Typo.body1" Class="tw:font-semibold">@_viewData.EmployeeName</MudText>
+                            <MudText Typo="Typo.body2" Style="color: var(--tw-color-text-secondary);">@_viewData.EmployeeCode</MudText>
+                        </div>
+
+                        <MudDivider />
+
+                        <div>
+                            <MudText Typo="Typo.caption" Style="color: var(--tw-color-text-secondary);">Leave Type</MudText>
+                            <MudText Typo="Typo.body1">@_viewData.LeaveTypeName</MudText>
+                        </div>
+
+                        <MudDivider />
+
+                        <div>
+                            <MudText Typo="Typo.caption" Style="color: var(--tw-color-text-secondary);">Duration</MudText>
+                            <MudText Typo="Typo.body1">
+                                @_viewData.StartDate.ToString("MMM dd") - @_viewData.EndDate.ToString("MMM dd, yyyy")
+                            </MudText>
+                            <MudText Typo="Typo.body2" Style="color: var(--tw-color-text-secondary);">
+                                @_viewData.TotalDays day@(_viewData.TotalDays != 1 ? "s" : "")
+                            </MudText>
+                        </div>
+
+                        @if (_viewData.Status == LeaveStatus.Approved && !string.IsNullOrEmpty(_viewData.ApprovedBy))
+                        {
+                            <MudDivider />
+                            <div>
+                                <MudText Typo="Typo.caption" Style="color: var(--tw-color-text-secondary);">Approved By</MudText>
+                                <MudText Typo="Typo.body1">@_viewData.ApprovedBy</MudText>
+                                @if (_viewData.ApprovedAt.HasValue)
+                                {
+                                    <MudText Typo="Typo.body2" Style="color: var(--tw-color-text-secondary);">
+                                        @_viewData.ApprovedAt.Value.ToString("MMM dd, yyyy 'at' hh:mm tt")
+                                    </MudText>
+                                }
+                            </div>
+                        }
+
+                        @if (_viewData.Status == LeaveStatus.Rejected && !string.IsNullOrEmpty(_viewData.RejectionReason))
+                        {
+                            <MudDivider />
+                            <div>
+                                <MudText Typo="Typo.caption" Style="color: var(--tw-color-text-secondary);">Rejection Reason</MudText>
+                                <MudAlert Severity="Severity.Error" Dense="true" Class="tw:mt-1" NoIcon="true">
+                                    @_viewData.RejectionReason
+                                </MudAlert>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(_viewData.Reason))
+                        {
+                            <MudDivider />
+                            <div>
+                                <MudText Typo="Typo.caption" Style="color: var(--tw-color-text-secondary);">Reason</MudText>
+                                <MudText Typo="Typo.body2">@_viewData.Reason</MudText>
+                            </div>
+                        }
+                    </div>
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+}
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private bool _isCreateMode => !Id.HasValue;
+    private bool _loadingData = true;
+    private bool _saving;
+    private bool _isValid;
+    private MudForm? _form;
+
+    private List<EmployeeDto> _employees = new();
+    private List<LeaveTypeDto> _leaveTypes = new();
+
+    private LeaveFormModel _model = new();
+    private int _totalDays;
+
+    // View mode data
+    private LeaveRequestDto? _viewData;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _employees = await Mediator.Send(new GetEmployeesQuery());
+        _leaveTypes = await Mediator.Send(new GetLeaveTypesQuery());
+
+        if (!_isCreateMode && Id.HasValue)
+        {
+            await LoadExistingRequest();
+        }
+
+        _loadingData = false;
+    }
+
+    private async Task LoadExistingRequest()
+    {
+        using var scope = ScopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var leaveRequest = await db.LeaveRequests
+            .AsNoTracking()
+            .Include(lr => lr.Employee)
+            .Include(lr => lr.LeaveType)
+            .FirstOrDefaultAsync(lr => lr.Id == Id!.Value);
+
+        if (leaveRequest != null)
+        {
+            _model.EmployeeId = leaveRequest.EmployeeId;
+            _model.LeaveTypeId = leaveRequest.LeaveTypeId;
+            _model.StartDate = leaveRequest.StartDate;
+            _model.EndDate = leaveRequest.EndDate;
+            _model.Reason = leaveRequest.Reason;
+            _totalDays = leaveRequest.TotalDays;
+
+            _viewData = new LeaveRequestDto
+            {
+                Id = leaveRequest.Id,
+                EmployeeId = leaveRequest.EmployeeId,
+                EmployeeName = $"{leaveRequest.Employee.FirstName} {leaveRequest.Employee.LastName}",
+                EmployeeCode = leaveRequest.Employee.EmployeeCode,
+                LeaveTypeName = leaveRequest.LeaveType.Name,
+                StartDate = leaveRequest.StartDate,
+                EndDate = leaveRequest.EndDate,
+                TotalDays = leaveRequest.TotalDays,
+                Status = leaveRequest.Status,
+                Reason = leaveRequest.Reason,
+                ApprovedBy = leaveRequest.ApprovedBy,
+                ApprovedAt = leaveRequest.ApprovedAt,
+                RejectionReason = leaveRequest.RejectionReason
+            };
+        }
+        else
+        {
+            Snackbar.Add("Leave request not found", Severity.Error);
+            Navigation.NavigateTo("/hr/leave");
+        }
+    }
+
+    private void OnDatesChanged()
+    {
+        CalculateTotalDays();
+    }
+
+    private void CalculateTotalDays()
+    {
+        if (_model.StartDate.HasValue && _model.EndDate.HasValue && _model.EndDate.Value >= _model.StartDate.Value)
+        {
+            _totalDays = (int)(_model.EndDate.Value.Date - _model.StartDate.Value.Date).TotalDays + 1;
+        }
+        else
+        {
+            _totalDays = 0;
+        }
+    }
+
+    private async Task SubmitRequest()
+    {
+        if (_form != null)
+        {
+            await _form.Validate();
+        }
+
+        if (!_isValid || !_model.StartDate.HasValue || !_model.EndDate.HasValue) return;
+        if (_model.EmployeeId == 0 || _model.LeaveTypeId == 0)
+        {
+            Snackbar.Add("Please select an employee and leave type", Severity.Warning);
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            var result = await Mediator.Send(new CreateLeaveRequestCommand(
+                _model.EmployeeId,
+                _model.LeaveTypeId,
+                _model.StartDate.Value,
+                _model.EndDate.Value,
+                _model.Reason
+            ));
+
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Leave request submitted successfully", Severity.Success);
+                Navigation.NavigateTo("/hr/leave");
+            }
+            else
+            {
+                Snackbar.Add(result.Error ?? "Failed to submit leave request", Severity.Error);
+            }
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void GoBack() => Navigation.NavigateTo("/hr/leave");
+
+    private Color GetStatusColor(LeaveStatus status) => status switch
+    {
+        LeaveStatus.Pending => Color.Warning,
+        LeaveStatus.Approved => Color.Success,
+        LeaveStatus.Rejected => Color.Error,
+        LeaveStatus.Cancelled => Color.Default,
+        _ => Color.Default
+    };
+
+    private class LeaveFormModel
+    {
+        public int EmployeeId { get; set; }
+        public int LeaveTypeId { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public string? Reason { get; set; }
+    }
+}

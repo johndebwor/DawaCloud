@@ -1,0 +1,390 @@
+@page "/hr/attendance"
+@using MudBlazor
+@using DawaCloud.Web.Features.HR.Queries
+@using DawaCloud.Web.Features.HR.Commands
+@using DawaCloud.Web.Data.Entities
+@using MediatR
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "RequireHrAccess")]
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+
+<PageTitle>DawaCloud | Attendance</PageTitle>
+
+<!-- Hero Section -->
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">Attendance</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Track daily employee attendance</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<MudPaper Elevation="0" Class="pa-4 mb-4 dc-card animate-fade-in-up animate-delay-1">
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="4">
+            <MudDatePicker @bind-Date="_selectedDate" Label="Date" Variant="Variant.Outlined" Dense="true"
+                           @bind-Date:after="OnDateChanged" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="4">
+            <MudSelect T="int?" @bind-Value="_selectedDepartmentId" Label="Department" Variant="Variant.Outlined"
+                       Dense="true" Clearable="true" @bind-Value:after="OnDepartmentChanged">
+                @foreach (var dept in _departments)
+                {
+                    <MudSelectItem T="int?" Value="@dept.Id">@dept.Name</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+<!-- KPI Cards -->
+<div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 lg:tw:grid-cols-4 tw:gap-4 tw:mb-6">
+    <div class="dc-kpi animate-fade-in-up animate-delay-2">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-success-50 tw:text-success">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+            </div>
+            <div>
+                <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide">Present Today</div>
+                <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-0.5 tw:font-display">@_presentCount</div>
+            </div>
+        </div>
+    </div>
+    <div class="dc-kpi animate-fade-in-up animate-delay-3">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-danger-50 tw:text-danger">
+                <MudIcon Icon="@Icons.Material.Filled.Cancel" />
+            </div>
+            <div>
+                <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide">Absent</div>
+                <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-0.5 tw:font-display">@_absentCount</div>
+            </div>
+        </div>
+    </div>
+    <div class="dc-kpi animate-fade-in-up animate-delay-4">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-warning-50 tw:text-warning">
+                <MudIcon Icon="@Icons.Material.Filled.Schedule" />
+            </div>
+            <div>
+                <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide">Late</div>
+                <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-0.5 tw:font-display">@_lateCount</div>
+            </div>
+        </div>
+    </div>
+    <div class="dc-kpi animate-fade-in-up animate-delay-5">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-primary-50">
+                <MudIcon Icon="@Icons.Material.Filled.Groups" Style="color: var(--tw-color-primary-600);" />
+            </div>
+            <div>
+                <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide">Total Expected</div>
+                <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-0.5 tw:font-display">@_totalExpected</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Attendance Table -->
+<MudPaper Elevation="0" Class="dc-card tw:p-0 tw:overflow-hidden animate-fade-in-up animate-delay-6">
+    @if (_loading)
+    {
+        <div class="d-flex justify-center pa-8">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        </div>
+    }
+    else if (_mergedAttendance.Count == 0)
+    {
+        <div class="d-flex flex-column align-center justify-center pa-8" style="min-height: 200px;">
+            <MudIcon Icon="@Icons.Material.Filled.EventAvailable" Size="Size.Large" Style="color: var(--tw-color-text-secondary); font-size: 4rem;" />
+            <MudText Typo="Typo.h6" Class="mt-4" Style="color: var(--tw-color-text-secondary);">No attendance records</MudText>
+            <MudText Typo="Typo.body2" Style="color: var(--tw-color-text-secondary);">No active employees found for the selected filters</MudText>
+        </div>
+    }
+    else
+    {
+        <MudTable Items="@_mergedAttendance" Hover="true" Striped="false" Dense="true" FixedHeader="true">
+            <HeaderContent>
+                <MudTh>Employee Code</MudTh>
+                <MudTh>Employee Name</MudTh>
+                <MudTh>Department</MudTh>
+                <MudTh Style="text-align: center;">Clock In</MudTh>
+                <MudTh Style="text-align: center;">Clock Out</MudTh>
+                <MudTh Style="text-align: center;">Hours Worked</MudTh>
+                <MudTh Style="text-align: center;">Status</MudTh>
+                <MudTh Style="text-align: center;">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>
+                    <MudText Typo="Typo.body2" Style="font-family: monospace; font-weight: 600;">@context.EmployeeCode</MudText>
+                </MudTd>
+                <MudTd>
+                    <MudText Typo="Typo.body2" Class="tw:font-semibold">@context.EmployeeName</MudText>
+                </MudTd>
+                <MudTd>
+                    <MudText Typo="Typo.body2" Class="tw:text-text-secondary">@context.DepartmentName</MudText>
+                </MudTd>
+                <MudTd Style="text-align: center;">
+                    @if (context.ClockIn.HasValue)
+                    {
+                        <MudText Typo="Typo.body2">@context.ClockIn.Value.ToString("hh:mm tt")</MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Class="tw:text-text-secondary">--:--</MudText>
+                    }
+                </MudTd>
+                <MudTd Style="text-align: center;">
+                    @if (context.ClockOut.HasValue)
+                    {
+                        <MudText Typo="Typo.body2">@context.ClockOut.Value.ToString("hh:mm tt")</MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Class="tw:text-text-secondary">--:--</MudText>
+                    }
+                </MudTd>
+                <MudTd Style="text-align: center;">
+                    @if (context.HoursWorked.HasValue)
+                    {
+                        <MudText Typo="Typo.body2" Class="tw:font-semibold">@context.HoursWorked.Value.ToString("F1")h</MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Class="tw:text-text-secondary">—</MudText>
+                    }
+                </MudTd>
+                <MudTd Style="text-align: center;">
+                    <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">
+                        @GetStatusLabel(context.Status)
+                    </MudChip>
+                </MudTd>
+                <MudTd Style="text-align: center;">
+                    @if (!context.HasAttendance)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Login"
+                                   OnClick="@(() => ClockIn(context.EmployeeId))">
+                            Clock In
+                        </MudButton>
+                    }
+                    else if (context.ClockIn.HasValue && !context.ClockOut.HasValue)
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Warning" Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Logout"
+                                   OnClick="@(() => ClockOut(context.AttendanceId, context.EmployeeId))">
+                            Clock Out
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Class="tw:text-text-secondary">Completed</MudText>
+                    }
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudPaper>
+
+@code {
+    private bool _loading = true;
+    private List<AttendanceDto> _attendance = new();
+    private List<DepartmentDto> _departments = new();
+    private List<EmployeeDto> _activeEmployees = new();
+    private List<AttendanceRowModel> _mergedAttendance = new();
+
+    private DateTime? _selectedDate = DateTime.Today;
+    private int? _selectedDepartmentId;
+
+    // KPI values
+    private int _presentCount;
+    private int _absentCount;
+    private int _lateCount;
+    private int _totalExpected;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDepartments();
+        await LoadActiveEmployees();
+        await LoadAttendance();
+    }
+
+    private async Task LoadDepartments()
+    {
+        _departments = await Mediator.Send(new GetDepartmentsQuery());
+    }
+
+    private async Task LoadActiveEmployees()
+    {
+        _activeEmployees = await Mediator.Send(new GetEmployeesQuery(Status: EmploymentStatus.Active));
+    }
+
+    private async Task LoadAttendance()
+    {
+        _loading = true;
+        StateHasChanged();
+
+        var date = _selectedDate ?? DateTime.Today;
+
+        _attendance = await Mediator.Send(new GetAttendanceQuery(
+            Date: date,
+            DepartmentId: _selectedDepartmentId));
+
+        MergeAttendanceWithEmployees();
+        CalculateKpis();
+
+        _loading = false;
+        StateHasChanged();
+    }
+
+    private void MergeAttendanceWithEmployees()
+    {
+        var employees = _selectedDepartmentId.HasValue
+            ? _activeEmployees.Where(e => e.DepartmentName == _departments.FirstOrDefault(d => d.Id == _selectedDepartmentId.Value)?.Name).ToList()
+            : _activeEmployees;
+
+        var attendanceByEmployee = _attendance.ToDictionary(a => a.EmployeeId);
+
+        _mergedAttendance = employees.Select(emp =>
+        {
+            if (attendanceByEmployee.TryGetValue(emp.Id, out var att))
+            {
+                return new AttendanceRowModel
+                {
+                    AttendanceId = att.Id,
+                    EmployeeId = emp.Id,
+                    EmployeeCode = emp.EmployeeCode,
+                    EmployeeName = $"{emp.FirstName} {emp.LastName}",
+                    DepartmentName = emp.DepartmentName,
+                    ClockIn = att.ClockIn,
+                    ClockOut = att.ClockOut,
+                    HoursWorked = att.HoursWorked,
+                    Status = att.Status,
+                    HasAttendance = true
+                };
+            }
+            else
+            {
+                return new AttendanceRowModel
+                {
+                    AttendanceId = 0,
+                    EmployeeId = emp.Id,
+                    EmployeeCode = emp.EmployeeCode,
+                    EmployeeName = $"{emp.FirstName} {emp.LastName}",
+                    DepartmentName = emp.DepartmentName,
+                    ClockIn = null,
+                    ClockOut = null,
+                    HoursWorked = null,
+                    Status = AttendanceStatus.Absent,
+                    HasAttendance = false
+                };
+            }
+        })
+        .OrderBy(a => a.HasAttendance ? 0 : 1)
+        .ThenBy(a => a.EmployeeName)
+        .ToList();
+    }
+
+    private void CalculateKpis()
+    {
+        _totalExpected = _mergedAttendance.Count;
+        _presentCount = _mergedAttendance.Count(a => a.HasAttendance && a.Status == AttendanceStatus.Present);
+        _lateCount = _mergedAttendance.Count(a => a.HasAttendance && a.Status == AttendanceStatus.Late);
+        _absentCount = _mergedAttendance.Count(a => !a.HasAttendance);
+    }
+
+    private async Task ClockIn(int employeeId)
+    {
+        var date = _selectedDate ?? DateTime.Today;
+        var now = DateTime.Now;
+
+        var result = await Mediator.Send(new CreateAttendanceCommand(
+            EmployeeId: employeeId,
+            Date: date,
+            ClockIn: now,
+            ClockOut: null,
+            Status: AttendanceStatus.Present,
+            Notes: null));
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Employee clocked in successfully", Severity.Success);
+            await LoadAttendance();
+        }
+        else
+        {
+            Snackbar.Add(result.Error ?? "Failed to clock in", Severity.Error);
+        }
+    }
+
+    private async Task ClockOut(int attendanceId, int employeeId)
+    {
+        var date = _selectedDate ?? DateTime.Today;
+        var now = DateTime.Now;
+
+        var result = await Mediator.Send(new CreateAttendanceCommand(
+            EmployeeId: employeeId,
+            Date: date,
+            ClockIn: null,
+            ClockOut: now,
+            Status: AttendanceStatus.Present,
+            Notes: null));
+
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Employee clocked out successfully", Severity.Success);
+            await LoadAttendance();
+        }
+        else
+        {
+            Snackbar.Add(result.Error ?? "Failed to clock out", Severity.Error);
+        }
+    }
+
+    private async Task OnDateChanged()
+    {
+        await LoadAttendance();
+    }
+
+    private async Task OnDepartmentChanged()
+    {
+        await LoadAttendance();
+    }
+
+    private Color GetStatusColor(AttendanceStatus status) => status switch
+    {
+        AttendanceStatus.Present => Color.Success,
+        AttendanceStatus.Absent => Color.Error,
+        AttendanceStatus.Late => Color.Warning,
+        AttendanceStatus.HalfDay => Color.Info,
+        AttendanceStatus.OnLeave => Color.Default,
+        _ => Color.Default
+    };
+
+    private string GetStatusLabel(AttendanceStatus status) => status switch
+    {
+        AttendanceStatus.Present => "Present",
+        AttendanceStatus.Absent => "Absent",
+        AttendanceStatus.Late => "Late",
+        AttendanceStatus.HalfDay => "Half Day",
+        AttendanceStatus.OnLeave => "On Leave",
+        _ => status.ToString()
+    };
+
+    private class AttendanceRowModel
+    {
+        public int AttendanceId { get; set; }
+        public int EmployeeId { get; set; }
+        public string EmployeeCode { get; set; } = string.Empty;
+        public string EmployeeName { get; set; } = string.Empty;
+        public string DepartmentName { get; set; } = string.Empty;
+        public DateTime? ClockIn { get; set; }
+        public DateTime? ClockOut { get; set; }
+        public double? HoursWorked { get; set; }
+        public AttendanceStatus Status { get; set; }
+        public bool HasAttendance { get; set; }
+    }
+}

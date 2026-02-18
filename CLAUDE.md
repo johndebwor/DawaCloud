@@ -27,7 +27,7 @@
 
 ### Background
 
-**DawaCloud** (Dawa = Medicine in Swahili) is a comprehensive pharmaceutical management system designed to streamline drug inventory, procurement, wholesale and retail operations for pharmacies and drug distribution businesses in South Sudan and East Africa. This instance is currently configured for **Revo Pharma & Medical Ltd**.
+**DawaCloud** (Dawa = Medicine in Swahili) is a comprehensive pharmaceutical management system designed to streamline drug inventory, procurement, wholesale and retail operations for pharmacies and drug distribution businesses in South Sudan and East Africa. This instance is currently configured for **Guru Brothers Ltd**.
 
 ### Vision
 
@@ -1849,7 +1849,7 @@ jobs:
     "SmtpHost": "",
     "SmtpPort": 587,
     "FromEmail": "noreply@revopharma.com",
-    "FromName": "Revo Pharma & Medical Ltd"
+    "FromName": "Guru Brothers Ltd"
   },
   "WhatsApp": {
     "Provider": "Twilio",
@@ -1895,7 +1895,7 @@ docker-compose logs -f web
 
 ## Contact & Support
 
-- **Company**: Revo Pharma & Medical Ltd
+- **Company**: Guru Brothers Ltd
 - **Email**: info@revopharma.com
 - **Website**: www.revopharma.com
 - **Repository**: https://github.com/your-org/DawaCloud

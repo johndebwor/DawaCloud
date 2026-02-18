@@ -67,7 +67,7 @@ public class InvoiceService : IInvoiceService
         {
             row.RelativeItem().Column(column =>
             {
-                column.Item().Text("INVOICE").FontSize(28).Bold().FontColor(Colors.Teal.Darken2);
+                column.Item().Text("INVOICE").FontSize(28).Bold().FontColor(Colors.Blue.Darken2);
                 column.Item().Text(companySettings?.CompanyName ?? "Company Name").FontSize(16).SemiBold();
                 column.Item().Text(companySettings?.Address ?? "Address").FontSize(10);
                 column.Item().Text($"Tel: {companySettings?.Phone ?? "N/A"}").FontSize(10);
@@ -89,18 +89,18 @@ public class InvoiceService : IInvoiceService
                     }
 
                     // Fallback to styled box if logo not found
-                    column.Item().Height(80).Width(80).Border(2).BorderColor(Colors.Teal.Darken2)
-                        .Background(Colors.Teal.Lighten5).Padding(10)
+                    column.Item().Height(80).Width(80).Border(2).BorderColor(Colors.Blue.Darken2)
+                        .Background(Colors.Blue.Lighten5).Padding(10)
                         .AlignCenter().AlignMiddle()
-                        .Text(companySettings?.CompanyName?.Substring(0, Math.Min(10, companySettings.CompanyName.Length)) ?? "COMPANY").FontSize(10).Bold().FontColor(Colors.Teal.Darken2);
+                        .Text(companySettings?.CompanyName?.Substring(0, Math.Min(10, companySettings.CompanyName.Length)) ?? "COMPANY").FontSize(10).Bold().FontColor(Colors.Blue.Darken2);
                 }
                 catch
                 {
                     // Fallback on any error
-                    column.Item().Height(80).Width(80).Border(2).BorderColor(Colors.Teal.Darken2)
-                        .Background(Colors.Teal.Lighten5).Padding(10)
+                    column.Item().Height(80).Width(80).Border(2).BorderColor(Colors.Blue.Darken2)
+                        .Background(Colors.Blue.Lighten5).Padding(10)
                         .AlignCenter().AlignMiddle()
-                        .Text(companySettings?.CompanyName?.Substring(0, Math.Min(10, companySettings.CompanyName.Length)) ?? "COMPANY").FontSize(10).Bold().FontColor(Colors.Teal.Darken2);
+                        .Text(companySettings?.CompanyName?.Substring(0, Math.Min(10, companySettings.CompanyName.Length)) ?? "COMPANY").FontSize(10).Bold().FontColor(Colors.Blue.Darken2);
                 }
             });
         });
@@ -226,7 +226,7 @@ public class InvoiceService : IInvoiceService
                 col.Item().Row(row =>
                 {
                     row.ConstantItem(120).Text("Total Amount:").SemiBold().FontSize(12);
-                    row.ConstantItem(120).AlignRight().Text($"SSP {sale.TotalAmount:N2}").SemiBold().FontSize(12).FontColor(Colors.Teal.Darken2);
+                    row.ConstantItem(120).AlignRight().Text($"SSP {sale.TotalAmount:N2}").SemiBold().FontSize(12).FontColor(Colors.Blue.Darken2);
                 });
 
                 col.Item().PaddingTop(10);

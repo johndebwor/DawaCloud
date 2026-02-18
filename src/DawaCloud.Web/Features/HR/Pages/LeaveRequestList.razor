@@ -1,0 +1,314 @@
+@page "/hr/leave"
+@using MudBlazor
+@using DawaCloud.Web.Features.HR.Queries
+@using DawaCloud.Web.Features.HR.Commands
+@using DawaCloud.Web.Data.Entities
+@using MediatR
+@using Microsoft.AspNetCore.Authorization
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [Authorize(Policy = "RequireHrAccess")]
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>DawaCloud | Leave Requests</PageTitle>
+
+<!-- Hero Section -->
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">Leave Requests</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Manage employee leave requests and approvals</p>
+        </div>
+        <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-3">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="@(() => Navigation.NavigateTo("/hr/leave/new"))" Size="Size.Small">
+                New Request
+            </MudButton>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 lg:tw:grid-cols-4 tw:gap-4 tw:mb-6">
+    <div class="dc-kpi animate-fade-in-up animate-delay-1">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-warning-50 tw:text-warning">
+                <MudIcon Icon="@Icons.Material.Filled.Pending" />
+            </div>
+            <div>
+                <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide">Pending Requests</div>
+                <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-0.5 tw:font-display">@_pendingCount</div>
+            </div>
+        </div>
+    </div>
+    <div class="dc-kpi animate-fade-in-up animate-delay-2">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-success-50 tw:text-success">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+            </div>
+            <div>
+                <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide">Approved (This Month)</div>
+                <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-0.5 tw:font-display">@_approvedThisMonth</div>
+            </div>
+        </div>
+    </div>
+    <div class="dc-kpi animate-fade-in-up animate-delay-3">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-danger-50 tw:text-danger">
+                <MudIcon Icon="@Icons.Material.Filled.Cancel" />
+            </div>
+            <div>
+                <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide">Rejected (This Month)</div>
+                <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-0.5 tw:font-display">@_rejectedThisMonth</div>
+            </div>
+        </div>
+    </div>
+    <div class="dc-kpi animate-fade-in-up animate-delay-4">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-primary-50 tw:text-primary-600">
+                <MudIcon Icon="@Icons.Material.Filled.CalendarMonth" />
+            </div>
+            <div>
+                <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide">Total Days Off</div>
+                <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-0.5 tw:font-display">@_totalDaysOff</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters & Table -->
+<MudPaper Elevation="0" Class="dc-card tw:p-0 tw:overflow-hidden animate-fade-in-up animate-delay-5">
+    <div class="tw:p-4 tw:border-b tw:border-border">
+        <MudGrid>
+            <MudItem xs="12" sm="6" md="4">
+                <MudSelect T="LeaveStatus?" @bind-Value="_selectedStatus" Label="Status" Variant="Variant.Outlined"
+                           Dense="true" Clearable="true" @bind-Value:after="OnStatusFilterChanged">
+                    <MudSelectItem T="LeaveStatus?" Value="@LeaveStatus.Pending">Pending</MudSelectItem>
+                    <MudSelectItem T="LeaveStatus?" Value="@LeaveStatus.Approved">Approved</MudSelectItem>
+                    <MudSelectItem T="LeaveStatus?" Value="@LeaveStatus.Rejected">Rejected</MudSelectItem>
+                    <MudSelectItem T="LeaveStatus?" Value="@LeaveStatus.Cancelled">Cancelled</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+        </MudGrid>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="d-flex justify-center pa-8">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        </div>
+    }
+    else if (_leaveRequests.Count == 0)
+    {
+        <div class="d-flex flex-column align-center justify-center pa-8" style="min-height: 200px;">
+            <MudIcon Icon="@Icons.Material.Filled.EventBusy" Size="Size.Large" Style="color: var(--tw-color-text-secondary); font-size: 4rem;" />
+            <MudText Typo="Typo.h6" Class="mt-4" Style="color: var(--tw-color-text-secondary);">No leave requests found</MudText>
+            <MudText Typo="Typo.body2" Style="color: var(--tw-color-text-secondary);">Create a new leave request to get started</MudText>
+        </div>
+    }
+    else
+    {
+        <MudTable Items="@_leaveRequests" Hover="true" Striped="false" Dense="true" FixedHeader="true">
+            <HeaderContent>
+                <MudTh>Employee</MudTh>
+                <MudTh>Leave Type</MudTh>
+                <MudTh>Start Date</MudTh>
+                <MudTh>End Date</MudTh>
+                <MudTh Style="text-align: right;">Days</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Reason</MudTh>
+                <MudTh Style="text-align: center;">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>
+                    <div>
+                        <MudText Typo="Typo.body2" Style="font-weight: 600;">@context.EmployeeName</MudText>
+                        <MudText Typo="Typo.caption" Style="color: var(--tw-color-text-secondary);">@context.EmployeeCode</MudText>
+                    </div>
+                </MudTd>
+                <MudTd>@context.LeaveTypeName</MudTd>
+                <MudTd>@context.StartDate.ToString("MMM dd, yyyy")</MudTd>
+                <MudTd>@context.EndDate.ToString("MMM dd, yyyy")</MudTd>
+                <MudTd Style="text-align: right; font-weight: 600;">@context.TotalDays</MudTd>
+                <MudTd>
+                    <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">
+                        @context.Status.ToString()
+                    </MudChip>
+                </MudTd>
+                <MudTd>
+                    <MudTooltip Text="@context.Reason" Placement="Placement.Top">
+                        <MudText Typo="Typo.body2" Style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            @(string.IsNullOrEmpty(context.Reason) ? "---" : (context.Reason.Length > 40 ? context.Reason[..40] + "..." : context.Reason))
+                        </MudText>
+                    </MudTooltip>
+                </MudTd>
+                <MudTd Style="text-align: center;">
+                    <div class="tw:flex tw:items-center tw:justify-center tw:gap-1">
+                        <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small"
+                                       OnClick="@(() => Navigation.NavigateTo($"/hr/leave/{context.Id}"))"
+                                       Title="View Details" />
+                        @if (context.Status == LeaveStatus.Pending)
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small"
+                                           Color="Color.Success" OnClick="@(() => ApproveLeave(context.Id))"
+                                           Title="Approve" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Cancel" Size="Size.Small"
+                                           Color="Color.Error" OnClick="@(() => ShowRejectDialog(context.Id))"
+                                           Title="Reject" />
+                        }
+                    </div>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudPaper>
+
+<!-- Rejection Dialog -->
+@if (_showRejectDialog)
+{
+    <MudOverlay Visible="true" DarkBackground="true" ZIndex="9999" OnClick="CancelRejectDialog" />
+    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000; width: 100%; max-width: 480px;">
+        <MudPaper Elevation="8" Class="pa-6" Style="border-radius: 12px;">
+            <MudText Typo="Typo.h6" Class="mb-2">Reject Leave Request</MudText>
+            <MudText Typo="Typo.body2" Class="mb-4" Style="color: var(--tw-color-text-secondary);">
+                Please provide a reason for rejecting this leave request.
+            </MudText>
+            <MudTextField @bind-Value="_rejectionReason" Label="Rejection Reason" Variant="Variant.Outlined"
+                          Lines="3" Required="true" RequiredError="Please provide a reason for rejection"
+                          Placeholder="Enter the reason for rejection..." />
+            <div class="d-flex gap-3 mt-4 justify-end">
+                <MudButton Variant="Variant.Outlined" OnClick="CancelRejectDialog">Cancel</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="RejectLeave"
+                           Disabled="@(string.IsNullOrWhiteSpace(_rejectionReason))">
+                    Confirm Rejection
+                </MudButton>
+            </div>
+        </MudPaper>
+    </div>
+}
+
+@code {
+    private bool _loading = true;
+    private List<LeaveRequestDto> _leaveRequests = new();
+    private LeaveStatus? _selectedStatus;
+    private string _userName = string.Empty;
+
+    // KPIs
+    private int _pendingCount;
+    private int _approvedThisMonth;
+    private int _rejectedThisMonth;
+    private int _totalDaysOff;
+
+    // Rejection dialog
+    private bool _showRejectDialog;
+    private int _rejectingId;
+    private string _rejectionReason = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        _userName = authState.User.Identity?.Name ?? "Unknown";
+
+        await LoadLeaveRequests();
+    }
+
+    private async Task LoadLeaveRequests()
+    {
+        _loading = true;
+        StateHasChanged();
+
+        _leaveRequests = await Mediator.Send(new GetLeaveRequestsQuery(Status: _selectedStatus));
+        CalculateKpis();
+
+        _loading = false;
+        StateHasChanged();
+    }
+
+    private void CalculateKpis()
+    {
+        var now = DateTime.UtcNow;
+        var startOfMonth = new DateTime(now.Year, now.Month, 1);
+
+        // Pending count is across all requests (not filtered by month)
+        _pendingCount = _leaveRequests.Count(lr => lr.Status == LeaveStatus.Pending);
+
+        // This month metrics - use all data if no status filter, otherwise use the full unfiltered list concept
+        // Since we load filtered data, we calculate from what we have when unfiltered,
+        // or show relevant counts from the filtered set
+        var allRequests = _leaveRequests;
+        _approvedThisMonth = allRequests.Count(lr => lr.Status == LeaveStatus.Approved
+                                                     && lr.ApprovedAt.HasValue
+                                                     && lr.ApprovedAt.Value >= startOfMonth);
+        _rejectedThisMonth = allRequests.Count(lr => lr.Status == LeaveStatus.Rejected
+                                                     && lr.StartDate >= startOfMonth);
+        _totalDaysOff = allRequests
+            .Where(lr => lr.Status == LeaveStatus.Approved
+                         && lr.ApprovedAt.HasValue
+                         && lr.ApprovedAt.Value >= startOfMonth)
+            .Sum(lr => lr.TotalDays);
+    }
+
+    private async Task OnStatusFilterChanged()
+    {
+        await LoadLeaveRequests();
+    }
+
+    private async Task ApproveLeave(int id)
+    {
+        var result = await Mediator.Send(new ApproveRejectLeaveCommand(id, true, null, _userName));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Leave request approved", Severity.Success);
+            await LoadLeaveRequests();
+        }
+        else
+        {
+            Snackbar.Add(result.Error ?? "Failed to approve leave request", Severity.Error);
+        }
+    }
+
+    private void ShowRejectDialog(int id)
+    {
+        _rejectingId = id;
+        _rejectionReason = string.Empty;
+        _showRejectDialog = true;
+    }
+
+    private void CancelRejectDialog()
+    {
+        _showRejectDialog = false;
+        _rejectingId = 0;
+        _rejectionReason = string.Empty;
+    }
+
+    private async Task RejectLeave()
+    {
+        if (string.IsNullOrWhiteSpace(_rejectionReason)) return;
+
+        var result = await Mediator.Send(new ApproveRejectLeaveCommand(_rejectingId, false, _rejectionReason, _userName));
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Leave request rejected", Severity.Warning);
+            _showRejectDialog = false;
+            _rejectingId = 0;
+            _rejectionReason = string.Empty;
+            await LoadLeaveRequests();
+        }
+        else
+        {
+            Snackbar.Add(result.Error ?? "Failed to reject leave request", Severity.Error);
+        }
+    }
+
+    private Color GetStatusColor(LeaveStatus status) => status switch
+    {
+        LeaveStatus.Pending => Color.Warning,
+        LeaveStatus.Approved => Color.Success,
+        LeaveStatus.Rejected => Color.Error,
+        LeaveStatus.Cancelled => Color.Default,
+        _ => Color.Default
+    };
+}

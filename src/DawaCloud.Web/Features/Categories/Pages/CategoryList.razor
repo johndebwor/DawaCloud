@@ -1,6 +1,8 @@
 @page "/categories"
 @using MudBlazor
 @using DawaCloud.Web.Features.Categories.Queries
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "RequireInventoryAccess")]
 @using DawaCloud.Web.Features.Categories.Commands
 @using DawaCloud.Web.Features.Categories.Components
 @using MediatR
@@ -11,11 +13,11 @@
 <PageTitle>Categories - DawaCloud</PageTitle>
 
 <!-- Hero Section -->
-<div class="df-hero animate-fade-in-up">
-    <div class="df-hero-content">
-        <div class="df-hero-text">
-            <h1>Drug Categories</h1>
-            <p>Manage hierarchical drug classifications</p>
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">Drug Categories</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Manage hierarchical drug classifications</p>
         </div>
         <MudButton Variant="Variant.Filled"
                    Color="Color.Primary"
@@ -28,109 +30,99 @@
 
 <MudGrid Class="mt-4">
     <MudItem xs="12" md="8">
-        <div class="df-alert-card animate-fade-in-up animate-delay-1">
-            <div class="df-alert-header">
-                <div class="df-alert-title">
-                    <div class="df-alert-title-icon primary">
-                        <MudIcon Icon="@Icons.Material.Filled.Category" />
+        <div class="dc-card animate-fade-in-up animate-delay-1">
+            <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                <div class="tw:flex tw:items-center tw:gap-3">
+                    <div class="dc-icon-box tw:bg-primary-50">
+                        <MudIcon Icon="@Icons.Material.Filled.Category" Style="color: var(--tw-color-primary-600);" />
                     </div>
                     <span>Category Tree</span>
                 </div>
             </div>
-            <div class="df-alert-body">
-                @if (_isLoading)
-                {
-                    <div class="d-flex justify-center align-center pa-8">
-                        <MudProgressCircular Indeterminate="true" />
-                    </div>
-                }
-                else if (_categories.Any())
-                {
-                    <MudList T="string" Dense="true">
-                        @foreach (var category in _categories)
-                        {
-                            <CategoryTreeItem Category="category"
-                                              OnAdd="OpenDialog"
-                                              OnEdit="EditCategory"
-                                              OnDelete="DeleteCategory"
-                                              Level="0" />
-                        }
-                    </MudList>
-                }
-                else
-                {
-                    <div class="text-center pa-8">
-                        <MudIcon Icon="@Icons.Material.Filled.Category" Size="Size.Large" Color="Color.Default" Class="mb-3" />
-                        <MudText Typo="Typo.h6" Color="Color.Secondary">No categories yet</MudText>
-                        <MudButton Color="Color.Primary" Variant="Variant.Text" OnClick="@(() => OpenDialog(null))" Class="mt-3">
-                            Create your first category
-                        </MudButton>
-                    </div>
-                }
-            </div>
+            @if (_isLoading)
+            {
+                <div class="d-flex justify-center align-center pa-8">
+                    <MudProgressCircular Indeterminate="true" />
+                </div>
+            }
+            else if (_categories.Any())
+            {
+                <MudList T="string" Dense="true">
+                    @foreach (var category in _categories)
+                    {
+                        <CategoryTreeItem Category="category"
+                                          OnAdd="OpenDialog"
+                                          OnEdit="EditCategory"
+                                          OnDelete="DeleteCategory"
+                                          Level="0" />
+                    }
+                </MudList>
+            }
+            else
+            {
+                <div class="text-center pa-8">
+                    <MudIcon Icon="@Icons.Material.Filled.Category" Size="Size.Large" Color="Color.Default" Class="mb-3" />
+                    <MudText Typo="Typo.h6" Color="Color.Secondary">No categories yet</MudText>
+                    <MudButton Color="Color.Primary" Variant="Variant.Text" OnClick="@(() => OpenDialog(null))" Class="mt-3">
+                        Create your first category
+                    </MudButton>
+                </div>
+            }
         </div>
     </MudItem>
 
     <MudItem xs="12" md="4">
         <!-- Statistics Card -->
-        <div class="df-kpi-card animate-fade-in-up animate-delay-2 mb-4">
-            <div class="df-kpi-header">
-                <div class="df-kpi-icon primary">
-                    <MudIcon Icon="@Icons.Material.Filled.Analytics" />
+        <div class="dc-kpi animate-fade-in-up animate-delay-2 mb-4">
+            <div class="tw:flex tw:items-center tw:gap-3">
+                <div class="dc-icon-box tw:bg-primary-50">
+                    <MudIcon Icon="@Icons.Material.Filled.Analytics" Style="color: var(--tw-color-primary-600);" />
                 </div>
             </div>
-            <div class="df-kpi-body">
-                <div class="df-kpi-label">Total Categories</div>
-                <div class="df-kpi-value">@GetTotalCategories()</div>
-            </div>
+            <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Total Categories</div>
+            <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@GetTotalCategories()</div>
         </div>
 
-        <div class="df-kpi-card animate-fade-in-up animate-delay-3 mb-4">
-            <div class="df-kpi-header">
-                <div class="df-kpi-icon info">
-                    <MudIcon Icon="@Icons.Material.Filled.AccountTree" />
+        <div class="dc-kpi animate-fade-in-up animate-delay-3 mb-4">
+            <div class="tw:flex tw:items-center tw:gap-3">
+                <div class="dc-icon-box tw:bg-info-50">
+                    <MudIcon Icon="@Icons.Material.Filled.AccountTree" Style="color: var(--tw-color-info-600);" />
                 </div>
             </div>
-            <div class="df-kpi-body">
-                <div class="df-kpi-label">Parent Categories</div>
-                <div class="df-kpi-value">@_categories.Count</div>
-            </div>
+            <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Parent Categories</div>
+            <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@_categories.Count</div>
         </div>
 
-        <div class="df-kpi-card animate-fade-in-up animate-delay-4 mb-4">
-            <div class="df-kpi-header">
-                <div class="df-kpi-icon success">
-                    <MudIcon Icon="@Icons.Material.Filled.Medication" />
+        <div class="dc-kpi animate-fade-in-up animate-delay-4 mb-4">
+            <div class="tw:flex tw:items-center tw:gap-3">
+                <div class="dc-icon-box tw:bg-success-50">
+                    <MudIcon Icon="@Icons.Material.Filled.Medication" Style="color: var(--tw-color-success-600);" />
                 </div>
             </div>
-            <div class="df-kpi-body">
-                <div class="df-kpi-label">Total Drugs</div>
-                <div class="df-kpi-value">@GetTotalDrugs()</div>
-            </div>
+            <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Total Drugs</div>
+            <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">@GetTotalDrugs()</div>
         </div>
 
-        <div class="df-alert-card animate-fade-in-up animate-delay-4">
-            <div class="df-alert-header">
-                <div class="df-alert-title">
-                    <div class="df-alert-title-icon info">
-                        <MudIcon Icon="@Icons.Material.Filled.Lightbulb" />
+        <div class="dc-card animate-fade-in-up animate-delay-4">
+            <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                <div class="tw:flex tw:items-center tw:gap-3">
+                    <div class="dc-icon-box tw:bg-info-50">
+                        <MudIcon Icon="@Icons.Material.Filled.Lightbulb" Style="color: var(--tw-color-info-600);" />
                     </div>
                     <span>Quick Tips</span>
                 </div>
             </div>
-            <div class="df-alert-body">
-                <MudList T="string" Dense="true">
-                    <MudListItem T="string" Icon="@Icons.Material.Filled.Info" IconColor="Color.Info">
-                        <MudText Typo="Typo.body2">Create parent categories first</MudText>
-                    </MudListItem>
-                    <MudListItem T="string" Icon="@Icons.Material.Filled.Info" IconColor="Color.Info">
-                        <MudText Typo="Typo.body2">Use subcategories for specifics</MudText>
-                    </MudListItem>
-                    <MudListItem T="string" Icon="@Icons.Material.Filled.Info" IconColor="Color.Info">
-                        <MudText Typo="Typo.body2">Max depth: 3 levels</MudText>
-                    </MudListItem>
-                </MudList>
-            </div>
+            <MudList T="string" Dense="true">
+                <MudListItem T="string" Icon="@Icons.Material.Filled.Info" IconColor="Color.Info">
+                    <MudText Typo="Typo.body2">Create parent categories first</MudText>
+                </MudListItem>
+                <MudListItem T="string" Icon="@Icons.Material.Filled.Info" IconColor="Color.Info">
+                    <MudText Typo="Typo.body2">Use subcategories for specifics</MudText>
+                </MudListItem>
+                <MudListItem T="string" Icon="@Icons.Material.Filled.Info" IconColor="Color.Info">
+                    <MudText Typo="Typo.body2">Max depth: 3 levels</MudText>
+                </MudListItem>
+            </MudList>
         </div>
     </MudItem>
 </MudGrid>

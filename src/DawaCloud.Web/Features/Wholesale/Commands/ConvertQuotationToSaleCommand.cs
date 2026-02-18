@@ -40,7 +40,7 @@ public class ConvertQuotationToSaleCommandHandler : IRequestHandler<ConvertQuota
         if (quotation.Status == QuotationStatus.Rejected)
             return Result<int>.Fail("Cannot convert rejected quotation");
 
-        if (quotation.ValidUntil < DateTime.Now)
+        if (quotation.ValidUntil < DateTime.UtcNow)
             return Result<int>.Fail("Quotation has expired");
 
         // Check stock availability for all items
@@ -104,14 +104,14 @@ public class ConvertQuotationToSaleCommandHandler : IRequestHandler<ConvertQuota
             .FirstOrDefaultAsync(ct);
 
         var nextNumber = (lastSale?.Id ?? 0) + 1;
-        var invoiceNumber = $"INV-{DateTime.Now:yyyyMM}-{nextNumber:D5}";
+        var invoiceNumber = $"INV-{DateTime.UtcNow:yyyyMM}-{nextNumber:D5}";
 
         // Create wholesale sale
         var sale = new WholesaleSale
         {
             InvoiceNumber = invoiceNumber,
             CustomerId = quotation.CustomerId,
-            SaleDate = DateTime.Now,
+            SaleDate = DateTime.UtcNow,
             SubTotal = quotation.SubTotal,
             TaxAmount = quotation.TaxAmount,
             DiscountAmount = quotation.DiscountAmount,

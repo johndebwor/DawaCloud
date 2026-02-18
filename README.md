@@ -7,7 +7,7 @@
 
   **Modern Drugs Wholesale & Retail Management System**
 
-  *Currently deployed for Revo Pharma & Medical Ltd*
+  *Currently deployed for Guru Brothers Ltd*
   
   [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)](https://dotnet.microsoft.com/)
   [![Blazor](https://img.shields.io/badge/Blazor-Server-purple)](https://blazor.net/)
@@ -213,7 +213,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## ðŸ“ž Support
 
-- **Company**: Revo Pharma & Medical Ltd
+- **Company**: Guru Brothers Ltd
 - **Email**: info@revopharma.com
 - **Website**: www.revopharma.com
 - **Phone**: +211 920 123456
@@ -224,13 +224,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## ðŸ¢ About This Installation
 
-This DawaCloud system is currently deployed for **Revo Pharma & Medical Ltd**, a leading pharmaceutical distribution company serving South Sudan.
+This DawaCloud system is currently deployed for **Guru Brothers Ltd**, a leading pharmaceutical distribution company serving South Sudan.
 
 **About DawaCloud:**
 DawaCloud is a flexible pharmaceutical management platform that can be configured for any pharmacy or pharmaceutical distribution business. The system provides comprehensive tools to streamline drug inventory, procurement, and distribution operations.
 
-**About Revo Pharma & Medical Ltd (Current Client):**
-Revo Pharma & Medical Ltd uses DawaCloud to manage their pharmaceutical operations in South Sudan. The system is configured with features tailored to South Sudanese regulatory requirements and business practices.
+**About Guru Brothers Ltd (Current Client):**
+Guru Brothers Ltd uses DawaCloud to manage their pharmaceutical operations in South Sudan. The system is configured with features tailored to South Sudanese regulatory requirements and business practices.
 
 ---
 

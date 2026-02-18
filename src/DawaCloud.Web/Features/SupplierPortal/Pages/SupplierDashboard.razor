@@ -4,158 +4,144 @@
 <PageTitle>Supplier Dashboard - DawaCloud</PageTitle>
 
 <!-- Welcome Section -->
-<div class="df-hero animate-fade-in-up">
-    <div class="df-hero-content">
-        <div class="df-hero-text">
-            <h1>Welcome, MedSupply Ltd</h1>
-            <p>Supplier Portal Dashboard</p>
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">Welcome, MedSupply Ltd</h1>
+            <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Supplier Portal Dashboard</p>
         </div>
     </div>
 </div>
 
 <!-- KPI Cards -->
-<div class="df-kpi-grid">
-    <div class="df-kpi-card featured animate-fade-in-up animate-delay-1">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon primary">
-                <MudIcon Icon="@Icons.Material.Filled.Assignment" />
+<div class="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 lg:tw:grid-cols-4 tw:gap-4 tw:my-6">
+    <div class="dc-kpi animate-fade-in-up animate-delay-1">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-primary-50">
+                <MudIcon Icon="@Icons.Material.Filled.Assignment" Style="color: var(--tw-color-primary-600);" />
             </div>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">Pending Requests</div>
-            <div class="df-kpi-value">5</div>
-            <div class="df-kpi-subtitle">Awaiting your response</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Pending Requests</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">5</div>
+        <div class="tw:text-xs tw:text-text-secondary tw:mt-1">Awaiting your response</div>
     </div>
-    <div class="df-kpi-card animate-fade-in-up animate-delay-2">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon warning">
-                <MudIcon Icon="@Icons.Material.Filled.LocalShipping" />
+    <div class="dc-kpi animate-fade-in-up animate-delay-2">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-warning/10">
+                <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Style="color: var(--tw-color-warning);" />
             </div>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">In Transit</div>
-            <div class="df-kpi-value">3</div>
-            <div class="df-kpi-subtitle">Deliveries pending</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">In Transit</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">3</div>
+        <div class="tw:text-xs tw:text-text-secondary tw:mt-1">Deliveries pending</div>
     </div>
-    <div class="df-kpi-card animate-fade-in-up animate-delay-3">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon success">
-                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+    <div class="dc-kpi animate-fade-in-up animate-delay-3">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-success/10">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Style="color: var(--tw-color-success);" />
             </div>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">Delivered This Month</div>
-            <div class="df-kpi-value">12</div>
-            <div class="df-kpi-subtitle">Orders completed</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">Delivered This Month</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">12</div>
+        <div class="tw:text-xs tw:text-text-secondary tw:mt-1">Orders completed</div>
     </div>
-    <div class="df-kpi-card animate-fade-in-up animate-delay-4">
-        <div class="df-kpi-header">
-            <div class="df-kpi-icon info">
-                <MudIcon Icon="@Icons.Material.Filled.AttachMoney" />
+    <div class="dc-kpi animate-fade-in-up animate-delay-4">
+        <div class="tw:flex tw:items-center tw:gap-3">
+            <div class="dc-icon-box tw:bg-info/10">
+                <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Style="color: var(--tw-color-info);" />
             </div>
         </div>
-        <div class="df-kpi-body">
-            <div class="df-kpi-label">This Month's Value</div>
-            <div class="df-kpi-value">SSP 850K</div>
-            <div class="df-kpi-subtitle">Total order value</div>
-        </div>
+        <div class="tw:text-xs tw:font-medium tw:text-text-secondary tw:uppercase tw:tracking-wide tw:mt-3">This Month's Value</div>
+        <div class="tw:text-2xl tw:font-bold tw:text-text tw:mt-1 tw:font-display">SSP 850K</div>
+        <div class="tw:text-xs tw:text-text-secondary tw:mt-1">Total order value</div>
     </div>
 </div>
 
 <!-- Pending Requests -->
 <MudGrid Class="mt-4">
     <MudItem xs="12" lg="8">
-        <div class="df-alert-card animate-fade-in-up animate-delay-2">
-            <div class="df-alert-header">
-                <div class="df-alert-title">
-                    <div class="df-alert-title-icon warning">
-                        <MudIcon Icon="@Icons.Material.Filled.PendingActions" />
+        <div class="dc-card animate-fade-in-up animate-delay-2">
+            <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                <div class="tw:flex tw:items-center tw:gap-3">
+                    <div class="dc-icon-box tw:bg-warning/10">
+                        <MudIcon Icon="@Icons.Material.Filled.PendingActions" Style="color: var(--tw-color-warning);" />
                     </div>
-                    <span>Pending Drug Requests</span>
+                    <span class="tw:text-lg tw:font-semibold tw:text-text tw:m-0 tw:font-display">Pending Drug Requests</span>
                 </div>
                 <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/supplier/requests">
                     View All
                 </MudButton>
             </div>
-            <div class="df-alert-body">
-                <MudTable T="RequestDto" Items="@_pendingRequests" Dense="true" Hover="true">
-                    <HeaderContent>
-                        <MudTh>Request #</MudTh>
-                        <MudTh>Date</MudTh>
-                        <MudTh>Items</MudTh>
-                        <MudTh>Est. Value</MudTh>
-                        <MudTh>Status</MudTh>
-                        <MudTh>Actions</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd>@context.RequestNumber</MudTd>
-                        <MudTd>@context.RequestDate.ToString("dd MMM yyyy")</MudTd>
-                        <MudTd>@context.ItemCount items</MudTd>
-                        <MudTd>SSP @context.EstimatedValue.ToString("N0")</MudTd>
-                        <MudTd>
-                            <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">@context.Status</MudChip>
-                        </MudTd>
-                        <MudTd>
-                            <MudButton Variant="Variant.Filled" Size="Size.Small" Color="Color.Primary" Href="@($"/supplier/requests/{context.Id}")">
-                                Respond
-                            </MudButton>
-                        </MudTd>
-                    </RowTemplate>
-                </MudTable>
-            </div>
+            <MudTable T="RequestDto" Items="@_pendingRequests" Dense="true" Hover="true">
+                <HeaderContent>
+                    <MudTh>Request #</MudTh>
+                    <MudTh>Date</MudTh>
+                    <MudTh>Items</MudTh>
+                    <MudTh>Est. Value</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.RequestNumber</MudTd>
+                    <MudTd>@context.RequestDate.ToString("dd MMM yyyy")</MudTd>
+                    <MudTd>@context.ItemCount items</MudTd>
+                    <MudTd>SSP @context.EstimatedValue.ToString("N0")</MudTd>
+                    <MudTd>
+                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">@context.Status</MudChip>
+                    </MudTd>
+                    <MudTd>
+                        <MudButton Variant="Variant.Filled" Size="Size.Small" Color="Color.Primary" Href="@($"/supplier/requests/{context.Id}")">
+                            Respond
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
         </div>
     </MudItem>
 
     <MudItem xs="12" lg="4">
         <!-- Recent Activity -->
-        <div class="df-alert-card animate-fade-in-up animate-delay-3">
-            <div class="df-alert-header">
-                <div class="df-alert-title">
-                    <div class="df-alert-title-icon info">
-                        <MudIcon Icon="@Icons.Material.Filled.Timeline" />
+        <div class="dc-card animate-fade-in-up animate-delay-3">
+            <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                <div class="tw:flex tw:items-center tw:gap-3">
+                    <div class="dc-icon-box tw:bg-info/10">
+                        <MudIcon Icon="@Icons.Material.Filled.Timeline" Style="color: var(--tw-color-info);" />
                     </div>
-                    <span>Recent Activity</span>
+                    <span class="tw:text-lg tw:font-semibold tw:text-text tw:m-0 tw:font-display">Recent Activity</span>
                 </div>
             </div>
-            <div class="df-alert-body">
-                <MudTimeline TimelinePosition="TimelinePosition.Start">
-                    @foreach (var activity in _recentActivity)
-                    {
-                        <MudTimelineItem Color="@activity.Color" Size="Size.Small">
-                            <MudText Typo="Typo.body2">@activity.Description</MudText>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">@activity.Time</MudText>
-                        </MudTimelineItem>
-                    }
-                </MudTimeline>
-            </div>
+            <MudTimeline TimelinePosition="TimelinePosition.Start">
+                @foreach (var activity in _recentActivity)
+                {
+                    <MudTimelineItem Color="@activity.Color" Size="Size.Small">
+                        <MudText Typo="Typo.body2">@activity.Description</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@activity.Time</MudText>
+                    </MudTimelineItem>
+                }
+            </MudTimeline>
         </div>
 
         <!-- Contact Info -->
-        <div class="df-alert-card animate-fade-in-up animate-delay-4 mt-4">
-            <div class="df-alert-header">
-                <div class="df-alert-title">
-                    <div class="df-alert-title-icon primary">
-                        <MudIcon Icon="@Icons.Material.Filled.ContactSupport" />
+        <div class="dc-card animate-fade-in-up animate-delay-4 mt-4">
+            <div class="tw:flex tw:items-center tw:justify-between tw:gap-4 tw:mb-4">
+                <div class="tw:flex tw:items-center tw:gap-3">
+                    <div class="dc-icon-box tw:bg-primary-50">
+                        <MudIcon Icon="@Icons.Material.Filled.ContactSupport" Style="color: var(--tw-color-primary-600);" />
                     </div>
-                    <span>Need Help?</span>
+                    <span class="tw:text-lg tw:font-semibold tw:text-text tw:m-0 tw:font-display">Need Help?</span>
                 </div>
             </div>
-            <div class="df-alert-body">
-                <MudList T="string" Dense="true">
-                    <MudListItem T="string" Icon="@Icons.Material.Filled.Email">
-                        <MudText Typo="Typo.body2">procurement@DawaCloud.com</MudText>
-                    </MudListItem>
-                    <MudListItem T="string" Icon="@Icons.Material.Filled.Phone">
-                        <MudText Typo="Typo.body2">+211 920 123 456</MudText>
-                    </MudListItem>
-                    <MudListItem T="string" Icon="@Icons.Material.Filled.Chat">
-                        <MudText Typo="Typo.body2">+211 920 123 456</MudText>
-                    </MudListItem>
-                </MudList>
-            </div>
+            <MudList T="string" Dense="true">
+                <MudListItem T="string" Icon="@Icons.Material.Filled.Email">
+                    <MudText Typo="Typo.body2">procurement@DawaCloud.com</MudText>
+                </MudListItem>
+                <MudListItem T="string" Icon="@Icons.Material.Filled.Phone">
+                    <MudText Typo="Typo.body2">+211 920 123 456</MudText>
+                </MudListItem>
+                <MudListItem T="string" Icon="@Icons.Material.Filled.Chat">
+                    <MudText Typo="Typo.body2">+211 920 123 456</MudText>
+                </MudListItem>
+            </MudList>
         </div>
     </MudItem>
 </MudGrid>
@@ -173,11 +159,11 @@
     {
         _pendingRequests = new List<RequestDto>
         {
-            new() { Id = 1, RequestNumber = "REQ-2024-0045", RequestDate = DateTime.Now.AddDays(-1), ItemCount = 8, EstimatedValue = 125000, Status = "Pending" },
-            new() { Id = 2, RequestNumber = "REQ-2024-0044", RequestDate = DateTime.Now.AddDays(-2), ItemCount = 5, EstimatedValue = 85000, Status = "Pending" },
-            new() { Id = 3, RequestNumber = "REQ-2024-0043", RequestDate = DateTime.Now.AddDays(-3), ItemCount = 12, EstimatedValue = 230000, Status = "Awaiting Confirmation" },
-            new() { Id = 4, RequestNumber = "REQ-2024-0042", RequestDate = DateTime.Now.AddDays(-4), ItemCount = 3, EstimatedValue = 45000, Status = "Pending" },
-            new() { Id = 5, RequestNumber = "REQ-2024-0041", RequestDate = DateTime.Now.AddDays(-5), ItemCount = 6, EstimatedValue = 95000, Status = "Pending" },
+            new() { Id = 1, RequestNumber = "REQ-2024-0045", RequestDate = DateTime.UtcNow.AddDays(-1), ItemCount = 8, EstimatedValue = 125000, Status = "Pending" },
+            new() { Id = 2, RequestNumber = "REQ-2024-0044", RequestDate = DateTime.UtcNow.AddDays(-2), ItemCount = 5, EstimatedValue = 85000, Status = "Pending" },
+            new() { Id = 3, RequestNumber = "REQ-2024-0043", RequestDate = DateTime.UtcNow.AddDays(-3), ItemCount = 12, EstimatedValue = 230000, Status = "Awaiting Confirmation" },
+            new() { Id = 4, RequestNumber = "REQ-2024-0042", RequestDate = DateTime.UtcNow.AddDays(-4), ItemCount = 3, EstimatedValue = 45000, Status = "Pending" },
+            new() { Id = 5, RequestNumber = "REQ-2024-0041", RequestDate = DateTime.UtcNow.AddDays(-5), ItemCount = 6, EstimatedValue = 95000, Status = "Pending" },
         };
 
         _recentActivity = new List<ActivityItem>

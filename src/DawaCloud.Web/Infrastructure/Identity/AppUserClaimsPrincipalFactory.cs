@@ -19,6 +19,8 @@ public class AppUserClaimsPrincipalFactory : UserClaimsPrincipalFactory<Applicat
         var identity = await base.GenerateClaimsAsync(user);
         identity.AddClaim(new Claim("FirstName", user.FirstName ?? string.Empty));
         identity.AddClaim(new Claim("LastName", user.LastName ?? string.Empty));
+        if (user.TenantId.HasValue)
+            identity.AddClaim(new Claim("TenantId", user.TenantId.Value.ToString()));
         return identity;
     }
 }

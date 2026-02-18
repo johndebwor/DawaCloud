@@ -2,6 +2,8 @@
 @page "/wholesale/sales/{Id:int}"
 @using MudBlazor
 @using MediatR
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "RequireSalesAccess")]
 @using DawaCloud.Web.Features.Wholesale.Commands
 @using DawaCloud.Web.Features.Wholesale.Queries
 @using DawaCloud.Web.Features.Wholesale.Components
@@ -15,47 +17,44 @@
 
 <PageTitle>@(_isViewMode ? "Invoice Details" : "New Wholesale Sale") - DawaCloud</PageTitle>
 
-<div class="mb-4">
-    <MudBreadcrumbs Items="_breadcrumbItems" Class="mb-4" />
-
-    <div class="d-flex justify-space-between align-center mb-4">
-        <div>
-            <MudText Typo="Typo.h4" Class="mb-1">@(_isViewMode ? $"Invoice #{_sale.InvoiceNumber}" : "New Wholesale Sale")</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">
-                @(_isViewMode ? $"Customer: {_sale.CustomerName}" : "Create a new wholesale invoice")
-            </MudText>
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:flex-wrap tw:justify-between tw:items-center tw:gap-4">
+        <div class="tw:flex tw:items-center tw:gap-4">
+            <a href="/wholesale/sales" class="dc-btn-secondary">
+                <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
+                Back
+            </a>
+            <div>
+                <h1 class="tw:text-2xl tw:font-bold tw:font-display tw:tracking-tight tw:text-text tw:m-0">
+                    @(_isViewMode ? $"Invoice #{_sale.InvoiceNumber}" : "New Wholesale Sale")
+                </h1>
+                <p class="tw:text-text-secondary tw:text-sm tw:mt-0.5 tw:m-0">
+                    @(_isViewMode ? $"Customer: {_sale.CustomerName}" : "Create a new wholesale invoice")
+                </p>
+            </div>
         </div>
-        <div class="d-flex gap-2">
-            <MudButton Variant="Variant.Outlined"
-                       Color="Color.Default"
-                       StartIcon="@Icons.Material.Filled.ArrowBack"
-                       Href="/wholesale/sales">
-                Back to List
-            </MudButton>
+        <div class="tw:flex tw:items-center tw:gap-2">
             @if (_isViewMode)
             {
-                <MudButton Variant="Variant.Outlined"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.Print"
-                           OnClick="PrintInvoice">
+                <button class="dc-btn-secondary" @onclick="PrintInvoice">
+                    <MudIcon Icon="@Icons.Material.Filled.Print" Size="Size.Small" />
                     Print Invoice
-                </MudButton>
+                </button>
                 @if (_sale.BalanceAmount > 0)
                 {
-                    <MudButton Variant="Variant.Filled"
-                               Color="Color.Success"
-                               StartIcon="@Icons.Material.Filled.Payment"
-                               OnClick="RecordPayment">
+                    <button class="dc-btn-primary" @onclick="RecordPayment">
+                        <MudIcon Icon="@Icons.Material.Filled.Payment" Size="Size.Small" />
                         Record Payment
-                    </MudButton>
+                    </button>
                 }
             }
         </div>
     </div>
+</div>
 
-    <MudGrid>
-        <MudItem xs="12" md="8">
-            <MudPaper Elevation="2" Class="pa-6">
+<MudGrid>
+    <MudItem xs="12" md="8">
+        <div class="dc-card animate-fade-in-up animate-delay-1">
                 @if (_isViewMode)
                 {
                     <!-- View Mode -->
@@ -159,12 +158,12 @@
                         }
                     </RowTemplate>
                 </MudTable>
-            </MudPaper>
-        </MudItem>
+        </div>
+    </MudItem>
 
-        <MudItem xs="12" md="4">
-            <!-- Summary Card -->
-            <MudPaper Elevation="2" Class="pa-4 mb-4">
+    <MudItem xs="12" md="4">
+        <!-- Summary Card -->
+        <div class="dc-card tw:mb-4 animate-fade-in-up animate-delay-2">
                 <MudText Typo="Typo.h6" Class="mb-3">Invoice Summary</MudText>
                 <div class="d-flex flex-column gap-2">
                     <div class="d-flex justify-space-between">
@@ -200,9 +199,9 @@
                         </div>
                     }
                 </div>
-            </MudPaper>
+        </div>
 
-            @if (!_isViewMode)
+        @if (!_isViewMode)
             {
                 <div class="d-flex flex-column gap-2">
                     <MudButton Variant="Variant.Outlined"
@@ -222,10 +221,9 @@
                         Confirm Sale
                     </MudButton>
                 </div>
-            }
-        </MudItem>
-    </MudGrid>
-</div>
+        }
+    </MudItem>
+</MudGrid>
 
 @code {
     [Parameter]
@@ -233,7 +231,7 @@
 
     private bool _isViewMode => Id.HasValue;
     private MudForm? _form;
-    private Queries.SaleDto _sale = new(0, "", DateTime.Now, 0, "", 0, 0, 0, 0, 0, 0, PaymentStatus.Pending, SaleStatus.Draft, 0);
+    private Queries.SaleDto _sale = new(0, "", DateTime.UtcNow, 0, "", 0, 0, 0, 0, 0, 0, PaymentStatus.Pending, SaleStatus.Draft, 0);
     private List<DTOs.SaleItemDto> _items = new();
     private List<Wholesale.Queries.CustomerDto> _customers = new();
     private List<Drugs.Queries.DrugListDto> _drugs = new();
@@ -378,7 +376,7 @@
 
             var command = new CreateSaleCommand(
                 _selectedCustomerId.Value,
-                DateTime.Now,
+                DateTime.UtcNow,
                 saleItems,
                 _notes,
                 _deliveryAddress

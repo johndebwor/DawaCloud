@@ -1,5 +1,7 @@
 @using DawaCloud.Web.Shared.Extensions
 @using Microsoft.AspNetCore.Components.Authorization
+@inject DawaCloud.Web.Services.ThemeService ThemeService
+@implements IDisposable
 
 <MudThemeProvider Theme="@MudThemeConfiguration.DawaFlowTheme" IsDarkMode="@_isDarkMode" />
 <MudPopoverProvider />
@@ -25,5 +27,31 @@
 </CascadingAuthenticationState>
 
 @code {
-    private bool _isDarkMode = false;
+    private bool _isDarkMode;
+
+    protected override void OnInitialized()
+    {
+        ThemeService.OnThemeChanged += HandleThemeChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ThemeService.InitializeAsync();
+            _isDarkMode = ThemeService.IsDarkMode;
+            StateHasChanged();
+        }
+    }
+
+    private void HandleThemeChanged()
+    {
+        _isDarkMode = ThemeService.IsDarkMode;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnThemeChanged -= HandleThemeChanged;
+    }
 }

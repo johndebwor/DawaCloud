@@ -58,7 +58,7 @@ public class GetBatchesByDrugQueryHandler : IRequestHandler<GetBatchesByDrugQuer
                 b.ReservedQuantity,
                 b.CostPrice,
                 b.Status,
-                (int)(b.ExpiryDate - DateTime.Now).TotalDays
+                (int)(b.ExpiryDate - DateTime.UtcNow).TotalDays
             ))
             .ToListAsync(ct);
 

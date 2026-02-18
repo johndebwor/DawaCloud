@@ -1,0 +1,679 @@
+@page "/hr/employees/new"
+@page "/hr/employees/{Id:int}"
+@using MudBlazor
+@using DawaCloud.Web.Features.HR.Queries
+@using DawaCloud.Web.Features.HR.Commands
+@using DawaCloud.Web.Data
+@using DawaCloud.Web.Data.Entities
+@using MediatR
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@attribute [Authorize(Policy = "RequireHrAccess")]
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+@inject IServiceScopeFactory ScopeFactory
+
+<PageTitle>@(_isCreateMode ? "New Employee" : $"{_model.FirstName} {_model.LastName}") - DawaCloud</PageTitle>
+
+<!-- Hero Section -->
+<div class="dc-hero tw:mb-6 animate-fade-in-up">
+    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+        <div class="tw:flex-1">
+            @if (_isCreateMode)
+            {
+                <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">New Employee</h1>
+                <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Add a new employee record</p>
+            }
+            else if (_isEditMode)
+            {
+                <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">Edit Employee</h1>
+                <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">Update employee information for @_model.FirstName @_model.LastName</p>
+            }
+            else
+            {
+                <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:font-display">@_model.FirstName @_model.LastName</h1>
+                <p class="tw:text-sm tw:text-text-secondary tw:m-0 tw:mt-1">@_model.EmployeeCode &mdash; @_model.Position</p>
+            }
+        </div>
+        <div class="d-flex gap-2">
+            @if (_isViewMode)
+            {
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Default"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           Href="/hr/employees">
+                    Back
+                </MudButton>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Edit"
+                           OnClick="ToggleEdit">
+                    Edit
+                </MudButton>
+            }
+            else if (_isEditMode)
+            {
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Default"
+                           OnClick="CancelEdit">
+                    Cancel
+                </MudButton>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Save"
+                           Disabled="@_isSaving"
+                           OnClick="SaveEmployee">
+                    @if (_isSaving)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                        <span class="ml-2">Saving...</span>
+                    }
+                    else
+                    {
+                        <span>Save Changes</span>
+                    }
+                </MudButton>
+            }
+        </div>
+    </div>
+</div>
+
+@if (_isLoading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+}
+else
+{
+    <MudGrid>
+        <!-- Left Column: Form -->
+        <MudItem xs="12" md="8">
+            <MudForm @ref="_form">
+                <!-- Personal Information -->
+                <div class="dc-card animate-fade-in-up animate-delay-1 tw:mb-4">
+                    <MudText Typo="Typo.h6" Class="tw:mb-4">Personal Information</MudText>
+                    <MudDivider Class="tw:my-4" />
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.FirstName"
+                                          Label="First Name"
+                                          Variant="Variant.Outlined"
+                                          Required="true"
+                                          RequiredError="First name is required"
+                                          ReadOnly="@_isViewMode" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.LastName"
+                                          Label="Last Name"
+                                          Variant="Variant.Outlined"
+                                          Required="true"
+                                          RequiredError="Last name is required"
+                                          ReadOnly="@_isViewMode" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.Email"
+                                          Label="Email"
+                                          Variant="Variant.Outlined"
+                                          InputType="InputType.Email"
+                                          ReadOnly="@_isViewMode" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.Phone"
+                                          Label="Phone"
+                                          Variant="Variant.Outlined"
+                                          ReadOnly="@_isViewMode" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudSelect T="Gender?" @bind-Value="_model.Gender"
+                                       Label="Gender"
+                                       Variant="Variant.Outlined"
+                                       ReadOnly="@_isViewMode"
+                                       AnchorOrigin="Origin.BottomCenter">
+                                <MudSelectItem T="Gender?" Value="@((Gender?)null)">Not Specified</MudSelectItem>
+                                <MudSelectItem T="Gender?" Value="@((Gender?)Gender.Male)">Male</MudSelectItem>
+                                <MudSelectItem T="Gender?" Value="@((Gender?)Gender.Female)">Female</MudSelectItem>
+                                <MudSelectItem T="Gender?" Value="@((Gender?)Gender.Other)">Other</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudDatePicker @bind-Date="_model.DateOfBirth"
+                                           Label="Date of Birth"
+                                           Variant="Variant.Outlined"
+                                           MaxDate="DateTime.Today.AddYears(-16)"
+                                           ReadOnly="@_isViewMode" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="_model.NationalId"
+                                          Label="National ID"
+                                          Variant="Variant.Outlined"
+                                          ReadOnly="@_isViewMode" />
+                        </MudItem>
+                        <MudItem xs="12" md="8">
+                            <MudTextField @bind-Value="_model.Address"
+                                          Label="Address"
+                                          Variant="Variant.Outlined"
+                                          ReadOnly="@_isViewMode" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="_model.City"
+                                          Label="City"
+                                          Variant="Variant.Outlined"
+                                          ReadOnly="@_isViewMode" />
+                        </MudItem>
+                    </MudGrid>
+                </div>
+
+                <!-- Employment Details -->
+                <div class="dc-card animate-fade-in-up animate-delay-2 tw:mb-4">
+                    <MudText Typo="Typo.h6" Class="tw:mb-4">Employment Details</MudText>
+                    <MudDivider Class="tw:my-4" />
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="int" @bind-Value="_model.DepartmentId"
+                                       Label="Department"
+                                       Variant="Variant.Outlined"
+                                       Required="true"
+                                       RequiredError="Department is required"
+                                       ReadOnly="@_isViewMode"
+                                       AnchorOrigin="Origin.BottomCenter">
+                                @foreach (var dept in _departments)
+                                {
+                                    <MudSelectItem T="int" Value="@dept.Id">@dept.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_model.Position"
+                                          Label="Position"
+                                          Variant="Variant.Outlined"
+                                          Required="true"
+                                          RequiredError="Position is required"
+                                          ReadOnly="@_isViewMode" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="EmploymentType" @bind-Value="_model.EmploymentType"
+                                       Label="Employment Type"
+                                       Variant="Variant.Outlined"
+                                       ReadOnly="@_isViewMode"
+                                       AnchorOrigin="Origin.BottomCenter">
+                                <MudSelectItem T="EmploymentType" Value="@EmploymentType.FullTime">Full Time</MudSelectItem>
+                                <MudSelectItem T="EmploymentType" Value="@EmploymentType.PartTime">Part Time</MudSelectItem>
+                                <MudSelectItem T="EmploymentType" Value="@EmploymentType.Contract">Contract</MudSelectItem>
+                                <MudSelectItem T="EmploymentType" Value="@EmploymentType.Intern">Intern</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                        @if (!_isCreateMode)
+                        {
+                            <MudItem xs="12" md="6">
+                                <MudSelect T="EmploymentStatus" @bind-Value="_model.Status"
+                                           Label="Status"
+                                           Variant="Variant.Outlined"
+                                           ReadOnly="@_isViewMode"
+                                           AnchorOrigin="Origin.BottomCenter">
+                                    <MudSelectItem T="EmploymentStatus" Value="@EmploymentStatus.Active">Active</MudSelectItem>
+                                    <MudSelectItem T="EmploymentStatus" Value="@EmploymentStatus.OnLeave">On Leave</MudSelectItem>
+                                    <MudSelectItem T="EmploymentStatus" Value="@EmploymentStatus.Suspended">Suspended</MudSelectItem>
+                                    <MudSelectItem T="EmploymentStatus" Value="@EmploymentStatus.Terminated">Terminated</MudSelectItem>
+                                </MudSelect>
+                            </MudItem>
+                        }
+                        <MudItem xs="12" md="6">
+                            <MudDatePicker @bind-Date="_model.HireDate"
+                                           Label="Hire Date"
+                                           Variant="Variant.Outlined"
+                                           Required="true"
+                                           ReadOnly="@_isViewMode" />
+                        </MudItem>
+                        @if (!_isCreateMode && _model.Status == EmploymentStatus.Terminated)
+                        {
+                            <MudItem xs="12" md="6">
+                                <MudDatePicker @bind-Date="_model.TerminationDate"
+                                               Label="Termination Date"
+                                               Variant="Variant.Outlined"
+                                               ReadOnly="@_isViewMode" />
+                            </MudItem>
+                        }
+                        <MudItem xs="12" md="6">
+                            <MudNumericField @bind-Value="_model.BasicSalary"
+                                             Label="Basic Salary"
+                                             Variant="Variant.Outlined"
+                                             Adornment="Adornment.Start"
+                                             AdornmentText="SSP"
+                                             Format="N2"
+                                             Min="0m"
+                                             ReadOnly="@_isViewMode" />
+                        </MudItem>
+                    </MudGrid>
+                </div>
+
+                <!-- Emergency Contact -->
+                <div class="dc-card animate-fade-in-up animate-delay-3 tw:mb-4">
+                    <MudText Typo="Typo.h6" Class="tw:mb-4">Emergency Contact</MudText>
+                    <MudDivider Class="tw:my-4" />
+                    <MudGrid>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="_model.EmergencyContactName"
+                                          Label="Contact Name"
+                                          Variant="Variant.Outlined"
+                                          ReadOnly="@_isViewMode" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="_model.EmergencyContactPhone"
+                                          Label="Contact Phone"
+                                          Variant="Variant.Outlined"
+                                          ReadOnly="@_isViewMode" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="_model.EmergencyContactRelation"
+                                          Label="Relationship"
+                                          Variant="Variant.Outlined"
+                                          ReadOnly="@_isViewMode" />
+                        </MudItem>
+                    </MudGrid>
+                </div>
+
+                <!-- Notes -->
+                <div class="dc-card animate-fade-in-up animate-delay-4 tw:mb-4">
+                    <MudText Typo="Typo.h6" Class="tw:mb-4">Notes</MudText>
+                    <MudDivider Class="tw:my-4" />
+                    <MudTextField @bind-Value="_model.Notes"
+                                  Label="Notes"
+                                  Variant="Variant.Outlined"
+                                  Lines="4"
+                                  ReadOnly="@_isViewMode" />
+                </div>
+
+                <!-- Save / Cancel buttons (Create Mode) -->
+                @if (_isCreateMode)
+                {
+                    <div class="d-flex justify-space-between tw:mt-4">
+                        <MudButton Variant="Variant.Text"
+                                   Color="Color.Default"
+                                   Href="/hr/employees"
+                                   StartIcon="@Icons.Material.Filled.ArrowBack">
+                            Cancel
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Disabled="@_isSaving"
+                                   OnClick="SaveEmployee"
+                                   StartIcon="@Icons.Material.Filled.Save">
+                            @if (_isSaving)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                                <span class="ml-2">Saving...</span>
+                            }
+                            else
+                            {
+                                <span>Save Employee</span>
+                            }
+                        </MudButton>
+                    </div>
+                }
+            </MudForm>
+        </MudItem>
+
+        <!-- Right Column: Sidebar -->
+        <MudItem xs="12" md="4">
+            <div class="dc-card animate-fade-in-up animate-delay-1 tw:mb-4">
+                <MudText Typo="Typo.h6" Class="tw:mb-3">Employee Info</MudText>
+
+                @if (!_isCreateMode)
+                {
+                    <!-- Status Badge -->
+                    <div class="tw:mb-4">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Status</MudText>
+                        <div class="tw:mt-1">
+                            <MudChip T="string" Color="@GetStatusColor(_model.Status)" Size="Size.Medium">@FormatStatus(_model.Status)</MudChip>
+                        </div>
+                    </div>
+
+                    <!-- Employee Code -->
+                    <div class="tw:mb-4">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Employee Code</MudText>
+                        <MudText Typo="Typo.h6">@_model.EmployeeCode</MudText>
+                    </div>
+
+                    <!-- Days Employed -->
+                    <div class="tw:mb-4">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Days Employed</MudText>
+                        <MudText Typo="Typo.h6">@GetDaysEmployed()</MudText>
+                    </div>
+
+                    <!-- Department -->
+                    <div class="tw:mb-4">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Department</MudText>
+                        <MudText Typo="Typo.body1">@(_departments.FirstOrDefault(d => d.Id == _model.DepartmentId)?.Name ?? "-")</MudText>
+                    </div>
+
+                    <!-- Employment Type -->
+                    <div class="tw:mb-4">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Employment Type</MudText>
+                        <MudText Typo="Typo.body1">@FormatEmploymentType(_model.EmploymentType)</MudText>
+                    </div>
+
+                    <!-- Hire Date -->
+                    <div class="tw:mb-4">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Hire Date</MudText>
+                        <MudText Typo="Typo.body1">@(_model.HireDate?.ToString("dd MMM yyyy") ?? "-")</MudText>
+                    </div>
+                }
+                else
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Fill in the employee details and click Save to create the record. An employee code will be automatically generated.
+                    </MudText>
+                }
+            </div>
+
+            @if (!_isCreateMode)
+            {
+                <div class="dc-card animate-fade-in-up animate-delay-2">
+                    <MudText Typo="Typo.h6" Class="tw:mb-3">Quick Actions</MudText>
+                    <MudList T="string" Dense="true">
+                        <MudListItem T="string" Icon="@Icons.Material.Filled.Email" IconColor="Color.Primary">
+                            <MudText Typo="Typo.body2">@(_model.Email ?? "No email set")</MudText>
+                        </MudListItem>
+                        <MudListItem T="string" Icon="@Icons.Material.Filled.Phone" IconColor="Color.Primary">
+                            <MudText Typo="Typo.body2">@(_model.Phone ?? "No phone set")</MudText>
+                        </MudListItem>
+                        @if (!string.IsNullOrWhiteSpace(_model.EmergencyContactName))
+                        {
+                            <MudListItem T="string" Icon="@Icons.Material.Filled.ContactPhone" IconColor="Color.Warning">
+                                <MudText Typo="Typo.body2">Emergency: @_model.EmergencyContactName (@_model.EmergencyContactPhone)</MudText>
+                            </MudListItem>
+                        }
+                    </MudList>
+                </div>
+            }
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private MudForm? _form;
+    private bool _isLoading = true;
+    private bool _isSaving;
+    private bool _isViewMode = true;
+    private bool _isCreateMode => !Id.HasValue;
+    private bool _isEditMode => !_isCreateMode && !_isViewMode;
+
+    private EmployeeModel _model = new();
+    private List<DepartmentDto> _departments = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (_isCreateMode)
+        {
+            _isViewMode = false;
+            _model.HireDate = DateTime.Today;
+        }
+
+        await LoadDepartments();
+
+        if (Id.HasValue)
+        {
+            await LoadEmployee(Id.Value);
+        }
+
+        _isLoading = false;
+    }
+
+    private async Task LoadEmployee(int id)
+    {
+        try
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var employee = await db.Employees
+                .Include(e => e.Department)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (employee == null)
+            {
+                Snackbar.Add("Employee not found.", Severity.Error);
+                Navigation.NavigateTo("/hr/employees");
+                return;
+            }
+
+            _model = new EmployeeModel
+            {
+                EmployeeCode = employee.EmployeeCode,
+                FirstName = employee.FirstName,
+                LastName = employee.LastName,
+                Email = employee.Email,
+                Phone = employee.Phone,
+                Gender = employee.Gender,
+                DateOfBirth = employee.DateOfBirth,
+                NationalId = employee.NationalId,
+                Address = employee.Address,
+                City = employee.City,
+                DepartmentId = employee.DepartmentId,
+                Position = employee.Position,
+                EmploymentType = employee.EmploymentType,
+                Status = employee.Status,
+                HireDate = employee.HireDate,
+                TerminationDate = employee.TerminationDate,
+                BasicSalary = employee.BasicSalary,
+                EmergencyContactName = employee.EmergencyContactName,
+                EmergencyContactPhone = employee.EmergencyContactPhone,
+                EmergencyContactRelation = employee.EmergencyContactRelation,
+                Notes = employee.Notes
+            };
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading employee: {ex.Message}", Severity.Error);
+            Navigation.NavigateTo("/hr/employees");
+        }
+    }
+
+    private async Task LoadDepartments()
+    {
+        try
+        {
+            _departments = await Mediator.Send(new GetDepartmentsQuery());
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading departments: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task SaveEmployee()
+    {
+        if (_form != null)
+        {
+            await _form.Validate();
+        }
+
+        if (string.IsNullOrWhiteSpace(_model.FirstName) || string.IsNullOrWhiteSpace(_model.LastName))
+        {
+            Snackbar.Add("First name and last name are required.", Severity.Warning);
+            return;
+        }
+
+        if (_model.DepartmentId == 0)
+        {
+            Snackbar.Add("Please select a department.", Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_model.Position))
+        {
+            Snackbar.Add("Position is required.", Severity.Warning);
+            return;
+        }
+
+        if (!_model.HireDate.HasValue)
+        {
+            Snackbar.Add("Hire date is required.", Severity.Warning);
+            return;
+        }
+
+        _isSaving = true;
+        StateHasChanged();
+
+        try
+        {
+            if (_isCreateMode)
+            {
+                var result = await Mediator.Send(new CreateEmployeeCommand(
+                    FirstName: _model.FirstName,
+                    LastName: _model.LastName,
+                    Email: _model.Email,
+                    Phone: _model.Phone,
+                    Gender: _model.Gender,
+                    DateOfBirth: _model.DateOfBirth,
+                    NationalId: _model.NationalId,
+                    Address: _model.Address,
+                    City: _model.City,
+                    DepartmentId: _model.DepartmentId,
+                    Position: _model.Position,
+                    EmploymentType: _model.EmploymentType,
+                    HireDate: _model.HireDate!.Value,
+                    BasicSalary: _model.BasicSalary,
+                    EmergencyContactName: _model.EmergencyContactName,
+                    EmergencyContactPhone: _model.EmergencyContactPhone,
+                    EmergencyContactRelation: _model.EmergencyContactRelation,
+                    Notes: _model.Notes
+                ));
+
+                if (result.IsSuccess)
+                {
+                    Snackbar.Add("Employee created successfully.", Severity.Success);
+                    Navigation.NavigateTo($"/hr/employees/{result.Value}");
+                }
+                else
+                {
+                    Snackbar.Add(result.Error ?? "Error creating employee.", Severity.Error);
+                }
+            }
+            else
+            {
+                var result = await Mediator.Send(new UpdateEmployeeCommand(
+                    Id: Id!.Value,
+                    FirstName: _model.FirstName,
+                    LastName: _model.LastName,
+                    Email: _model.Email,
+                    Phone: _model.Phone,
+                    Gender: _model.Gender,
+                    DateOfBirth: _model.DateOfBirth,
+                    NationalId: _model.NationalId,
+                    Address: _model.Address,
+                    City: _model.City,
+                    DepartmentId: _model.DepartmentId,
+                    Position: _model.Position,
+                    EmploymentType: _model.EmploymentType,
+                    Status: _model.Status,
+                    HireDate: _model.HireDate!.Value,
+                    TerminationDate: _model.TerminationDate,
+                    BasicSalary: _model.BasicSalary,
+                    EmergencyContactName: _model.EmergencyContactName,
+                    EmergencyContactPhone: _model.EmergencyContactPhone,
+                    EmergencyContactRelation: _model.EmergencyContactRelation,
+                    Notes: _model.Notes
+                ));
+
+                if (result.IsSuccess)
+                {
+                    Snackbar.Add("Employee updated successfully.", Severity.Success);
+                    _isViewMode = true;
+                }
+                else
+                {
+                    Snackbar.Add(result.Error ?? "Error updating employee.", Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving employee: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ToggleEdit()
+    {
+        _isViewMode = false;
+    }
+
+    private void CancelEdit()
+    {
+        _isViewMode = true;
+        // Reload original data
+        if (Id.HasValue)
+        {
+            _ = LoadEmployee(Id.Value);
+        }
+    }
+
+    private int GetDaysEmployed()
+    {
+        if (_model.HireDate.HasValue)
+        {
+            var endDate = _model.TerminationDate ?? DateTime.Today;
+            return (endDate - _model.HireDate.Value).Days;
+        }
+        return 0;
+    }
+
+    private Color GetStatusColor(EmploymentStatus status) => status switch
+    {
+        EmploymentStatus.Active => Color.Success,
+        EmploymentStatus.OnLeave => Color.Warning,
+        EmploymentStatus.Suspended => Color.Error,
+        EmploymentStatus.Terminated => Color.Default,
+        _ => Color.Default
+    };
+
+    private string FormatStatus(EmploymentStatus status) => status switch
+    {
+        EmploymentStatus.Active => "Active",
+        EmploymentStatus.OnLeave => "On Leave",
+        EmploymentStatus.Suspended => "Suspended",
+        EmploymentStatus.Terminated => "Terminated",
+        _ => status.ToString()
+    };
+
+    private string FormatEmploymentType(EmploymentType type) => type switch
+    {
+        EmploymentType.FullTime => "Full Time",
+        EmploymentType.PartTime => "Part Time",
+        EmploymentType.Contract => "Contract",
+        EmploymentType.Intern => "Intern",
+        _ => type.ToString()
+    };
+
+    private class EmployeeModel
+    {
+        public string EmployeeCode { get; set; } = string.Empty;
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string? Email { get; set; }
+        public string? Phone { get; set; }
+        public Gender? Gender { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+        public string? NationalId { get; set; }
+        public string? Address { get; set; }
+        public string? City { get; set; }
+        public int DepartmentId { get; set; }
+        public string Position { get; set; } = string.Empty;
+        public EmploymentType EmploymentType { get; set; } = EmploymentType.FullTime;
+        public EmploymentStatus Status { get; set; } = EmploymentStatus.Active;
+        public DateTime? HireDate { get; set; }
+        public DateTime? TerminationDate { get; set; }
+        public decimal BasicSalary { get; set; }
+        public string? EmergencyContactName { get; set; }
+        public string? EmergencyContactPhone { get; set; }
+        public string? EmergencyContactRelation { get; set; }
+        public string? Notes { get; set; }
+    }
+}

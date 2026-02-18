@@ -1,5 +1,7 @@
 @page "/drugs/{id:int}"
 @using MudBlazor
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "RequireInventoryAccess")]
 @inject NavigationManager Navigation
 
 <PageTitle>Drug Details - DawaCloud</PageTitle>
@@ -7,32 +9,30 @@
 <div class="mb-4">
     <MudBreadcrumbs Items="_breadcrumbItems" Class="mb-4" />
 
-    <div class="d-flex justify-space-between align-center mb-4">
-        <div>
-            <MudText Typo="Typo.h4" Class="mb-1">@_drug.Name</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">@_drug.Code</MudText>
-        </div>
-        <div class="d-flex gap-2">
-            <MudButton Variant="Variant.Outlined"
-                       Color="Color.Default"
-                       StartIcon="@Icons.Material.Filled.ArrowBack"
-                       Href="/drugs">
-                Back to List
-            </MudButton>
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       StartIcon="@Icons.Material.Filled.Edit"
-                       Href="@($"/drugs/{Id}/edit")">
-                Edit Drug
-            </MudButton>
+    <div class="dc-hero tw:mb-6 animate-fade-in-up">
+        <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-4">
+            <div>
+                <h1 class="tw:text-2xl tw:font-bold tw:tracking-tight tw:text-text tw:m-0 tw:mb-1 tw:font-display">@_drug.Name</h1>
+                <p class="tw:text-sm tw:text-text-secondary tw:m-0">@_drug.Code</p>
+            </div>
+            <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-3 tw:mt-5">
+                <a href="/drugs" class="dc-btn-secondary">
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
+                    <span>Back to List</span>
+                </a>
+                <a href="@($"/drugs/{Id}/edit")" class="dc-btn-primary">
+                    <MudIcon Icon="@Icons.Material.Filled.Edit" Size="Size.Small" />
+                    <span>Edit Drug</span>
+                </a>
+            </div>
         </div>
     </div>
 
     <MudGrid>
         <!-- Basic Information -->
         <MudItem xs="12" md="8">
-            <MudPaper Elevation="2" Class="pa-6">
-                <MudText Typo="Typo.h6" Class="mb-4">Basic Information</MudText>
+            <div class="dc-card">
+                <h3 class="tw:text-lg tw:font-semibold tw:text-text tw:font-display tw:mb-6">Basic Information</h3>
                 <MudGrid>
                     <MudItem xs="12" md="6">
                         <MudText Typo="Typo.caption" Color="Color.Secondary">Drug Name</MudText>
@@ -44,7 +44,9 @@
                     </MudItem>
                     <MudItem xs="12" md="6">
                         <MudText Typo="Typo.caption" Color="Color.Secondary">Category</MudText>
-                        <MudChip T="string" Size="Size.Small" Color="Color.Info">@_drug.Category</MudChip>
+                        <div class="mb-4">
+                            <span class="dc-badge tw:bg-info/10 tw:text-info">@_drug.Category</span>
+                        </div>
                     </MudItem>
                     <MudItem xs="12" md="6">
                         <MudText Typo="Typo.caption" Color="Color.Secondary">Manufacturer</MudText>
@@ -70,7 +72,7 @@
 
                 <MudDivider Class="my-4" />
 
-                <MudText Typo="Typo.h6" Class="mb-4">Pricing</MudText>
+                <h3 class="tw:text-lg tw:font-semibold tw:text-text tw:font-display tw:mb-6">Pricing</h3>
                 <MudGrid>
                     <MudItem xs="12" md="4">
                         <MudText Typo="Typo.caption" Color="Color.Secondary">Retail Price</MudText>
@@ -88,7 +90,7 @@
 
                 <MudDivider Class="my-4" />
 
-                <MudText Typo="Typo.h6" Class="mb-4">Stock Settings</MudText>
+                <h3 class="tw:text-lg tw:font-semibold tw:text-text tw:font-display tw:mb-6">Stock Settings</h3>
                 <MudGrid>
                     <MudItem xs="12" md="6">
                         <MudText Typo="Typo.caption" Color="Color.Secondary">Reorder Level</MudText>
@@ -99,78 +101,70 @@
                         <MudText Typo="Typo.body1" Class="mb-4">@_drug.MaxStockLevel units</MudText>
                     </MudItem>
                 </MudGrid>
-            </MudPaper>
+            </div>
         </MudItem>
 
         <!-- Side Panel -->
         <MudItem xs="12" md="4">
             <!-- Status Card -->
-            <MudPaper Elevation="2" Class="pa-4 mb-4">
-                <MudText Typo="Typo.h6" Class="mb-3">Status</MudText>
-                <div class="d-flex flex-column gap-2">
-                    <div class="d-flex justify-space-between">
-                        <MudText Typo="Typo.body2">Active</MudText>
-                        <MudChip T="string" Size="Size.Small" Color="@(_drug.IsActive ? Color.Success : Color.Default)">
+            <div class="dc-card tw:mb-4">
+                <h3 class="tw:text-lg tw:font-semibold tw:text-text tw:font-display tw:mb-4">Status</h3>
+                <div class="tw:flex tw:flex-col tw:gap-2">
+                    <div class="tw:flex tw:justify-between tw:items-center">
+                        <span class="tw:text-sm tw:text-text-secondary">Active</span>
+                        <span class="dc-badge @(_drug.IsActive ? "tw:bg-success/10 tw:text-success" : "")">
                             @(_drug.IsActive ? "Yes" : "No")
-                        </MudChip>
+                        </span>
                     </div>
-                    <div class="d-flex justify-space-between">
-                        <MudText Typo="Typo.body2">Requires Prescription</MudText>
-                        <MudChip T="string" Size="Size.Small" Color="@(_drug.RequiresPrescription ? Color.Warning : Color.Default)">
+                    <div class="tw:flex tw:justify-between tw:items-center">
+                        <span class="tw:text-sm tw:text-text-secondary">Requires Prescription</span>
+                        <span class="dc-badge @(_drug.RequiresPrescription ? "tw:bg-warning/10 tw:text-warning" : "")">
                             @(_drug.RequiresPrescription ? "Yes" : "No")
-                        </MudChip>
+                        </span>
                     </div>
-                    <div class="d-flex justify-space-between">
-                        <MudText Typo="Typo.body2">Controlled Substance</MudText>
-                        <MudChip T="string" Size="Size.Small" Color="@(_drug.IsControlled ? Color.Error : Color.Default)">
+                    <div class="tw:flex tw:justify-between tw:items-center">
+                        <span class="tw:text-sm tw:text-text-secondary">Controlled Substance</span>
+                        <span class="dc-badge @(_drug.IsControlled ? "tw:bg-danger/10 tw:text-danger" : "")">
                             @(_drug.IsControlled ? "Yes" : "No")
-                        </MudChip>
+                        </span>
                     </div>
                 </div>
-            </MudPaper>
+            </div>
 
             <!-- Stock Summary Card -->
-            <MudPaper Elevation="2" Class="pa-4 mb-4">
-                <MudText Typo="Typo.h6" Class="mb-3">Current Stock</MudText>
-                <div class="text-center pa-4">
-                    <MudText Typo="Typo.h3" Color="@GetStockColor()">@_currentStock</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">units in stock</MudText>
+            <div class="dc-card tw:mb-4">
+                <h3 class="tw:text-lg tw:font-semibold tw:text-text tw:font-display tw:mb-4">Current Stock</h3>
+                <div class="tw:text-center tw:p-4">
+                    <div class="tw:text-5xl tw:font-bold tw:font-display @(_currentStock <= _drug.ReorderLevel ? "tw:text-warning" : "tw:text-success")">@_currentStock</div>
+                    <div class="tw:text-sm tw:text-text-secondary tw:mt-2">units in stock</div>
                 </div>
                 @if (_currentStock <= _drug.ReorderLevel)
                 {
-                    <MudAlert Severity="Severity.Warning" Class="mt-2">
-                        Stock below reorder level
-                    </MudAlert>
+                    <div class="tw:bg-warning/5 tw:border tw:border-warning/20 tw:rounded-xl tw:p-4 tw:flex tw:items-start tw:gap-3 tw:mt-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Warning" Size="Size.Small" />
+                        <span>Stock below reorder level</span>
+                    </div>
                 }
-            </MudPaper>
+            </div>
 
             <!-- Quick Actions -->
-            <MudPaper Elevation="2" Class="pa-4">
-                <MudText Typo="Typo.h6" Class="mb-3">Quick Actions</MudText>
-                <div class="d-flex flex-column gap-2">
-                    <MudButton Variant="Variant.Outlined"
-                               Color="Color.Primary"
-                               FullWidth="true"
-                               StartIcon="@Icons.Material.Filled.Inventory"
-                               Href="@($"/batches?drugId={Id}")">
-                        View Batches
-                    </MudButton>
-                    <MudButton Variant="Variant.Outlined"
-                               Color="Color.Info"
-                               FullWidth="true"
-                               StartIcon="@Icons.Material.Filled.History"
-                               Href="@($"/inventory/movements?drugId={Id}")">
-                        View Stock History
-                    </MudButton>
-                    <MudButton Variant="Variant.Outlined"
-                               Color="Color.Default"
-                               FullWidth="true"
-                               StartIcon="@Icons.Material.Filled.Add"
-                               Href="@($"/inventory/adjustments/new?drugId={Id}")">
-                        Adjust Stock
-                    </MudButton>
+            <div class="dc-card">
+                <h3 class="tw:text-lg tw:font-semibold tw:text-text tw:font-display tw:mb-4">Quick Actions</h3>
+                <div class="tw:flex tw:flex-col tw:gap-2">
+                    <a href="@($"/batches?drugId={Id}")" class="dc-btn-secondary tw:w-full tw:justify-center">
+                        <MudIcon Icon="@Icons.Material.Filled.Inventory" Size="Size.Small" />
+                        <span>View Batches</span>
+                    </a>
+                    <a href="@($"/inventory/movements?drugId={Id}")" class="dc-btn-secondary tw:w-full tw:justify-center">
+                        <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" />
+                        <span>View Stock History</span>
+                    </a>
+                    <a href="@($"/inventory/adjustments/new?drugId={Id}")" class="dc-btn-secondary tw:w-full tw:justify-center">
+                        <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                        <span>Adjust Stock</span>
+                    </a>
                 </div>
-            </MudPaper>
+            </div>
         </MudItem>
     </MudGrid>
 </div>
