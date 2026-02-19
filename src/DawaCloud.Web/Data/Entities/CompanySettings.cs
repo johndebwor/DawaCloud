@@ -20,6 +20,7 @@ public class CompanySettings : BaseAuditableEntity
     public string? City { get; set; }
     public string? Country { get; set; }
     public string? LogoUrl { get; set; }
+    public string? StampUrl { get; set; }
     public string DefaultCurrency { get; set; } = "SSP";
     public decimal DefaultTaxRate { get; set; } = 16;
     public int LowStockThresholdDays { get; set; } = 14;
